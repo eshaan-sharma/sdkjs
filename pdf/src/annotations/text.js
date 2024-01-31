@@ -148,7 +148,6 @@
 
         return oAscCommData;
     };
-
     CAnnotationText.prototype.GetIconType = function() {
         return this._noteIcon;
     };

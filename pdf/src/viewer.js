@@ -1270,6 +1270,9 @@
 			this.IsOpenAnnotsInProgress = true;
 
 			let oAnnotInfo, oAnnot, aRect;
+			let aReplies = []; // массив text аннотаций - ответов (комментов)
+			let aReviews = []; // массив text аннотаций - ревью
+			
 			for (let i = 0; i < aAnnotsInfo.length; i++) {
 				oAnnotInfo = aAnnotsInfo[i];
 
@@ -1391,9 +1394,22 @@
 					}
 				}
 				else {
-					if (oAnnotInfo["StateModel"] != AscPDF.TEXT_ANNOT_STATE_MODEL.Review && oAnnotsMap[oAnnotInfo["RefTo"]] && oAnnotsMap[oAnnotInfo["RefTo"]]._AddReplyOnOpen)
-						oAnnotsMap[oAnnotInfo["RefTo"]]._AddReplyOnOpen(oAnnotInfo);
+					if (oAnnotInfo["StateModel"] == AscPDF.TEXT_ANNOT_STATE_MODEL.Review) {
+						aReviews.push(oAnnotInfo);
+					}
+					else {
+						aReplies.push(oAnnotInfo);
+					}
 				}
+			}
+
+			// заполняем ответы
+			for (let i = 0; i < aReplies.length; i++) {
+				oAnnotsMap[aReplies[i]["RefTo"]]._AddReplyOnOpen(aReplies[i]);
+			}
+			// заполняем reviews
+			for (let i = 0; i < aReviews.length; i++) {
+				oAnnotsMap[aReviews[i]["RefTo"]]._AddReviewOnOpen(aReviews[i]);
 			}
 
 			for (let apIdx in oAnnotsMap) {

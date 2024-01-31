@@ -72,6 +72,7 @@
         this._popupIdx              = undefined;
 
         this._replies               = []; // тут будут храниться ответы (text аннотации)
+        this._reviews               = []; // тут будут храниться review аннотации
 
         // internal
         this._bDrawFromStream   = false; // нужно ли рисовать из стрима
@@ -614,6 +615,24 @@
         oReply.SetApIdx(oReplyInfo["AP"]["i"]);
         
         this._replies.push(oReply);
+    };
+    CAnnotationBase.prototype._AddReviewOnOpen = function(oReplyInfo) {
+        let oReply = new AscPDF.CAnnotationText(oReplyInfo["UniqueName"], this.GetPage(), [], this.GetDocument());
+
+        oReply.SetContents(oReplyInfo["Contents"]);
+        oReply.SetCreationDate(AscPDF.ParsePDFDate(oReplyInfo["CreationDate"]).getTime());
+        oReply.SetModDate(AscPDF.ParsePDFDate(oReplyInfo["LastModified"]).getTime());
+        oReply.SetAuthor(oReplyInfo["User"]);
+        oReply.SetDisplay(window["AscPDF"].Api.Objects.display["visible"]);
+        oReply.SetPopupIdx(oReplyInfo["Popup"]);
+        oReply.SetSubject(oReplyInfo["Subj"]);
+        oReply.SetState(oReplyInfo["State"]);
+        oReply.SetStateModel(oReplyInfo["StateModel"]);
+
+        oReply.SetReplyTo(this);
+        oReply.SetApIdx(oReplyInfo["AP"]["i"]);
+        
+        this._reviews.push(oReply);
     };
     CAnnotationBase.prototype.SetContents = function(contents) {
         if (this.GetContents() == contents)
