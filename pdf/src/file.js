@@ -2040,6 +2040,20 @@ void main() {\n\
         //console.log(ret);
         return ret;
     };
+    CFile.prototype.getSpeechDescription = function(oSelection) {
+        let oCurSel = this.Selection;
+        this.Selection = oSelection;
+
+        let oTextObj = {Text: ""};
+        this.copy(oTextObj);
+
+        this.Selection = oCurSel;
+
+        return {
+            type: AscCommon.SpeechWorkerCommands.Text,
+            obj: {text: oTextObj.Text.replace(/[\r\n\t\f\v]/g, '')}
+        };
+    };
 
     CFile.prototype.getCountLines = function(pageIndex)
     {

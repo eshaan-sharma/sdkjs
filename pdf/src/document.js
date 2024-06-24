@@ -3423,6 +3423,31 @@ var CPresentation = CPresentation || function(){};
         return oController.canIncreaseParagraphLevel(bIncrease);
     };
 
+    CPDFDoc.prototype.GetSpeechDescription = function(oPrevState, action) {
+        if (!oPrevState) {
+            return null;
+        }
+    
+        const oCurState = this.GetSelectionState();
+    
+        const correctPageIndexes = function (aIndexes) {
+            for(let nIdx = 0; nIdx < aIndexes.length; ++nIdx) {
+                aIndexes[nIdx] += 1;
+            }
+        };
+        const getSpeechData = function(type, obj) {
+            return {type: type, obj: obj};
+        };
+    
+        if (oPrevState.CurPage !== oCurState.CurPage) {
+            let aIndexes = correctPageIndexes([this.GetCurPage()]);
+            return getSpeechData(AscCommon.SpeechWorkerCommands.PagesSelected, {
+                indexes: aIndexes
+            });
+        }
+    
+        return AscCommon.getSpeechDescription([oPrevState], [oCurState], action);
+    };
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Work with text
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5352,14 +5377,16 @@ var CPresentation = CPresentation || function(){};
         return this.Viewer.file.pages.length;
     };
     CPDFDoc.prototype.GetSelectionState = function() {
-        const oSelectionState = {};
-
+        let oSelectionState = {};
+        let oFile = this.Viewer.file;
+        
         let oController = this.GetController();
 
         oSelectionState.CurPage             = this.Viewer.currentPage;
         oSelectionState.activeObject        = this.GetActiveObject();
         oSelectionState.drawingSelection    = oController.getSelectionState();
         oSelectionState.HistoryIndex        = this.History.Index;
+        oSelectionState.pageTextSelection   = oFile.isSelectionUse() ? Object.assign({}, oFile.getSelection()) : null;
 
         return oSelectionState;
     };

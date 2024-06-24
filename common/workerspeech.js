@@ -102,8 +102,13 @@
 		MultipleRangesSelected : 11,
 
 		// { name: "sheet 1", cell: "A1", text: "text", cellEnd: "D5", cellsCount: 10, objectsCount: 5 }
-		SheetSelected : 12
+		SheetSelected : 12,
 
+		// { indexes: [1, 2, ..] }
+		PagesSelected : 13,
+
+		// { indexes: [1, 2, ..] }
+		PagesUnselected : 14
 	};
 	
 	/**

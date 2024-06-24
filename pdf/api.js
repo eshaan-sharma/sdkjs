@@ -2246,13 +2246,11 @@
 		// Do not load any fonts
 	};
 
-	PDFEditorApi.prototype.getSelectionState = function()
-	{
-		return null;
+	PDFEditorApi.prototype.getSelectionState = function() {
+		return this.getPDFDoc().GetSelectionState();
 	};
-	PDFEditorApi.prototype.getSpeechDescription = function(prevState, action)
-	{
-		return null;
+	PDFEditorApi.prototype.getSpeechDescription = function(prevState, action) {
+		return this.getPDFDoc().GetSpeechDescription(prevState, action);
 	};
 	PDFEditorApi.prototype.GenerateStyles = function() {};
 	
@@ -2393,8 +2391,8 @@
 	PDFEditorApi.prototype['Paste']                        = PDFEditorApi.prototype.Paste;
 	PDFEditorApi.prototype['asc_PasteData']                = PDFEditorApi.prototype.asc_PasteData;
 
-	PDFEditorApi.prototype['getSelectionState']            = PDFEditorApi.prototype.Paste;
-	PDFEditorApi.prototype['getSpeechDescription']         = PDFEditorApi.prototype.asc_PasteData;
+	PDFEditorApi.prototype['getSelectionState']            = PDFEditorApi.prototype.getSelectionState;
+	PDFEditorApi.prototype['getSpeechDescription']         = PDFEditorApi.prototype.getSpeechDescription;
 
 	PDFEditorApi.prototype['asc_ShowDocumentOutline']      = PDFEditorApi.prototype.asc_ShowDocumentOutline;
 	PDFEditorApi.prototype['asc_HideDocumentOutline']      = PDFEditorApi.prototype.asc_HideDocumentOutline;

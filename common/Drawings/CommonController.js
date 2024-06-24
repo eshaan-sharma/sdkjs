@@ -11017,6 +11017,18 @@
 					obj: {text: sText}
 				};
 			}
+			if (Asc.editor.isPdfEditor() && oSelectionState2.pageTextSelection) {
+				let oFile = Asc.editor.getDocumentRenderer().file;
+				let oCurSpeech = oFile.getSpeechDescription(oSelectionState2.pageTextSelection);
+				let oPrevSpeech = oSelectionState1.pageTextSelection ? oFile.getSpeechDescription(oSelectionState2.pageTextSelection) : null;
+
+				if (oPrevSpeech && oPrevSpeech.obj.text == oCurSpeech.obj.text) {
+					return null;
+				}
+
+				return oCurSpeech;
+			}
+
 			if(oSelectionState2.textSelection) {
 				if(oSelectionState1.textObject !== oSelectionState2.textObject) {
 					return getTextObj(AscCommon.translateManager.getValue("entered text selection"));
