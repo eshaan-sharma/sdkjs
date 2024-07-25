@@ -3194,6 +3194,176 @@ CPresentation.prototype.Set_TargetPos = function (X, Y, PageNum) {
 	this.TargetPos.PageNum = PageNum;
 };
 
+const PresentationPrintLayout = {
+	FullSlide: 0,
+	NotesPage: 1,
+	Outline: 2,
+	Slide1: 3,
+	Slide2: 4,
+	Slide3: 5,
+	Slide4Hor: 6,
+	Slide6Hor: 7,
+	Slide9Hor: 8,
+	Slide4Ver: 9,
+	Slide6Ver: 10,
+	Slide9Ver: 11
+};
+function PresentationPrintSettings() {
+	this.Range = {
+		All: true,
+		Current: false,
+		Start: null,
+		End: null
+	};
+	this.Layout = PresentationPrintLayout.FullSlide;
+	this.Frame = true;
+	this.FitToPage = false;
+	this.PrintComments = false;
+
+	this.PageWidth = AscCommon.c_oAscPrintDefaultSettings.PageWidth;
+	this.PageHeight = AscCommon.c_oAscPrintDefaultSettings.PageHeight;
+}
+//Printing
+CPresentation.prototype.Print = function (oContext, Settings) {
+	if(this.Slides.length === 0) return;
+	let aIndexes = [];
+	let oRange = Settings.Range;
+	if(Settings.Current) {
+		if(!this.IsMasterMode()) {
+			aIndexes = [this.CurPage];
+		}
+		else {
+			aIndexes = [0];
+		}
+	}
+	else if(oRange.Start !== null && oRange.End !== null) {
+		let nStart = oRange.Start;
+		let nEnd = oRange.End;
+		if(nStart > nEnd) {
+			let nTmp = nStart;
+			nStart = nEnd;
+			nEnd = nTmp;
+		}
+		for(let nIdx = nStart; nIdx <= nEnd && nIdx < this.Slides.length; ++nIdx) {
+			aIndexes.push(nIdx);
+		}
+	}
+	else {
+		aIndexes = this.GetAllSlideIndexes();
+	}
+	let nPagesCount;
+	let nPageWidth = Settings.PageWidth;
+	let nPageHeight = Settings.PageHeight;
+	switch (Settings.Layout) {
+		case PresentationPrintLayout.FullSlide: {
+			nPagesCount = aIndexes.length;
+			nPageWidth = this.GetWidthMM();
+			nPageHeight = this.GetHeightMM();
+			break;
+		}
+		case PresentationPrintLayout.NotesPage: {
+			nPagesCount = aIndexes.length;
+			break;
+		}
+		case PresentationPrintLayout.Outline: {
+			nPagesCount = 1;
+			break;
+		}
+		case PresentationPrintLayout.Slide1: {
+			nPagesCount = aIndexes.length;
+			break;
+		}
+		case PresentationPrintLayout.Slide2: {
+			nPagesCount = Math.ceil(aIndexes.length / 2);
+			break;
+		}
+		case PresentationPrintLayout.Slide3: {
+			nPagesCount = Math.ceil(aIndexes.length / 3);
+			break;
+		}
+		case PresentationPrintLayout.Slide4Hor: {
+			nPagesCount = Math.ceil(aIndexes.length / 4);
+			break;
+		}
+		case PresentationPrintLayout.Slide6Hor: {
+			nPagesCount = Math.ceil(aIndexes.length / 6);
+			break;
+		}
+		case PresentationPrintLayout.Slide9Hor: {
+			nPagesCount = Math.ceil(aIndexes.length / 9);
+			break;
+		}
+		case PresentationPrintLayout.Slide4Ver: {
+			nPagesCount = Math.ceil(aIndexes.length / 4);
+			break;
+		}
+		case PresentationPrintLayout.Slide6Ver: {
+			nPagesCount = Math.ceil(aIndexes.length / 6);
+			break;
+		}
+		case PresentationPrintLayout.Slide9Ver: {
+			nPagesCount = Math.ceil(aIndexes.length / 9);
+			break;
+		}
+	}
+	let oSlide;
+	for(let nPage = 0; nPage < nPagesCount; ++nPage) {
+		oContext.BeginPage(nPageWidth, nPageHeight);
+		switch (Settings.Layout) {
+			case PresentationPrintLayout.FullSlide: {
+				oSlide = this.Slides[aIndexes[nPage]];
+				oSlide.draw(oContext);
+				break;
+			}
+			case PresentationPrintLayout.NotesPage: {
+				nPagesCount = aIndexes.length;
+				break;
+			}
+			case PresentationPrintLayout.Outline: {
+				nPagesCount = 1;
+				break;
+			}
+			case PresentationPrintLayout.Slide1: {
+				nPagesCount = aIndexes.length;
+				break;
+			}
+			case PresentationPrintLayout.Slide2: {
+				nPagesCount = Math.ceil(aIndexes.length / 2);
+				break;
+			}
+			case PresentationPrintLayout.Slide3: {
+				nPagesCount = Math.ceil(aIndexes.length / 3);
+				break;
+			}
+			case PresentationPrintLayout.Slide4Hor: {
+				nPagesCount = Math.ceil(aIndexes.length / 4);
+				break;
+			}
+			case PresentationPrintLayout.Slide6Hor: {
+				nPagesCount = Math.ceil(aIndexes.length / 6);
+				break;
+			}
+			case PresentationPrintLayout.Slide9Hor: {
+				nPagesCount = Math.ceil(aIndexes.length / 9);
+				break;
+			}
+			case PresentationPrintLayout.Slide4Ver: {
+				nPagesCount = Math.ceil(aIndexes.length / 4);
+				break;
+			}
+			case PresentationPrintLayout.Slide6Ver: {
+				nPagesCount = Math.ceil(aIndexes.length / 6);
+				break;
+			}
+			case PresentationPrintLayout.Slide9Ver: {
+				nPagesCount = Math.ceil(aIndexes.length / 9);
+				break;
+			}
+		}
+		oContext.EndPage();
+	}
+};
+
 // Вызываем перерисовку нужных страниц
 CPresentation.prototype.ReDraw = function (StartPage, EndPage) {
 	this.DrawingDocument.OnRecalculateSlide(StartPage);
