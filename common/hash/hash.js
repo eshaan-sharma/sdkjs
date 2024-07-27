@@ -34,6 +34,17 @@
 
 (function(window, undefined) {
 
+	function createCorsWorker(src){
+		//Cross-origin Web Workers still require worker-loader
+		//https://github.com/webpack/webpack/issues/16696#issuecomment-1842647437
+		var blob = new window.Blob([src], {
+			type: 'text/javascript'
+		});
+		var URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+		var workerUrl = URL.createObjectURL(blob);
+		return new window.Worker(workerUrl);
+	}
+
 	function CHashWorker(message, callback)
 	{
 		this.message = message;
@@ -79,7 +90,7 @@
 			var worker_src = this.useWasm ? "engine.js" : "engine_ie.js";
 			worker_src = this.enginePath + worker_src;
 
-			this.worker = new Worker(worker_src);
+			this.worker = createCorsWorker(worker_src);
 
 			var _t = this;
 

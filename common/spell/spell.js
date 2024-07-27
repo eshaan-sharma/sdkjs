@@ -88,6 +88,14 @@ window['AscCommon'].spellcheckGetLanguages = function()
 	};
 };
 
+function createCorsWorker(src) {
+	var blob = new window.Blob([src], {
+		type: 'text/javascript'
+	});
+	var URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+	var workerUrl = URL.createObjectURL(blob);
+	return new window.Worker(workerUrl);
+}
 function CSpellchecker(settings)
 {
 	this.useWasm = false;
@@ -173,14 +181,14 @@ function CSpellchecker(settings)
 			this.worker.creator = this;
 			this.worker.onerror = function() {
 				var creator = this.creator;
-				creator.worker = new Worker(worker_src);
+				creator.worker = createCorsWorker(worker_src);
 				creator._start(creator.worker);
 			};
 			this._start(this.worker.port);
 		}
 		else
 		{
-			this.worker = new Worker(worker_src);
+			this.worker = createCorsWorker(worker_src);
 
 			var _t = this;
 
