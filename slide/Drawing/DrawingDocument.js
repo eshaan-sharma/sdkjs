@@ -4045,7 +4045,7 @@ CMastersThumbnails.prototype.clear = function ()
 };
 CMastersThumbnails.prototype.GetPage = function(oPos)
 {
-	if(!Asc.Format.isRealObject(oPos)) return null;
+	if(!AscFormat.isRealObject(oPos)) return null;
 	let oMasterTh = this.masters[oPos.MasterIdx];
 	if(!oMasterTh) return null;
 	return oMasterTh.GetPage(oPos);
