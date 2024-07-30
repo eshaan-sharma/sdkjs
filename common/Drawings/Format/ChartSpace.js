@@ -1450,6 +1450,7 @@ function(window, undefined) {
 			// oLabelParams indecates necessary stuff such as label rotation, label skip, label format
 			const oLabelParams = new CLabelsParameters(nAxisType, sDataType);
 			oLabelParams.calculate(oLabelsBox, fAxisLength);
+			console.log(oLabelParams.maxHeight);
 
 			//check whether rotation is applied or not
 			let statement = oLabelParams.valid ? oLabelParams.isRotated() : fMaxMinWidth > fCheckInterval;
@@ -5050,12 +5051,12 @@ function(window, undefined) {
 		}
 		
 		let bCorrected = false;
-		let fL = oRect.x, fT = oRect.y, fR = oRect.x + oRect.w, fB = oRect.y + oRect.h;
 		const isChartEx = this.isChartEx();
 		let fHorPadding = 0.0;
 		let fVertPadding = 0.0;
 		let fHorInterval = null;
 		let oCalcMap = {};
+		aAxislabelsDimensions = [];
 		for(let nAxesSet = 0; nAxesSet < aAxesSet.length; ++nAxesSet) {
 			let oCurAxis = aAxesSet[nAxesSet];
 			let oCrossAxis = oCurAxis.crossAx;
@@ -5318,22 +5319,17 @@ function(window, undefined) {
 					oCurAxis.nullPos = fBK;
 				}
 			}
-			/* 	Check if hor or vert 
-				if vert check oLabelsBox.extX and add to pos and take from width of rect
-					take difference between the difference of rect and vert highest top 
-				if hor check the height of labels take from extY;
-			 */
-			if (oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.isHorizontal) {
-				const isHor = oLabelsBox.axis.isHorizontal();
+			if (oLabelsBox && oLabelsBox.axis /*&& oLabelsBox.axis.isHorizontal*/) {
+				// const isHor = oLabelsBox.axis.isHorizontal();
 				if (isHor) {
 					fB = fB - oLabelsBox.extY;
 				} else {
 					if (AscFormat.isRealNumber(oLabelsBox.extX)) {
 						fL = fL + oLabelsBox.extX;
-						fR = fR - oLabelsBox.extX;
 						fT = (2 * fT) - oLabelsBox.y;
 					}
 				}
+				aAxislabelsDimensions.push(oLabelsBox.x, oLabelsBox.x + oLabelsBox.extX, oLabelsBox.y, oLabelsBox.y + oLabelsBox.extY);
 			}
 			// if(oLabelsBox) {
 			// 	if(oLabelsBox.x < fL) {
@@ -5350,12 +5346,9 @@ function(window, undefined) {
 			// 	}
 			// }
 		}
-		console.log(fL, fR, fT, fB);
-		console.log(oRect, oBaseRect);	
 		if(nIndex < 2) {
 			let fDiff;
-			let fPrecision = 0.01;
-			oCorrectedRect = new CRect(oRect.x, oRect.y, oRect.w, oRect.h);
+			oCorrectedRect = new CRect(oBaseRect.x, oBaseRect.y, oBaseRect.w, oBaseRect.h);
 			let bWEdge = false;
 			let bHEge = false;
 			let oPALayout = this.chart.plotArea.layout;
@@ -5368,67 +5361,105 @@ function(window, undefined) {
 					bHEge = true;
 				}
 			}
-			if(bWithoutLabels) {
-				fDiff = fL;
-				if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.x -= fDiff;
+			// if(bWithoutLabels) {
+			// 	fDiff = fL;
+			// 	if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.x -= fDiff;
 
-					if(bWEdge) {
-						oCorrectedRect.w += fDiff;
+			// 		if(bWEdge) {
+			// 			oCorrectedRect.w += fDiff;
+			// 		}
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = fR - this.extX;
+			// 	if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.w -= fDiff;
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = fT;
+			// 	if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.y -= fDiff;
+			// 		if(bHEge) {
+			// 			oCorrectedRect.h += fDiff;
+			// 		}
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = fB - this.extY;
+			// 	if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.h -= fDiff;
+			// 		bCorrected = true;
+			// 	}
+			// }
+			// else {
+			// 	fDiff = oBaseRect.x - fL;
+			// 	if(/*fDiff > 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.x += fDiff;
+			// 		if(bWEdge) {
+			// 			oCorrectedRect.w -= fDiff;
+			// 		}
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = oBaseRect.x + oBaseRect.w - fR;
+			// 	if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.w += fDiff;
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = oBaseRect.y - fT;
+			// 	if(/*fDiff > 0.0 &&*/ !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.y += fDiff;
+			// 		if(bHEge) {
+			// 			oCorrectedRect.h -= fDiff;
+			// 		}
+			// 		bCorrected = true;
+			// 	}
+			// 	fDiff = oBaseRect.y + oBaseRect.h - fB;
+			// 	if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+			// 		oCorrectedRect.h += fDiff;
+			// 		bCorrected = true;
+			// 	}
+			// }
+
+			const isRectCorrected = function (oOuterRect, aLblsDims, oInnerRect) {
+				let fPrecision = 0.01;
+				// if some inconsistencies will be found then new rect should be constructed;
+				let fOuterL = 0, fOuterR = 0, fOuterT = 0, fOuterB = 0;
+				let fInnerL = 0, fInnerR = 0, fInnerT = 0, fInnerB = 0;
+				const bChanged = false;
+				for (let i = 0; i < aLblsDims.length; i++) {
+
+					// left edge 
+					if (aLblsDims[i].x < oOuterRect.x) {
+						fOuterL = Math.max(fOuterL, Math.abs(oOuterRect.x - aLblsDims[i].x));
+						bChanged = true;
 					}
-					bCorrected = true;
-				}
-				fDiff = fR - this.extX;
-				if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.w -= fDiff;
-					bCorrected = true;
-				}
-				fDiff = fT;
-				if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.y -= fDiff;
-					if(bHEge) {
-						oCorrectedRect.h += fDiff;
+					if (aLblsDims[i].extX < oOuterRect && AscFormat.fApproxEqual(aLblsDims[i].x, oOuterRect.x, fPrecision) && aLblsDims[i].extX + oInnerRect.w > oOuterRect.w) {
+						fInnerL = Math.max(fInnerL, aLblsDims[i].extX);
+						bChanged = true;
 					}
-					bCorrected = true;
-				}
-				fDiff = fB - this.extY;
-				if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.h -= fDiff;
-					bCorrected = true;
+
+					// top edge
+					if (aLblsDims[i].y < oOuterRect.y) {
+						fT = ((2 * fT) - aLblsDims[i].y);
+						bChanged = true;
+					}
+					if (!AscFormat.fApproxEqual(aLblsDims[i].extX, oOuterRect.w, fPrecision) && AscFormat.fApproxEqual(aLblsDims[i].y, oOuterRect.y, fPrecision)) {
+						fT = fT + aLblsDims[i].extY;
+						bChanged = true;
+					}
+
+					// right edge
+					if ( < oOuterRect.y) {
+						fR = ((2 * fT) - aLblsDims[i].y);
+						bChanged = true;
+					}
+					if (!AscFormat.fApproxEqual(aLblsDims[i].extX, oOuterRect.w, fPrecision) && AscFormat.fApproxEqual(aLblsDims[i].y, oOuterRect.y, fPrecision)) {
+						fT = fT + aLblsDims[i].extY;
+						bChanged = true;
+					}
 				}
 			}
-			else {
-				// fDiff = oBaseRect.x - fL;
-				// if(/*fDiff > 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-				// 	oCorrectedRect.x += fDiff;
-				// 	if(bWEdge) {
-				// 		oCorrectedRect.w -= fDiff;
-				// 	}
-				// 	bCorrected = true;
-				// }
-				// fDiff = oBaseRect.x + oBaseRect.w - fR;
-				// if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-				// 	oCorrectedRect.w += fDiff;
-				// 	bCorrected = true;
-				// }
-				// fDiff = oBaseRect.y - fT;
-				// if(/*fDiff > 0.0 &&*/ !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-				// 	oCorrectedRect.y += fDiff;
-				// 	if(bHEge) {
-				// 		oCorrectedRect.h -= fDiff;
-				// 	}
-				// 	bCorrected = true;
-				// }
-				// fDiff = oBaseRect.y + oBaseRect.h - fB;
-				// if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-				// 	oCorrectedRect.h += fDiff;
-				// 	bCorrected = true;
-				// }
-				oCorrectedRect.x = fL;
-				oCorrectedRect.y = fT;
-				oCorrectedRect.w = fR;
-				oCorrectedRect.h = fB;
-			}
+
+			bCorrected = isRectCorrected(oBaseRect, aAxislabelsDimensions, oCorrectedRect)
 			if(oCorrectedRect && bCorrected) {
 				if(oCorrectedRect.w > oRect.w) {
 					return this.recalculateAxesSet(aAxesSet, oCorrectedRect, oBaseRect, ++nIndex, fHorInterval);
@@ -11645,7 +11676,7 @@ function(window, undefined) {
 
 	CLabelsParameters.prototype.setMaxHeight = function (diagramHeight, chartHeight, titleHeight) {
 		// heightMultiplier defines the allowed occupation percentage of axis compared to the graph whole Height. 
-		const heightMultiplier = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? (this.sDataType === 'string' ? 0.27 : 0.65) : 0.37;
+		const heightMultiplier = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? (this.sDataType === 'string' ? 0.65 : 0.65) : 0.65;
 		const freeSpace = titleHeight ? (diagramHeight - titleHeight) * heightMultiplier : diagramHeight;
 		this.maxHeight = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? freeSpace * (1 - chartHeight) : heightMultiplier * freeSpace;
 	};
