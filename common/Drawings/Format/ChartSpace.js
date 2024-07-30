@@ -5318,21 +5318,40 @@ function(window, undefined) {
 					oCurAxis.nullPos = fBK;
 				}
 			}
-			if(oLabelsBox) {
-				if(oLabelsBox.x < fL) {
-					fL = oLabelsBox.x;
-				}
-				if(oLabelsBox.x + oLabelsBox.extX > fR) {
-					fR = oLabelsBox.x + oLabelsBox.extX;
-				}
-				if(oLabelsBox.y < fT) {
-					fT = oLabelsBox.y;
-				}
-				if(oLabelsBox.y + oLabelsBox.extY > fB) {
-					fB = oLabelsBox.y + oLabelsBox.extY;
+			/* 	Check if hor or vert 
+				if vert check oLabelsBox.extX and add to pos and take from width of rect
+					take difference between the difference of rect and vert highest top 
+				if hor check the height of labels take from extY;
+			 */
+			if (oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.isHorizontal) {
+				const isHor = oLabelsBox.axis.isHorizontal();
+				if (isHor) {
+					fB = fB - oLabelsBox.extY;
+				} else {
+					if (AscFormat.isRealNumber(oLabelsBox.extX)) {
+						fL = fL + oLabelsBox.extX;
+						fR = fR - oLabelsBox.extX;
+						fT = (2 * fT) - oLabelsBox.y;
+					}
 				}
 			}
+			// if(oLabelsBox) {
+			// 	if(oLabelsBox.x < fL) {
+			// 		fL = oLabelsBox.x;
+			// 	}
+			// 	if(oLabelsBox.x + oLabelsBox.extX > fR) {
+			// 		fR = oLabelsBox.x + oLabelsBox.extX;
+			// 	}
+			// 	if(oLabelsBox.y < fT) {
+			// 		fT = oLabelsBox.y;
+			// 	}
+			// 	if(oLabelsBox.y + oLabelsBox.extY > fB) {
+			// 		fB = oLabelsBox.y + oLabelsBox.extY;
+			// 	}
+			// }
 		}
+		console.log(fL, fR, fT, fB);
+		console.log(oRect, oBaseRect);	
 		if(nIndex < 2) {
 			let fDiff;
 			let fPrecision = 0.01;
@@ -5379,32 +5398,36 @@ function(window, undefined) {
 				}
 			}
 			else {
-				fDiff = oBaseRect.x - fL;
-				if(/*fDiff > 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.x += fDiff;
-					if(bWEdge) {
-						oCorrectedRect.w -= fDiff;
-					}
-					bCorrected = true;
-				}
-				fDiff = oBaseRect.x + oBaseRect.w - fR;
-				if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.w += fDiff;
-					bCorrected = true;
-				}
-				fDiff = oBaseRect.y - fT;
-				if(/*fDiff > 0.0 &&*/ !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.y += fDiff;
-					if(bHEge) {
-						oCorrectedRect.h -= fDiff;
-					}
-					bCorrected = true;
-				}
-				fDiff = oBaseRect.y + oBaseRect.h - fB;
-				if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-					oCorrectedRect.h += fDiff;
-					bCorrected = true;
-				}
+				// fDiff = oBaseRect.x - fL;
+				// if(/*fDiff > 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+				// 	oCorrectedRect.x += fDiff;
+				// 	if(bWEdge) {
+				// 		oCorrectedRect.w -= fDiff;
+				// 	}
+				// 	bCorrected = true;
+				// }
+				// fDiff = oBaseRect.x + oBaseRect.w - fR;
+				// if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+				// 	oCorrectedRect.w += fDiff;
+				// 	bCorrected = true;
+				// }
+				// fDiff = oBaseRect.y - fT;
+				// if(/*fDiff > 0.0 &&*/ !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+				// 	oCorrectedRect.y += fDiff;
+				// 	if(bHEge) {
+				// 		oCorrectedRect.h -= fDiff;
+				// 	}
+				// 	bCorrected = true;
+				// }
+				// fDiff = oBaseRect.y + oBaseRect.h - fB;
+				// if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
+				// 	oCorrectedRect.h += fDiff;
+				// 	bCorrected = true;
+				// }
+				oCorrectedRect.x = fL;
+				oCorrectedRect.y = fT;
+				oCorrectedRect.w = fR;
+				oCorrectedRect.h = fB;
 			}
 			if(oCorrectedRect && bCorrected) {
 				if(oCorrectedRect.w > oRect.w) {
