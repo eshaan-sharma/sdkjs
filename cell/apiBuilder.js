@@ -3704,7 +3704,7 @@
 	 * Returns the serial number of the date which comes the indicated number of months before or after the start date.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {function | number} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of months before or after the start date.
 	 * @returns {number}
 	 */
@@ -3715,7 +3715,7 @@
 	 * Returns the serial number of the last day of the month before or after the specified number of months.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {function | number} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of months before or after the start date.
 	 * @returns {number}
 	 */
@@ -3726,7 +3726,7 @@
 	 * Returns the hour as a number from 0 (12:00 A.M.) to 23 (11:00 P.M.).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | function} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
+	 * @param {number | string} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.HOUR = function (arg1) {
@@ -3736,7 +3736,7 @@
 	 * Returns the ISO week number in the year for a given date.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - The date-time code used for date and time calculation.
+	 * @param {number} arg1 - The date-time code used for date and time calculation.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.ISOWEEKNUM = function (arg1) {
@@ -3746,7 +3746,7 @@
 	 * Returns the minute, a number from 0 to 59.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | function} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
+	 * @param {number | string} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MINUTE = function (arg1) {
@@ -3756,7 +3756,7 @@
 	 * Returns the month, a number from 1 (January) to 12 (December).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1- A number in the date-time code.
+	 * @param {number} arg1- A number in the date-time code.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MONTH = function (arg1) {
@@ -3766,8 +3766,8 @@
 	 * Returns the number of whole workdays between two dates.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A serial date number that represents the start date.
-	 * @param {number | function} arg2 - A serial date number that represents the end date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg2 - A serial date number that represents the end date.
 	 * @param {?ApiRange} arg3 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
 	 */
@@ -3778,8 +3778,8 @@
 	 * Returns the number of whole workdays between two dates with custom weekend parameters.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A serial date number that represents the start date.
-	 * @param {number | function} arg2 - A serial date number that represents the end date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg2 - A serial date number that represents the end date.
 	 * @param {?number | ?string} arg3 - A number or string specifying when weekends occur.
 	 * @param {?ApiRange} arg4 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
@@ -3800,7 +3800,7 @@
 	 * Returns the second, a number from 0 to 59.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | function} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
+	 * @param {number | string} arg1 - A number in the date-time code, or text in the time format, such as "16:48:00" or "4:48:00 PM", or a result of other formulas or functions.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SECOND = function (arg1) {
@@ -3841,7 +3841,7 @@
 	 * Returns a number from 1 to 7 identifying the day of the week of the specified date.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A number that represents a date, or a result of other formulas or functions.
+	 * @param {number} arg1 - A number that represents a date, or a result of other formulas or functions.
 	 * @param {?number} arg2 - A number that determines the type of return value: <b>1</b> - returns a number from 1 (Sunday) to 7 (Saturday);
 	 * <b>2</b> - returns a number from 1 (Monday) to 7 (Sunday); <b>3</b> - returns a number from 0 (Monday) to 6 (Sunday).
 	 * @returns {number}
@@ -3853,7 +3853,7 @@
 	 * Returns the week number in the year.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - The date-time code used for date and time calculation.
+	 * @param {number} arg1 - The date-time code used for date and time calculation.
 	 * @param {?number} arg2 - A number (1 or 2) that determines the type of the return value: Sunday (1) or Monday (2).
 	 * @returns {number}
 	 */
@@ -3864,7 +3864,7 @@
 	 * Returns the serial number of the date before or after a specified number of workdays.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of nonweekend and non-holiday days before or after the start date. A positive value for days yields a future date; a negative value yields a past date.
 	 * @param {?ApiRange} arg3 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
@@ -3876,7 +3876,7 @@
 	 * Returns the serial number of the date before or after a specified number of workdays with custom weekend parameters.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of nonweekend and non-holiday days before or after the start date. A positive value for days yields a future date; a negative value yields a past date.
 	 * @param {?number | ?string} arg3 - A number or string specifying when weekends occur.
 	 * @param {?ApiRange} arg4 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
@@ -3889,7 +3889,7 @@
 	 * Returns the year of a date, an integer in the range 1900-9999.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A number in the date-time code, or a result of other formulas or functions.
+	 * @param {number} arg1 - A number in the date-time code, or a result of other formulas or functions.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.YEAR = function (arg1) {
@@ -3899,8 +3899,8 @@
 	 * Returns the year fraction representing the number of whole days between the start date and end date.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | function} arg1 - A serial date number that represents the start date.
-	 * @param {number | function} arg2 - A serial date number that represents the end date.
+	 * @param {number} arg1 - A serial date number that represents the start date.
+	 * @param {number} arg2 - A serial date number that represents the end date.
 	 * @param {?number} arg3 - The type of day count basis to use: <b>0</b> or omitted - US (NASD) 30/360; <b>1</b> - Actual/actual; <b>2</b> - Actual/360; <b>3</b> - Actual/365; <b>4</b> - European 30/360.
 	 * @returns {number}
 	 */
@@ -6265,7 +6265,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The position of the value in the list of values, a numeric value greater than or equal to 1 but less than the number of values in the list of values.
-	 * @param {number | string | function | ApiRange} args - Up to 254 values or the selected range of cells to analyze. The first argument is required, subsequent arguments are optional. 
+	 * @param {number | string | ApiRange} args - Up to 254 values or the selected range of cells to analyze. The first argument is required, subsequent arguments are optional.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.CHOOSE = function () {
@@ -6416,7 +6416,7 @@
 	 * Checks whether a value is an error other than <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {number | string | boolean | ApiRange} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISERR = function (arg1) {
@@ -6426,7 +6426,7 @@
 	 * Checks whether a value is an error, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {number | string | boolean | ApiRange} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISERROR = function (arg1) {
@@ -6446,7 +6446,7 @@
 	 * Checks whether a reference to a cell contains a formula, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - A reference to the cell to test. Reference can be a cell reference, a formula, or name that refers to a cell.
+	 * @param {ApiRange | string} arg1 - A reference to the cell to test. Reference can be a cell reference, a formula, or name that refers to a cell.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISFORMULA = function (arg1) {
@@ -6456,7 +6456,7 @@
 	 * Checks whether a value is a logical value (<b>true</b> or <b>false</b>), and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISLOGICAL = function (arg1) {
@@ -6466,7 +6466,7 @@
 	 * Checks whether a value is <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNA = function (arg1) {
@@ -6476,7 +6476,7 @@
 	 * Checks whether a value is not text (blank cells are not text), and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNONTEXT = function (arg1) {
@@ -6486,7 +6486,7 @@
 	 * Checks whether a value is a number, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNUMBER = function (arg1) {
@@ -6506,7 +6506,7 @@
 	 * Checks whether a value is a reference, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISREF = function (arg1) {
@@ -6516,7 +6516,7 @@
 	 * Checks whether a value is text, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | function} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISTEXT = function (arg1) {
@@ -6606,7 +6606,7 @@
 	 * Checks if there is an error in the formula in the first argument. The function returns the result of the formula if there is no error, or the value specified in the second argument if there is one.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {function | ApiRange | number | string | boolean} arg1 - The value, expression, or reference that is checked for an error.
+	 * @param {ApiRange | number | string | boolean} arg1 - The value, expression, or reference that is checked for an error.
 	 * @param {number | string | boolean} arg2 - The value to be returned if the formula evaluates to an error. The following errors are evaluated: <b>#N/A</b>, <b>#VALUE!</b>, <b>#REF!</b>, <b>#DIV/0!</b>, <b>#NUM!</b>, <b>#NAME?</b>, <b>#NULL!</b>.
 	 * @returns {number | string | boolean}
 	 */
@@ -6617,7 +6617,7 @@
 	 * Checks if there is an error in the formula in the first argument. The function returns the specified value if the formula returns the <em>#N/A</em> error value, otherwise returns the result of the formula.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {function | ApiRange | number | string | boolean} arg1 - The value, expression, or reference that is checked for an error.
+	 * @param {ApiRange | number | string | boolean} arg1 - The value, expression, or reference that is checked for an error.
 	 * @param {number | string | boolean} arg2 - The value to return if the formula evaluates to the <em>#N/A</em> error value.
 	 * @returns {number | string | boolean}
 	 */
@@ -6628,7 +6628,7 @@
 	 * Checks if the specified logical value is <b>true</b> or <b>false</b>. The function returns <b>true</b> if the argument is <b>false</b> and <b>false</b> if the argument is <b>true</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {function | ApiRange | number | string | boolean} arg1 - A value or expression that can be evaluated to <b>true</b> or <b>false</b>.
+	 * @param {ApiRange | number | string | boolean} arg1 - A value or expression that can be evaluated to <b>true</b> or <b>false</b>.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.NOT = function (arg1) {
