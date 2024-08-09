@@ -1394,7 +1394,7 @@ function(window, undefined) {
 		return AscFormat.isRealNumber(nLblTickSkip) && nLblTickSkip > 0 ? nLblTickSkip : 1;
 	}
 
-	function fLayoutHorLabelsBox(oLabelsBox, fY, fXStart, fXEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth) {
+	function fLayoutHorLabelsBox(oLabelsBox, fY, fXStart, fXEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth, nIndex) {
 		if (!oLabelsBox) {
 			return;
 		}
@@ -1448,8 +1448,8 @@ function(window, undefined) {
 			const sDataType = oLabelsBox.getLabelsDataType();
 
 			// oLabelParams indecates necessary stuff such as label rotation, label skip, label format
-			const oLabelParams = new CLabelsParameters(nAxisType, sDataType);
-			oLabelParams.calculate(oLabelsBox, fAxisLength);
+			const oLabelParams = oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.params ? oLabelsBox.axis.params : new CLabelsParameters(nAxisType, sDataType);
+			oLabelParams.calculate(oLabelsBox, fAxisLength, nIndex);
 			console.log(oLabelParams.maxHeight);
 
 			//check whether rotation is applied or not
@@ -5056,7 +5056,7 @@ function(window, undefined) {
 		let fVertPadding = 0.0;
 		let fHorInterval = null;
 		let oCalcMap = {};
-		aAxislabelsDimensions = [];
+		const aAxislabelsDimensions = [];
 		for(let nAxesSet = 0; nAxesSet < aAxesSet.length; ++nAxesSet) {
 			let oCurAxis = aAxesSet[nAxesSet];
 			let oCrossAxis = oCurAxis.crossAx;
@@ -5251,7 +5251,7 @@ function(window, undefined) {
 						fForceContentWidth = Math.abs(fHorInterval) + fHorInterval / nTickLblSkip;
 					}
 					fDistance = fDistanceSign * oLabelsBox.getLabelsOffset();
-					fLayoutHorLabelsBox(oLabelsBox, fPos, fPosStart, fPosEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth);
+					fLayoutHorLabelsBox(oLabelsBox, fPos, fPosStart, fPosEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth, nIndex);
 					if(bLabelsExtremePosition) {
 						if(fDistance > 0) {
 							fVertPadding = -oLabelsBox.extY;
@@ -5319,17 +5319,8 @@ function(window, undefined) {
 					oCurAxis.nullPos = fBK;
 				}
 			}
-			if (oLabelsBox && oLabelsBox.axis /*&& oLabelsBox.axis.isHorizontal*/) {
-				// const isHor = oLabelsBox.axis.isHorizontal();
-				if (isHor) {
-					fB = fB - oLabelsBox.extY;
-				} else {
-					if (AscFormat.isRealNumber(oLabelsBox.extX)) {
-						fL = fL + oLabelsBox.extX;
-						fT = (2 * fT) - oLabelsBox.y;
-					}
-				}
-				aAxislabelsDimensions.push(oLabelsBox.x, oLabelsBox.x + oLabelsBox.extX, oLabelsBox.y, oLabelsBox.y + oLabelsBox.extY);
+			if (oLabelsBox) {
+				aAxislabelsDimensions.push({x : oLabelsBox.x, extX : oLabelsBox.extX, y : oLabelsBox.y, extY : oLabelsBox.extY});
 			}
 			// if(oLabelsBox) {
 			// 	if(oLabelsBox.x < fL) {
@@ -5348,7 +5339,7 @@ function(window, undefined) {
 		}
 		if(nIndex < 2) {
 			let fDiff;
-			oCorrectedRect = new CRect(oBaseRect.x, oBaseRect.y, oBaseRect.w, oBaseRect.h);
+			oCorrectedRect = new CRect(oRect.x, oRect.y, oRect.w, oRect.h);
 			let bWEdge = false;
 			let bHEge = false;
 			let oPALayout = this.chart.plotArea.layout;
@@ -5361,105 +5352,76 @@ function(window, undefined) {
 					bHEge = true;
 				}
 			}
-			// if(bWithoutLabels) {
-			// 	fDiff = fL;
-			// 	if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.x -= fDiff;
-
-			// 		if(bWEdge) {
-			// 			oCorrectedRect.w += fDiff;
-			// 		}
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = fR - this.extX;
-			// 	if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.w -= fDiff;
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = fT;
-			// 	if(fDiff < 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.y -= fDiff;
-			// 		if(bHEge) {
-			// 			oCorrectedRect.h += fDiff;
-			// 		}
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = fB - this.extY;
-			// 	if(fDiff > 0.0 && !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.h -= fDiff;
-			// 		bCorrected = true;
-			// 	}
-			// }
-			// else {
-			// 	fDiff = oBaseRect.x - fL;
-			// 	if(/*fDiff > 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.x += fDiff;
-			// 		if(bWEdge) {
-			// 			oCorrectedRect.w -= fDiff;
-			// 		}
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = oBaseRect.x + oBaseRect.w - fR;
-			// 	if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.w += fDiff;
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = oBaseRect.y - fT;
-			// 	if(/*fDiff > 0.0 &&*/ !AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.y += fDiff;
-			// 		if(bHEge) {
-			// 			oCorrectedRect.h -= fDiff;
-			// 		}
-			// 		bCorrected = true;
-			// 	}
-			// 	fDiff = oBaseRect.y + oBaseRect.h - fB;
-			// 	if(/*fDiff < 0.0 && */!AscFormat.fApproxEqual(fDiff, 0.0, fPrecision)) {
-			// 		oCorrectedRect.h += fDiff;
-			// 		bCorrected = true;
-			// 	}
-			// }
 
 			const isRectCorrected = function (oOuterRect, aLblsDims, oInnerRect) {
 				let fPrecision = 0.01;
 				// if some inconsistencies will be found then new rect should be constructed;
 				let fOuterL = 0, fOuterR = 0, fOuterT = 0, fOuterB = 0;
 				let fInnerL = 0, fInnerR = 0, fInnerT = 0, fInnerB = 0;
-				const bChanged = false;
+				let bChanged = false;
 				for (let i = 0; i < aLblsDims.length; i++) {
-
-					// left edge 
-					if (aLblsDims[i].x < oOuterRect.x) {
-						fOuterL = Math.max(fOuterL, Math.abs(oOuterRect.x - aLblsDims[i].x));
+					// left edge
+					if (aLblsDims[i].x < (oOuterRect.x - fPrecision) ) {
+						// vertical Axes affect inner changes
+						if (aLblsDims[i].extX + oInnerRect.w > oOuterRect.w && aLblsDims[i].extX + oInnerRect.w < 2 * oOuterRect.w) {
+							fInnerL = Math.max(fInnerL, aLblsDims[i].extX);
+						// horizontal Axes affect outer changes
+						} else {
+							fOuterL = Math.max(fOuterL, Math.abs(oOuterRect.x - aLblsDims[i].x));
+						}
 						bChanged = true;
 					}
-					if (aLblsDims[i].extX < oOuterRect && AscFormat.fApproxEqual(aLblsDims[i].x, oOuterRect.x, fPrecision) && aLblsDims[i].extX + oInnerRect.w > oOuterRect.w) {
-						fInnerL = Math.max(fInnerL, aLblsDims[i].extX);
-						bChanged = true;
-					}
-
+					console.log(fOuterL, fInnerL);
 					// top edge
-					if (aLblsDims[i].y < oOuterRect.y) {
-						fT = ((2 * fT) - aLblsDims[i].y);
+					if (aLblsDims[i].y < (oOuterRect.y - fPrecision)) {
+						// horizontal Axes affect inner changes
+						if (aLblsDims[i].extY + oInnerRect.h > oOuterRect.h && aLblsDims[i].extY + oInnerRect.h < 2 * oOuterRect.h) {
+							fInnerT = Math.max(fInnerT, aLblsDims[i].extY);
+						// vertical Axes affect outer changes
+						} else {
+							fOuterT = Math.max(fOuterT, Math.abs(oOuterRect.y - aLblsDims[i].y));
+						}
 						bChanged = true;
 					}
-					if (!AscFormat.fApproxEqual(aLblsDims[i].extX, oOuterRect.w, fPrecision) && AscFormat.fApproxEqual(aLblsDims[i].y, oOuterRect.y, fPrecision)) {
-						fT = fT + aLblsDims[i].extY;
+					console.log(fOuterT, fInnerT);
+					// right edge 
+					if (aLblsDims[i].x + aLblsDims[i].extX > (oOuterRect.x + oOuterRect.w + fPrecision)) {
+						// vertical Axes affect inner changes
+						if (aLblsDims[i].extX + oInnerRect.w > oOuterRect.w && aLblsDims[i].extX + oInnerRect.w < 2 * oOuterRect.w) {
+							fInnerR = Math.max(fInnerR, aLblsDims[i].extX);
+						// horizontal Axes affect outer changes
+						} else {
+							fOuterR = Math.max(fOuterL, Math.abs(aLblsDims[i].x + aLblsDims[i].extX - oOuterRect.x - oOuterRect.w));
+						}
 						bChanged = true;
 					}
-
-					// right edge
-					if ( < oOuterRect.y) {
-						fR = ((2 * fT) - aLblsDims[i].y);
+					console.log(fOuterR, fInnerR);
+					// bottom edge
+					if (aLblsDims[i].y + aLblsDims[i].extY > (oOuterRect.y + oOuterRect.h + fPrecision)) {
+						// horizontal Axes affect inner changes
+						if (aLblsDims[i].extY + oInnerRect.h > oOuterRect.h && aLblsDims[i].extY + oInnerRect.h < 2 * oOuterRect.h) {
+							fInnerB = Math.max(fInnerB, aLblsDims[i].extY);
+						// vertical Axes affect outer changes
+						} else {
+							fOuterB = Math.max(fOuterB, Math.abs(aLblsDims[i].y + aLblsDims[i].extY - oOuterRect.y - oOuterRect.h));
+						}
 						bChanged = true;
 					}
-					if (!AscFormat.fApproxEqual(aLblsDims[i].extX, oOuterRect.w, fPrecision) && AscFormat.fApproxEqual(aLblsDims[i].y, oOuterRect.y, fPrecision)) {
-						fT = fT + aLblsDims[i].extY;
-						bChanged = true;
-					}
+					console.log(fOuterB, fInnerB);
 				}
-			}
 
-			bCorrected = isRectCorrected(oBaseRect, aAxislabelsDimensions, oCorrectedRect)
+				if (bChanged) {
+					oInnerRect.x = oInnerRect.x + Math.max(fOuterL, fInnerL);
+					oInnerRect.y = oInnerRect.y + Math.max(fOuterT, fInnerT);
+					oInnerRect.w = oInnerRect.w - Math.max(fOuterL, fInnerL) - Math.max(fOuterR, fInnerR);
+					oInnerRect.h = oInnerRect.h - Math.max(fOuterT, fInnerT) - Math.max(fInnerB, fOuterB);
+				}
+
+				return bChanged;
+			}
+			console.log(oCorrectedRect.h, oCorrectedRect.w, oCorrectedRect.x, oCorrectedRect.y);
+			bCorrected = isRectCorrected(oBaseRect, aAxislabelsDimensions, oCorrectedRect);
+			console.log(bCorrected, aAxislabelsDimensions, oCorrectedRect);
 			if(oCorrectedRect && bCorrected) {
 				if(oCorrectedRect.w > oRect.w) {
 					return this.recalculateAxesSet(aAxesSet, oCorrectedRect, oBaseRect, ++nIndex, fHorInterval);
@@ -11597,8 +11559,8 @@ function(window, undefined) {
 		this.nLabelsCount = 0;
 	}
 
-	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength) {
-		if (this.valid) {
+	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength, nIndex) {
+		if (this.valid && nIndex === 0) {
 			// check whether user has defined some parameters
 			this.getUserDefinedSettings(oLabelsBox);
 
@@ -11672,6 +11634,7 @@ function(window, undefined) {
 		}
 		const bodyPr = oLabelsBox.axis.txPr.bodyPr;
 		bodyPr.updatedRot = AscFormat.isRealNumber(this.rot) ? this.rot : bodyPr.rot;
+		oLabelsBox.axis.params = this;
 	};
 
 	CLabelsParameters.prototype.setMaxHeight = function (diagramHeight, chartHeight, titleHeight) {
