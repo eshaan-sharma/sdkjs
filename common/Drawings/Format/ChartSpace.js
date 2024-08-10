@@ -1394,7 +1394,7 @@ function(window, undefined) {
 		return AscFormat.isRealNumber(nLblTickSkip) && nLblTickSkip > 0 ? nLblTickSkip : 1;
 	}
 
-	function fLayoutHorLabelsBox(oLabelsBox, fY, fXStart, fXEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth, nIndex) {
+	function fLayoutHorLabelsBox(oLabelsBox, fY, fXStart, fXEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth) {
 		if (!oLabelsBox) {
 			return;
 		}
@@ -1449,7 +1449,7 @@ function(window, undefined) {
 
 			// oLabelParams indecates necessary stuff such as label rotation, label skip, label format
 			const oLabelParams = oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.params ? oLabelsBox.axis.params : new CLabelsParameters(nAxisType, sDataType);
-			oLabelParams.calculate(oLabelsBox, fAxisLength, nIndex);
+			oLabelParams.calculate(oLabelsBox, fAxisLength);
 			console.log(oLabelParams.maxHeight);
 
 			//check whether rotation is applied or not
@@ -5251,7 +5251,7 @@ function(window, undefined) {
 						fForceContentWidth = Math.abs(fHorInterval) + fHorInterval / nTickLblSkip;
 					}
 					fDistance = fDistanceSign * oLabelsBox.getLabelsOffset();
-					fLayoutHorLabelsBox(oLabelsBox, fPos, fPosStart, fPosEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth, nIndex);
+					fLayoutHorLabelsBox(oLabelsBox, fPos, fPosStart, fPosEnd, bOnTickMark, fDistance, bForceVertical, bNumbers, fForceContentWidth);
 					if(bLabelsExtremePosition) {
 						if(fDistance > 0) {
 							fVertPadding = -oLabelsBox.extY;
@@ -5337,7 +5337,7 @@ function(window, undefined) {
 			// 	}
 			// }
 		}
-		if(nIndex < 2) {
+		if(nIndex < 1) {
 			let fDiff;
 			oCorrectedRect = new CRect(oRect.x, oRect.y, oRect.w, oRect.h);
 			let bWEdge = false;
@@ -11557,10 +11557,11 @@ function(window, undefined) {
 		this.oStartingDate = null;
 		this.valid = AscFormat.isRealNumber(nAxisType) && (this.nAxisType === AscDFH.historyitem_type_CatAx || this.nAxisType === AscDFH.historyitem_type_DateAx);
 		this.nLabelsCount = 0;
+		this.calculated = false;
 	}
 
-	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength, nIndex) {
-		if (this.valid && nIndex === 0) {
+	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength) {
+		if (this.valid && !this.calculated) {
 			// check whether user has defined some parameters
 			this.getUserDefinedSettings(oLabelsBox);
 
@@ -11572,6 +11573,8 @@ function(window, undefined) {
 
 			// save some updated params for future use
 			this.saveParams(oLabelsBox);
+
+			this.calculated = true;
 		}
 	};
 
@@ -11639,7 +11642,7 @@ function(window, undefined) {
 
 	CLabelsParameters.prototype.setMaxHeight = function (diagramHeight, chartHeight, titleHeight) {
 		// heightMultiplier defines the allowed occupation percentage of axis compared to the graph whole Height. 
-		const heightMultiplier = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? (this.sDataType === 'string' ? 0.65 : 0.65) : 0.65;
+		const heightMultiplier = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? (this.sDataType === 'string' ? 0.27 : 0.65) : 0.37;
 		const freeSpace = titleHeight ? (diagramHeight - titleHeight) * heightMultiplier : diagramHeight;
 		this.maxHeight = chartHeight && (this.isUserDefinedLabelFormat || this.sDataType === 'string') ? freeSpace * (1 - chartHeight) : heightMultiplier * freeSpace;
 	};
