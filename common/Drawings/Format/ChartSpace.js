@@ -1448,9 +1448,8 @@ function(window, undefined) {
 			const sDataType = oLabelsBox.getLabelsDataType();
 
 			// oLabelParams indecates necessary stuff such as label rotation, label skip, label format
-			const oLabelParams = oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.params ? oLabelsBox.axis.params : new CLabelsParameters(nAxisType, sDataType);
+			const oLabelParams = new CLabelsParameters(nAxisType, sDataType);
 			oLabelParams.calculate(oLabelsBox, fAxisLength);
-			console.log(oLabelParams.maxHeight);
 
 			//check whether rotation is applied or not
 			let statement = oLabelParams.valid ? oLabelParams.isRotated() : fMaxMinWidth > fCheckInterval;
@@ -5371,7 +5370,6 @@ function(window, undefined) {
 						}
 						bChanged = true;
 					}
-					console.log(fOuterL, fInnerL);
 					// top edge
 					if (aLblsDims[i].y < (oOuterRect.y - fPrecision)) {
 						// horizontal Axes affect inner changes
@@ -5383,7 +5381,6 @@ function(window, undefined) {
 						}
 						bChanged = true;
 					}
-					console.log(fOuterT, fInnerT);
 					// right edge 
 					if (aLblsDims[i].x + aLblsDims[i].extX > (oOuterRect.x + oOuterRect.w + fPrecision)) {
 						// vertical Axes affect inner changes
@@ -5395,7 +5392,6 @@ function(window, undefined) {
 						}
 						bChanged = true;
 					}
-					console.log(fOuterR, fInnerR);
 					// bottom edge
 					if (aLblsDims[i].y + aLblsDims[i].extY > (oOuterRect.y + oOuterRect.h + fPrecision)) {
 						// horizontal Axes affect inner changes
@@ -5407,7 +5403,6 @@ function(window, undefined) {
 						}
 						bChanged = true;
 					}
-					console.log(fOuterB, fInnerB);
 				}
 
 				if (bChanged) {
@@ -5419,9 +5414,7 @@ function(window, undefined) {
 
 				return bChanged;
 			}
-			console.log(oCorrectedRect.h, oCorrectedRect.w, oCorrectedRect.x, oCorrectedRect.y);
 			bCorrected = isRectCorrected(oBaseRect, aAxislabelsDimensions, oCorrectedRect);
-			console.log(bCorrected, aAxislabelsDimensions, oCorrectedRect);
 			if(oCorrectedRect && bCorrected) {
 				if(oCorrectedRect.w > oRect.w) {
 					return this.recalculateAxesSet(aAxesSet, oCorrectedRect, oBaseRect, ++nIndex, fHorInterval);
@@ -11557,11 +11550,10 @@ function(window, undefined) {
 		this.oStartingDate = null;
 		this.valid = AscFormat.isRealNumber(nAxisType) && (this.nAxisType === AscDFH.historyitem_type_CatAx || this.nAxisType === AscDFH.historyitem_type_DateAx);
 		this.nLabelsCount = 0;
-		this.calculated = false;
 	}
 
 	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength) {
-		if (this.valid && !this.calculated) {
+		if (this.valid) {
 			// check whether user has defined some parameters
 			this.getUserDefinedSettings(oLabelsBox);
 
@@ -11573,8 +11565,6 @@ function(window, undefined) {
 
 			// save some updated params for future use
 			this.saveParams(oLabelsBox);
-
-			this.calculated = true;
 		}
 	};
 
@@ -11637,7 +11627,6 @@ function(window, undefined) {
 		}
 		const bodyPr = oLabelsBox.axis.txPr.bodyPr;
 		bodyPr.updatedRot = AscFormat.isRealNumber(this.rot) ? this.rot : bodyPr.rot;
-		oLabelsBox.axis.params = this;
 	};
 
 	CLabelsParameters.prototype.setMaxHeight = function (diagramHeight, chartHeight, titleHeight) {
