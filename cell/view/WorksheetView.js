@@ -3898,7 +3898,11 @@
 
 		var calcScale = this.calcPrintScale(width, height);
 		if(!isNaN(calcScale)) {
+			let realLockDraw = this.lockDraw;
+			//TODO add lock draw here. need review all draw calls(try to replace on recalculate)
+			this.lockDraw = true;
 			this._setPrintScale(calcScale);
+			this.lockDraw = realLockDraw;
 		}
 
 		//TODO нужно ли в данном случае лочить?
@@ -12203,7 +12207,7 @@
 
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
     };
-    WorksheetView.prototype.setSelection = function (range) {
+    WorksheetView.prototype.setSelection = function (range, onlyCells) {
     	if (!Array.isArray(range)) {
     		range = [AscCommonExcel.Range.prototype.createFromBBox(this.model, range)];
 		}
@@ -12229,7 +12233,7 @@
 			this.model.selectionRange.update();
 		}
 
-		this._fixSelectionOfMergedCells();
+		this._fixSelectionOfMergedCells(null, onlyCells);
 		this.updateSelectionWithSparklines();
 
 		this._updateSelectionNameAndInfo();
@@ -12398,7 +12402,7 @@
             // Не попали в выделение (меняем первую точку)
             this.cleanSelection();
             this.model.selectionRange.clean();
-			this.setSelection(range);
+			this.setSelection(range, true);
             this._drawSelection();
 
             this._updateSelectionNameAndInfo();
@@ -24866,12 +24870,18 @@
 				let needCalc = false;
 				if (fP) {
 					for (let i = 0; i < fP.outStack.length; i++) {
-						if ((AscCommonExcel.cElementType.cellsRange3D === fP.outStack[i].type || AscCommonExcel.cElementType.cell3D === fP.outStack[i].type) && fP.outStack[i].externalLink) {
+						let type = fP.outStack[i].type;
+						if ((AscCommonExcel.cElementType.cellsRange3D === type || AscCommonExcel.cElementType.cell3D === type ||
+							AscCommonExcel.cElementType.name3D === type) && fP.outStack[i].externalLink) {
 							let eR = t.model.workbook.getExternalWorksheet(fP.outStack[i].externalLink);
 							if (eR) {
 								externalReferences.push(opt_get_only_ids ? eR.Id : eR.getAscLink());
 								if (initStructure) {
-									eR.initRows(fP.outStack[i].getRange());
+									if (AscCommonExcel.cElementType.name3D === type) {
+										eR.initDefinedName(fP.outStack[i]);
+									} else {
+										eR.initRows(fP.outStack[i].getRange());
+									}
 								}
 							}
 						} else if (initStructure && fP.outStack[i].type === AscCommonExcel.cElementType.func && fP.outStack[i].name === "IMPORTRANGE") {
@@ -25094,7 +25104,7 @@
 		if (this.isPageBreakPreview(true)) {
 			this.model && this.model.PagePrintOptions && this.model.PagePrintOptions.initPrintTitles();
 			if (this.workbook && this.workbook.model && this.workbook.model.getActiveWs() === this.model) {
-				this.draw();
+				this.draw(this.lockDraw);
 			}
 		}
 	};

@@ -1495,10 +1495,11 @@ background-repeat: no-repeat;\
 		if (this.WordControl.m_oDrawingDocument.m_oDocumentRenderer)
 			this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.navigate(value);
 	};
-	asc_docs_api.prototype["asc_setViewerTargetType"] = function(type) {
+	asc_docs_api.prototype["asc_setViewerTargetType"] = asc_docs_api.prototype.asc_setViewerTargetType = function(type) {
 		this.isHandMode = ("hand" === type);
 		this.WordControl.checkMouseHandMode();
 		this.WordControl.onMouseMove();
+		this.sendEvent("asc_onChangeViewerTargetType", this.isHandMode);
 	};
 
 	function BeforeOpenDocument()
@@ -8680,7 +8681,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_SendForm = function()
 	{
 		var t = this;
-		this.sync_StartAction(c_oAscAsyncActionType.Information, c_oAscAsyncAction.Submit);
+		this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Submit);
 		var data = {'type': 'sendForm', 'userconnectionid': this.CoAuthoringApi.getUserConnectionId(), 'formdata': {
 				'formsdata': this.asc_GetAllFormsData(true)
 		}};
@@ -8688,7 +8689,7 @@ background-repeat: no-repeat;\
 			if (!(response && AscCommon.c_oAscServerCommandErrors.NoError === response.code)) {
 				t.sendEvent('asc_onError', Asc.c_oAscError.ID.Submit, c_oAscError.Level.NoCritical);
 			}
-			t.sync_EndAction(c_oAscAsyncActionType.Information, c_oAscAsyncAction.Submit);
+			t.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Submit);
 		});
 	};
 
@@ -11128,11 +11129,11 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_GetFormsCountByKey = function(sKey)
 	{
-		let oFormsManager = this.private_GetFormsManager();
-		if (!oFormsManager)
+		let formManager = this.private_GetFormsManager();
+		if (!formManager)
 			return 0;
-
-		return oFormsManager.GetAllFormsByKey(sKey).length;
+		
+		return formManager.GetAllFormsByKey(sKey).length + formManager.GetRadioButtons(sKey).length;
 	};
 	asc_docs_api.prototype.asc_MoveToFillingForm = function(isNext, isRequired, isNotFilled)
 	{
@@ -11809,11 +11810,36 @@ background-repeat: no-repeat;\
 		return null;
 	};
 
+	asc_docs_api.prototype.asc_AddComplexFieldWithInstruction = function(instruction)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
+		return logicDocument.AddComplexField(instruction);
+	};
+	asc_docs_api.prototype.asc_EditComplexFieldInstruction = function(instruction)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return false;
+		
+		let complexField = logicDocument.GetCurrentComplexField();
+		return logicDocument.EditComplexFieldInstruction(complexField, instruction);
+	};
+	asc_docs_api.prototype.asc_GetComplexFieldInstruction = function()
+	{
+		let complexField = this.asc_GetCurrentComplexField();
+		if (!complexField || !(complexField instanceof AscWord.CComplexField))
+			return "";
+		
+		return complexField.GetInstructionLine();
+	};
 	asc_docs_api.prototype.asc_GetCurrentComplexField = function()
 	{
 		var oLogicDocument = this.WordControl.m_oLogicDocument;
 		if (!oLogicDocument)
-			return;
+			return null;
 
 		return oLogicDocument.GetCurrentComplexField();
 	};
@@ -12226,11 +12252,14 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_EditSelectAll = function()
 	{
-		let oLogicDocument = this.private_GetLogicDocument();
-		if (!oLogicDocument)
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
 			return null;
-
-		oLogicDocument.SelectAll();
+		
+		if (this.isTargetHandMode() && !logicDocument.IsInFormField())
+			this.asc_setViewerTargetType("select");
+		
+		logicDocument.SelectAll();
 	};
 	asc_docs_api.prototype.asc_enterText = function(value)
 	{
@@ -13981,7 +14010,12 @@ background-repeat: no-repeat;\
 	{
 		return this.isHandMode && this.isRestrictionForms();
 	};
-	
+
+
+	asc_docs_api.prototype.asc_getCoHistory = function()
+	{
+		return AscCommon.CollaborativeEditing.getCoHistory();
+	};
 	asc_docs_api.prototype.asc_putPageColor = function(color)
 	{
 		let logicDocument = this.private_GetLogicDocument();
@@ -14025,6 +14059,28 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_insertTextFromUrl = function (url, token) {
 		const insertDocumentManager = new AscCommonWord.CInsertDocumentManager(this);
 		insertDocumentManager.insertTextFromUrl(url, token);
+	};
+	
+	asc_docs_api.prototype.asc_showDeletedTextInVersionHistory = function()
+	{
+		if (!this.getVersionHistory())
+			return false;
+		
+		return AscCommon.CollaborativeEditing.CoHistory.RecoverDeletedText()
+	};
+	asc_docs_api.prototype.asc_isShowedDeletedTextInVersionHistory = function()
+	{
+		if (!this.getVersionHistory())
+			return false;
+		
+		return AscCommon.CollaborativeEditing.CoHistory.HaveDeletedTextRecovery()
+	};
+	asc_docs_api.prototype.asc_hideDeletedTextInVersionHistory = function()
+	{
+		if (!this.getVersionHistory())
+			return;
+		
+		AscCommon.CollaborativeEditing.CoHistory.UndoDeletedTextRecovery();
 	};
 	
 	//-------------------------------------------------------------export---------------------------------------------------
@@ -14692,7 +14748,10 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['asc_UpdateTablesOfFigures']                 = asc_docs_api.prototype.asc_UpdateTablesOfFigures;
 	asc_docs_api.prototype['asc_AddTableOfFigures']                     = asc_docs_api.prototype.asc_AddTableOfFigures;
 	asc_docs_api.prototype['asc_GetTableOfFiguresPr']                   = asc_docs_api.prototype.asc_GetTableOfFiguresPr;
-
+	
+	asc_docs_api.prototype['asc_AddComplexFieldWithInstruction']        = asc_docs_api.prototype.asc_AddComplexFieldWithInstruction;
+	asc_docs_api.prototype['asc_GetComplexFieldInstruction']            = asc_docs_api.prototype.asc_GetComplexFieldInstruction;
+	asc_docs_api.prototype['asc_EditComplexFieldInstruction']           = asc_docs_api.prototype.asc_EditComplexFieldInstruction;
 	asc_docs_api.prototype['asc_GetCurrentComplexField']                = asc_docs_api.prototype.asc_GetCurrentComplexField;
 	asc_docs_api.prototype['asc_UpdateComplexField']                    = asc_docs_api.prototype.asc_UpdateComplexField;
 	asc_docs_api.prototype['asc_RemoveComplexField']                    = asc_docs_api.prototype.asc_RemoveComplexField;
@@ -14837,6 +14896,12 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype["asc_insertTextFromFile"] = asc_docs_api.prototype.asc_insertTextFromFile;
 	asc_docs_api.prototype["asc_insertTextFromUrl"] = asc_docs_api.prototype.asc_insertTextFromUrl;
+	
+	asc_docs_api.prototype["asc_showDeletedTextInVersionHistory"]     = asc_docs_api.prototype.asc_showDeletedTextInVersionHistory;
+	asc_docs_api.prototype["asc_isShowedDeletedTextInVersionHistory"] = asc_docs_api.prototype.asc_isShowedDeletedTextInVersionHistory;
+	asc_docs_api.prototype["asc_hideDeletedTextInVersionHistory"]     = asc_docs_api.prototype.asc_hideDeletedTextInVersionHistory;
+
+	asc_docs_api.prototype["asc_getCoHistory"] = asc_docs_api.prototype.asc_getCoHistory;
 
 	CDocInfoProp.prototype['get_PageCount']             = CDocInfoProp.prototype.get_PageCount;
 	CDocInfoProp.prototype['put_PageCount']             = CDocInfoProp.prototype.put_PageCount;

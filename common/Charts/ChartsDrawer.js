@@ -1251,7 +1251,7 @@ CChartsDrawer.prototype =
 		}
 
 		// for funnel chart
-		if (!horizontalAxis && isChartEx && verticalAxis.labels && verticalAxis.yPoints) {
+		if (!horizontalAxis && isChartEx && verticalAxis && verticalAxis.labels && verticalAxis.yPoints) {
 			calculateLeft = this.cChartSpace && this.cChartSpace.plotAreaRect ? this.cChartSpace.plotAreaRect.x : 0;
 			let curBetween = verticalAxis.yPoints[1] ? Math.abs(verticalAxis.yPoints[1].pos - verticalAxis.yPoints[0].pos) / 2 : 0;
 			// curBetween = !curBetween && this.cChartSpace && this.cChartSpace.plotAreaRect ? verticalAxis.yPoints[0].pos - this.cChartSpace.plotAreaRect.y : curBetween;
@@ -1992,11 +1992,20 @@ CChartsDrawer.prototype =
 				}
 			} else {
 				if(series.length > 0) {
-					//возможно стоит пройтись по всем сериям
-					seria = series[0];
-					numCache = t.getNumCache(seria.val);
+					// every chart except scatter should start from 1
 					min = 1;
-					max = numCache ? numCache.ptCount : 1;
+					max = 1;
+					// find max value across each seria
+					for (let i = 0; i < series.length; i++) {
+						const seria = series[i];
+						if (seria) {
+							numCache = t.getNumCache(seria.val);
+							const ptCount = numCache && AscFormat.isRealNumber(numCache.ptCount) ? numCache.ptCount : 0;
+							// trendline can affect max value
+							const newMax = seria.trendline && seria.trendline.forward && ptCount > 1 ? ptCount + seria.trendline.forward : ptCount;
+							max = Math.max(max, newMax);
+						}
+					}
 				}
 			}
 		};
@@ -2018,6 +2027,12 @@ CChartsDrawer.prototype =
 						addValues(val.x, val.y);
 						newArr[l][j] = [val.x, val.y];
 					}
+				}
+
+				// check the impact of trendline on scatter chart
+				if (series[l].trendline) {
+					min = series[l].trendline.backward ? min - series[l].trendline.backward : min;
+					max = series[l].trendline.forward ? max + series[l].trendline.forward : max;
 				}
 			}
 		};
@@ -16028,7 +16043,12 @@ axisChart.prototype = {
 		let tickmarksProps = this._getTickmarksPropsSer();
 		let widthLine = tickmarksProps.widthLine;
 
-		let seriesCount = this.axis.labels.count;
+		let seriesCount = this.axis.labels && this.axis.labels.count;
+		if (seriesCount == null) {
+			let _chart = this.axis.parent && this.axis.parent.chart;
+			let countSeries = this.cChartDrawer.calculateCountSeries(_chart);
+			seriesCount = countSeries.series;
+		}
 		
 		if (widthLine !== 0) {
 			let positionX = this.cChartDrawer.processor3D.calculateXPositionSerAxis();
@@ -17588,8 +17608,8 @@ CColorObj.prototype =
 				const coefficients = this._getEquationCoefficients(coords.catVals, coords.valVals, type, order, attributes.intercept);
 				const equationStorage = this._obtainEquationStorage(type);
 				if (coefficients && equationStorage) {
-					let catMax = catAxis.max + attributes.forward;
-					let catMin = catAxis.min + attributes.backward;
+					let catMax = catAxis.max;
+					let catMin = catAxis.min;
 					const midPointsNum = 100;
 					const lineBuilder = new CLineBuilder(coefficients, catMin, catMax, valAxis.scaling.min, valAxis.scaling.max, valAxis.scaling.logBase);
 					lineBuilder.setCalcYVal(equationStorage.calcYVal);

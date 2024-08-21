@@ -1797,6 +1797,7 @@ let ACTION_FLAGS = {
 };
 
 ACTION_FLAGS.UPDATEALL = ACTION_FLAGS.UPDATE_SELECTION | ACTION_FLAGS.UPDATE_INTERFACE | ACTION_FLAGS.UPDATE_RULERS | ACTION_FLAGS.UPDATE_UNDO_REDO | ACTION_FLAGS.UPDATE_TRACKS;
+ACTION_FLAGS.UPDATEALL_RECALCULATE = ACTION_FLAGS.UPDATEALL | ACTION_FLAGS.RECALCULATE;
 ACTION_FLAGS.UPDATEALL_RECALCULATE_NOSCROLL = ACTION_FLAGS.UPDATEALL | ACTION_FLAGS.RECALCULATE;
 
 AscWord.ACTION_FLAGS = ACTION_FLAGS;
@@ -8091,7 +8092,7 @@ CDocument.prototype.CheckPosInSelection = function(X, Y, PageAbs, NearPos)
  */
 CDocument.prototype.SelectAll = function()
 {
-	if (this.IsFillingFormMode())
+	if (this.IsFillingFormMode() && this.Api.isTargetHandMode())
 	{
 		var oSelectedElementsInfo = this.GetSelectedElementsInfo();
 
@@ -8809,6 +8810,9 @@ CDocument.prototype.OnKeyDown = function(e)
 		}
 		case Asc.c_oAscDocumentShortcutType.EditSelectAll:
 		{
+			if (this.Api.isTargetHandMode() && !this.IsInFormField())
+				this.Api.asc_setViewerTargetType("select");
+			
 			this.SelectAll();
 			bUpdateSelection = false;
 			bRetValue        = keydownresult_PreventAll;
@@ -12491,36 +12495,65 @@ CDocument.prototype.Get_ColumnsProps = function()
 
 	return ColumnsPr;
 };
-
-
+CDocument.prototype.GetWatermark = function()
+{
+	if (this.CurPage < this.Pages.length)
+	{
+		let pageInfo = this.Get_SectionPageNumInfo(this.CurPage);
+		let header = this.Get_SectionHdrFtr(this.CurPage, pageInfo.bFirst, pageInfo.bFirst.bEven).Header;
+		if (header)
+			return header.FindWatermark();
+		
+		return null;
+	}
+	else
+	{
+		// Case when the document wasn't calculated
+		let sectPr = this.SectionsInfo.Get(0).SectPr;
+		let header = sectPr.Get_Header_Default();
+		if (header)
+			return header.FindWatermark();
+		
+		return null;
+	}
+};
 CDocument.prototype.GetWatermarkProps = function()
 {
-    var SectionPageInfo = this.Get_SectionPageNumInfo(this.CurPage);
-    var bFirst = SectionPageInfo.bFirst;
-    var bEven  = SectionPageInfo.bEven;
-    var HdrFtr = this.Get_SectionHdrFtr(this.CurPage, false, false);
-    var Header = HdrFtr.Header;
-    var oProps;
-    if (null === Header)
-    {
-        oProps = new Asc.CAscWatermarkProperties();
-        oProps.put_Type(Asc.c_oAscWatermarkType.None);
-        oProps.put_Api(this.Api);
-        return oProps;
-    }
-    var oWatermark = Header.FindWatermark();
-    if(oWatermark)
-    {
-        oProps = oWatermark.GetWatermarkProps();
-        oProps.put_Api(this.Api);
-        return oProps;
-    }
-    oProps = new Asc.CAscWatermarkProperties();
-    oProps.put_Type(Asc.c_oAscWatermarkType.None);
-    oProps.put_Api(this.Api);
-    return oProps;
+	let watermark = this.GetWatermark();
+	
+	let props = new Asc.CAscWatermarkProperties();
+	props.put_Api(this.Api);
+	if (watermark)
+		props = watermark.GetWatermarkProps();
+	else
+		props.put_Type(Asc.c_oAscWatermarkType.None);
+	
+	return props;
 };
-
+CDocument.prototype.GetHeaderForWatermark = function()
+{
+	if (this.CurPage < this.Pages.length)
+	{
+		let pageInfo = this.Get_SectionPageNumInfo(this.CurPage);
+		let header = this.Get_SectionHdrFtr(this.CurPage, pageInfo.bFirst, pageInfo.bFirst.bEven).Header;
+		if (header)
+			return header;
+		
+		return this.Create_SectionHdrFtr(hdrftr_Header, this.CurPage);
+	}
+	else
+	{
+		// Case when the document wasn't calculated
+		let sectPr = this.SectionsInfo.Get(0).SectPr;
+		let header = sectPr.Get_Header_Default();
+		if (header)
+			return header;
+		
+		header = new CHeaderFooter(this.HdrFtr, this, this.DrawingDocument, hdrftr_Header);
+		sectPr.Set_Header_Default(header);
+		return header;
+	}
+};
 CDocument.prototype.SetWatermarkProps = function(oProps)
 {
 	if (!this.CanPerformAction())
@@ -12529,42 +12562,31 @@ CDocument.prototype.SetWatermarkProps = function(oProps)
 	this.StartAction(AscDFH.historydescription_Document_AddWatermark);
 	this.SetWatermarkPropsAction(oProps);
 	this.Recalculate();
-	this.Document_UpdateInterfaceState();
-	this.Document_UpdateSelectionState();
-	this.Document_UpdateRulersState();
+	this.UpdateInterface();
+	this.UpdateSelection();
+	this.UpdateRulers();
 	this.FinalizeAction(true);
 };
 
 CDocument.prototype.SetWatermarkPropsAction = function(oProps)
 {
-    const SectionPageInfo = this.Get_SectionPageNumInfo(this.CurPage);
-    const bFirst = SectionPageInfo.bFirst;
-    const bEven  = SectionPageInfo.bEven;
-    const HdrFtr = this.Get_SectionHdrFtr(this.CurPage, bFirst, bEven);
-    let Header = HdrFtr.Header;
-    if(null === Header)
-    {
-        if(Asc.c_oAscWatermarkType.None === oProps.get_Type())
-        {
-            this.FinalizeAction(true);
-            return;
-        }
-        Header = this.Create_SectionHdrFtr(hdrftr_Header, this.CurPage);
-    }
-    let oWatermark = Header.FindWatermark();
-    if(oWatermark)
-    {
-        if(oWatermark.GraphicObj.selected)
-        {
-            this.RemoveSelection(true);
-        }
-        oWatermark.Remove_FromDocument(false);
-    }
-    oWatermark = this.DrawingObjects.createWatermark(oProps);
-    if(oWatermark)
-    {
+	let watermark = this.GetWatermark();
+	if (watermark)
+	{
+		if (watermark.GraphicObj.selected)
+			this.RemoveSelection(true);
+		watermark.Remove_FromDocument(false);
+	}
+	
+	if (Asc.c_oAscWatermarkType.None === oProps.get_Type())
+		return;
+	
+	let oWatermark = this.DrawingObjects.createWatermark(oProps);
+	if (oWatermark)
+	{
+    	let header = this.GetHeaderForWatermark();
         const oDocState = this.Get_SelectionState2();
-        const oContent = Header.Content;
+        const oContent = header.GetContent();
         let oWatermarkCC = null;
         const aAllContentControls = oContent.GetAllContentControls();
         const nCount = aAllContentControls.length;
@@ -17991,13 +18013,20 @@ CDocument.prototype.AcceptAllRevisionChanges = function(isSkipCheckLock, isCheck
 		if (false !== isTrackRevision)
 			this.SetLocalTrackRevisions(false);
 
-		var LogicDocuments = this.TrackRevisionsManager.Get_AllChangesLogicDocuments();
-		for (var LogicDocId in LogicDocuments)
+		let docContentArray = this.TrackRevisionsManager.Get_AllChangesLogicDocuments();
+		for (let docContentId in docContentArray)
 		{
-			var LogicDoc = AscCommon.g_oTableId.Get_ById(LogicDocId);
-			if (LogicDoc)
+			let docContent = AscCommon.g_oTableId.Get_ById(docContentId);
+			if (!docContent)
+				continue;
+			
+			docContent.AcceptRevisionChanges(undefined, true);
+			if (docContent.GetElementsCount() <= 0)
 			{
-				LogicDoc.AcceptRevisionChanges(undefined, true);
+				if (docContent.IsBlockLevelSdtContent())
+					docContent.GetParent().RemoveThisFromParent();
+				else
+					docContent.ClearContent(true);
 			}
 		}
 
@@ -18056,13 +18085,20 @@ CDocument.prototype.RejectAllRevisionChanges = function(isSkipCheckLock, isCheck
 };
 CDocument.prototype.private_RejectAllRevisionChanges = function()
 {
-	var LogicDocuments = this.TrackRevisionsManager.Get_AllChangesLogicDocuments();
-	for (var LogicDocId in LogicDocuments)
+	let docContentArray = this.TrackRevisionsManager.Get_AllChangesLogicDocuments();
+	for (let docContentId in docContentArray)
 	{
-		var LogicDoc = this.TableId.Get_ById(LogicDocId);
-		if (LogicDoc)
+		let docContent = AscCommon.g_oTableId.Get_ById(docContentId);
+		if (!docContent)
+			continue;
+		
+		docContent.RejectRevisionChanges(undefined, true);
+		if (docContent.GetElementsCount() <= 0)
 		{
-			LogicDoc.RejectRevisionChanges(undefined, true);
+			if (docContent.IsBlockLevelSdtContent())
+				docContent.GetParent().RemoveThisFromParent();
+			else
+				docContent.ClearContent(true);
 		}
 	}
 };
@@ -22793,18 +22829,15 @@ CDocument.prototype.private_FinalizeValidateComplexFields = function()
 };
 CDocument.prototype.AddRefToParagraph = function(oParagraph, nType, bHyperlink, bAboveBelow, sSeparator)
 {
-	if(false === this.IsSelectionLocked(AscCommon.changestype_Document_Content, {
-		Type      : changestype_2_ElementsArray_and_Type,
-		Elements  : [oParagraph],
-		CheckType : changestype_Paragraph_Content
-	}))
+	// Мы не проверяем тут, что параграф, к которому добавляется ссылка залочен (в контроле или совместкой),
+	// т.к. это невидимое для пользователя действие, не меняющее вид параграфа
+	if (!this.IsSelectionLocked(AscCommon.changestype_Document_Content))
 	{
 		this.StartAction(AscDFH.historydescription_Document_AddCrossRef);
-		var sBookmarkName = oParagraph.AddBookmarkForRef();
-		if(sBookmarkName)
-		{
-			this.private_AddRefToBookmark(sBookmarkName, nType, bHyperlink, bAboveBelow, sSeparator);
-		}
+		let bookmarkName = oParagraph.AddBookmarkForRef();
+		if (bookmarkName)
+			this.private_AddRefToBookmark(bookmarkName, nType, bHyperlink, bAboveBelow, sSeparator);
+		
 		this.UpdateInterface();
 		this.UpdateSelection();
 		this.FinalizeAction();
@@ -23894,6 +23927,52 @@ CDocument.prototype.GetCurrentComplexField = function()
 	}
 
 	return null;
+};
+/**
+ * Меняем инструкицю у заданного поля
+ * @param complexField {AscWord.CComplexField}
+ * @param newInstruction {string}
+ * @returns {boolean}
+ */
+CDocument.prototype.EditComplexFieldInstruction = function(complexField, newInstruction)
+{
+	if (!complexField || !(complexField instanceof AscWord.CComplexField))
+		return false;
+	
+	if (complexField.GetInstructionLine() === newInstruction)
+		return false;
+	
+	let paras = complexField.GetRelatedParagraphs();
+	if (this.IsSelectionLocked(AscCommon.changestype_None, {
+		Type      : changestype_2_ElementsArray_and_Type,
+		Elements  : paras,
+		CheckType : AscCommon.changestype_Paragraph_Content
+	}))
+		return false;
+	
+	this.StartAction(AscDFH.historydescription_Document_EditComplexFieldInstruction, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+	complexField.ChangeInstruction(newInstruction);
+	complexField.Update();
+	this.FinalizeAction();
+	return true;
+};
+/**
+ * Добавляем сложное поле с заданной инструкцией в документ
+ * @param instruction {string}
+ * @returns {?AscWord.CComplexField}
+ */
+CDocument.prototype.AddComplexField = function(instruction)
+{
+	if (!instruction)
+		return null;
+	
+	if (this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
+		return null;
+	
+	this.StartAction(AscDFH.historydescription_Document_AddComplexField, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+	let complexField = this.AddFieldWithInstruction(instruction);
+	this.FinalizeAction();
+	return complexField;
 };
 /**
  * Очищаем закэшированные списки, которые чаще всего используются

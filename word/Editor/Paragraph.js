@@ -1267,6 +1267,11 @@ Paragraph.prototype.OnContentChange = function()
 	if (this.Parent && this.Parent.OnContentChange)
 		this.Parent.OnContentChange();
 };
+Paragraph.prototype.OnTextPrChange = function()
+{
+	if (this.Parent && this.Parent.OnTextPrChange)
+		this.Parent.OnTextPrChange();
+};
 Paragraph.prototype.NeedHyphenateText = function()
 {
 	this.RecalcInfo.NeedHyphenateText();
@@ -1856,7 +1861,7 @@ Paragraph.prototype.GetNumberingText = function(bWithoutLvlText)
 
 	var oNumbering = oParent.GetNumbering();
 	var oNumInfo   = oParent.CalculateNumberingValues(this, oNumPr);
-	return oNumbering.GetText(oNumPr.NumId, oNumPr.Lvl, oNumInfo, bWithoutLvlText);
+	return oNumbering.GetText(oNumPr.NumId, oNumPr.Lvl, oNumInfo, bWithoutLvlText, this.GetNumberingTextPr().Lang);
 };
 /**
  * Получаем рассчитанное значение нумерации для данного параграфа вместе с суффиксом
@@ -2025,6 +2030,21 @@ Paragraph.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY, isUpdateTar
 		this.CurPos.RealY = oCurPosInfo.Y;
 
 	return oCurPosInfo;
+};
+Paragraph.prototype.GetStartPosXY = function()
+{
+	if (!this.IsRecalculated())
+		return null;
+	
+	let curPos = this.Get_StartPos();
+	if (!curPos)
+		return null;
+	
+	let state = this.SaveSelectionState();
+	this.Set_ParaContentPos(curPos, false, -1, -1, true); // Обязательно корректируем позицию
+	let result = this.GetCalculatedCurPosXY();
+	this.LoadSelectionState(state);
+	return result;
 };
 Paragraph.prototype.GetCalculatedCurPosXY = function()
 {
@@ -11523,36 +11543,39 @@ Paragraph.prototype.Set_Shd = function(_Shd, bDeleteUndefined)
 };
 Paragraph.prototype.Set_Tabs = function(Tabs)
 {
-	var _Tabs = new CParaTabs();
-
-	if (Tabs)
+	if (Tabs != this.Pr.Tabs)
 	{
-		var StyleTabs = this.Get_CompiledPr2(false).ParaPr.StyleTabs;
+		var _Tabs = Tabs ? new CParaTabs() : Tabs;
 
-		// 1. Ищем табы, которые уже есть в стиле (такие добавлять не надо)
-		for (var Index = 0; Index < Tabs.Tabs.length; Index++)
+		if (Tabs)
 		{
-			var Value = StyleTabs.Get_Value(Tabs.Tabs[Index].Pos);
-			if (-1 === Value)
-				_Tabs.Add(Tabs.Tabs[Index]);
+			var StyleTabs = this.Get_CompiledPr2(false).ParaPr.StyleTabs;
+
+			// 1. Ищем табы, которые уже есть в стиле (такие добавлять не надо)
+			for (var Index = 0; Index < Tabs.Tabs.length; Index++)
+			{
+				var Value = StyleTabs.Get_Value(Tabs.Tabs[Index].Pos);
+				if (-1 === Value)
+					_Tabs.Add(Tabs.Tabs[Index]);
+			}
+
+			// 2. Ищем табы в стиле, которые нужно отменить
+			for (var Index = 0; Index < StyleTabs.Tabs.length; Index++)
+			{
+				var Value = _Tabs.Get_Value(StyleTabs.Tabs[Index].Pos);
+				if (tab_Clear != StyleTabs.Tabs[Index] && -1 === Value)
+					_Tabs.Add(new CParaTab(tab_Clear, StyleTabs.Tabs[Index].Pos));
+			}
 		}
 
-		// 2. Ищем табы в стиле, которые нужно отменить
-		for (var Index = 0; Index < StyleTabs.Tabs.length; Index++)
-		{
-			var Value = _Tabs.Get_Value(StyleTabs.Tabs[Index].Pos);
-			if (tab_Clear != StyleTabs.Tabs[Index] && -1 === Value)
-				_Tabs.Add(new CParaTab(tab_Clear, StyleTabs.Tabs[Index].Pos));
-		}
+		this.private_AddPrChange();
+		AscCommon.History.Add(new CChangesParagraphTabs(this, this.Pr.Tabs, _Tabs));
+		this.Pr.Tabs = _Tabs;
+
+		// Надо пересчитать конечный стиль
+		this.CompiledPr.NeedRecalc = true;
+		this.private_UpdateTrackRevisionOnChangeParaPr(true);
 	}
-
-	this.private_AddPrChange();
-	AscCommon.History.Add(new CChangesParagraphTabs(this, this.Pr.Tabs, _Tabs));
-	this.Pr.Tabs = _Tabs;
-
-	// Надо пересчитать конечный стиль
-	this.CompiledPr.NeedRecalc = true;
-	this.private_UpdateTrackRevisionOnChangeParaPr(true);
 };
 Paragraph.prototype.Set_ContextualSpacing = function(Value)
 {
@@ -14357,12 +14380,12 @@ Paragraph.prototype.GetCommentMark = function(sId, isStart)
 
 	return null;
 };
-Paragraph.prototype.MoveCursorToCommentMark = function(sId)
+Paragraph.prototype.MoveCursorToCommentMark = function(oParaComment)
 {
 	for (var nPos = 0, nCount = this.Content.length; nPos < nCount; ++nPos)
 	{
 		var oItem = this.Content[nPos];
-		if (para_Comment === oItem.Type && sId === oItem.CommentId)
+		if (oItem === oParaComment)
 		{
 			if (oItem.IsCommentStart())
 			{
@@ -16817,10 +16840,11 @@ Paragraph.prototype.GetComplexFieldsArrayByType = function(nType)
 };
 Paragraph.prototype.AddBookmarkForTOC = function()
 {
-	if (!this.LogicDocument)
-		return;
+	let logicDocument = this.GetLogicDocument();
+	if (!logicDocument || !logicDocument.IsDocumentEditor())
+		return null;
 
-	var oBookmarksManager = this.LogicDocument.GetBookmarksManager();
+	var oBookmarksManager = logicDocument.GetBookmarksManager();
 
 	var sId   = oBookmarksManager.GetNewBookmarkId();
 	var sName = oBookmarksManager.GetNewBookmarkNameTOC();
@@ -16832,23 +16856,34 @@ Paragraph.prototype.AddBookmarkForTOC = function()
 
 	return sName;
 };
+/**
+ * Проверяем, есть ли в параграфе уже закладка для ссылки на данный параграф
+ * @returns {string}
+ */
+Paragraph.prototype.GetBookmarkRefToParagraph = function()
+{
+	let startBookmarks = this.private_FindBookmarks(0, this.Content.length - 1);
+	if (startBookmarks.length <= 0)
+		return "";
+	
+	let endBookmarks = this.private_FindBookmarks(this.Content.length - 2, 0);
+	let pair = this.private_FindPairBookmarks(startBookmarks, endBookmarks, "_Ref");
+	if (pair)
+		return pair[0].GetBookmarkName();
+	
+	return "";
+};
 Paragraph.prototype.AddBookmarkForRef = function()
 {
-	if (!this.LogicDocument)
+	let logicDocument = this.GetLogicDocument();
+	if (!logicDocument || !logicDocument.IsDocumentEditor())
 		return null;
-
-	//check is ref bookmark in paragraph
-	var aStartBookmarks = this.private_FindBookmarks(0, this.Content.length - 1), aEndBookmarks;
-	if(aStartBookmarks.length > 0)
-	{
-		aEndBookmarks = this.private_FindBookmarks(this.Content.length - 2, 0);
-		var aPair = this.private_FindPairBookmarks(aStartBookmarks, aEndBookmarks, "_Ref");
-		if(aPair)
-		{
-			return aPair[0].GetBookmarkName();
-		}
-	}
-	var oBookmarksManager = this.LogicDocument.GetBookmarksManager();
+	
+	let bookmark = this.GetBookmarkRefToParagraph();
+	if (bookmark)
+		return bookmark;
+	
+	var oBookmarksManager = logicDocument.GetBookmarksManager();
 	var sId   = oBookmarksManager.GetNewBookmarkId();
 	var sBookmarkName = oBookmarksManager.GetNewBookmarkNameRef();
 	this.Add_ToContent(0, new CParagraphBookmark(true, sId, sBookmarkName));
@@ -17041,6 +17076,7 @@ Paragraph.prototype.private_GetLastSEQPos = function(sCaption)
 };
 Paragraph.prototype.CanAddRefAfterSEQ = function(sCaption)
 {
+	
 	if (!this.LogicDocument)
 		return false;
 	var oSEQPos = this.private_GetLastSEQPos(sCaption);

@@ -951,7 +951,8 @@ function (window, undefined) {
 				bboxOper = null;
 				r = this._parseResult.refPos[index];
 				oper = r.oper;
-				if (cElementType.table === oper.type || cElementType.name === oper.type || cElementType.name3D === oper.type) {
+				if ((cElementType.table === oper.type || cElementType.name === oper.type ||
+					cElementType.name3D === oper.type) && oper.externalLink == null) {
 					oper = r.oper.toRef(bbox);
 					if (oper instanceof AscCommonExcel.cError) {
 						continue;
@@ -3154,6 +3155,12 @@ function (window, undefined) {
 		this.skipKeyPress = val;
 	};
 	CellEditor.prototype.getText = function (start, len) {
+		if (start == null) {
+			start = 0;
+		}
+		if (len == null) {
+			len = this.textRender.getCharsCount();
+		}
 		let chars = this.textRender.getChars(start, len);
 		let res = "";
 		for (let i in chars) {

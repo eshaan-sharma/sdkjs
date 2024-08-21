@@ -21130,6 +21130,12 @@
 			case Asc.c_oAscNumberingFormat.CustomGreece:
 				sVal = "customGreece";
 				break;
+			case Asc.c_oAscNumberingFormat.CustomUpperTurkish:
+				sVal = "customUpperTurkish";
+				break;
+			case Asc.c_oAscNumberingFormat.CustomLowerTurkish:
+				sVal = "customLowerTurkish";
+				break;
 			case Asc.c_oAscNumberingFormat.CustomDecimalFourZero:
 				sVal = "customDecimalFourZero";
 				break;
@@ -21339,6 +21345,12 @@
 				break;
 			case "customGreece":
 				nVal = Asc.c_oAscNumberingFormat.CustomGreece;
+				break;
+			case "customUpperTurkish":
+				nVal = Asc.c_oAscNumberingFormat.CustomUpperTurkish;
+				break;
+			case "customLowerTurkish":
+				nVal = Asc.c_oAscNumberingFormat.CustomLowerTurkish;
 				break;
 			case "customDecimalFourZero":
 				nVal = Asc.c_oAscNumberingFormat.CustomDecimalFourZero;

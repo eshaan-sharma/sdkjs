@@ -2628,6 +2628,10 @@
 			AscCommon.CollaborativeEditing.Apply_Changes();
 		}
 	};
+	baseEditorsApi.prototype.getVersionHistory = function()
+	{
+		return this.VersionHistory;
+	};
 	baseEditorsApi.prototype.asc_undoAllChanges = function()
 	{
 	};
@@ -2799,6 +2803,14 @@
 				}
 				this.sendEvent("asc_onError", c_oAscError.ID.ConvertationOpenFormat, c_oAscError.Level.Critical, errorData);
 				return;
+			}
+			if (this.VersionHistory && this.VersionHistory.documentSha256) {
+				let sha256 = AscCommon.Digest.sha256(this.openResult.data, 0, this.openResult.data.length);
+				if (this.VersionHistory.documentSha256 !== AscCommon.Hex.encode(sha256) ) {
+					this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Open);
+					this.sendEvent("asc_onError", c_oAscError.ID.DocumentAndChangeMismatch, c_oAscError.Level.Critical);
+					return;
+				}
 			}
 
 			this.openDocument(this.openResult);
@@ -5045,16 +5057,26 @@
 		}
 	};
 
-	baseEditorsApi.prototype.wrapEvent = function(name) 
+	baseEditorsApi.prototype.wrapEvent = function(name)
 	{
+		var wrapArray = function(args) {
+			let arrayResult = new Array(args.length);
+			for (let i = 0, len = args.length; i < len; i++)
+			{
+				arrayResult[i] = args[i];
+				if (!args[i])
+					continue;
+				if (args[i].toCValue)
+					arrayResult[i] = args[i].toCValue();
+				else if (Array.isArray(args[i]))
+					arrayResult[i] = wrapArray(args[i]);
+			}
+			return arrayResult;
+		};
+
 		this.asc_registerCallback(name, function()
 		{
-			for (let i = 0, len = arguments.length; i < len; i++) 
-			{
-				if (arguments[i] && arguments[i].toCValue)
-					arguments[i] = arguments[i].toCValue();
-			}
-			window["native"]["onJsEvent"](name, Array.from(arguments));
+			window["native"]["onJsEvent"](name, wrapArray(arguments));
 		});
 	};
 

@@ -4697,11 +4697,183 @@
 		return ((num - 1) % nLastTrueSymbol) + 1;
 	}
 
+	function getANDConjunctionLang(nLang)
+	{
+		const sLang = languages[nLang];
+		switch (sLang)
+		{
+			case "tr-TR":
+				return "ve";
+			case 'fr-FR':
+				return "et";
+			case 'de-DE':
+				return "und";
+			case 'es-ES':
+				return "con";
+			case 'nl-NL':
+				return "en";
+			case 'sv-SE':
+			case 'sk-SK':
+				return "";
+			case 'pt-BR':
+			case 'pt-PT':
+			case 'it-IT':
+				return "e";
+			case 'el-GR':
+				return "και";
+			case "sr-Cyrl-RS":
+			case 'pl-PL':
+			case "sr-Latn-RS":
+				return "i";
+			case 'cs-CZ':
+				return "a";
+			case 'ru-RU':
+				return "и";
+			case "eu-ES":
+				return "koma";
+			case "hy-AM":
+			case "gl-ES":
+			case 'ko-KR':
+			case 'vi-VN':
+			case 'zh-CN':
+			case 'ja-JP':
+			case 'en-GB':
+			case "ms-MY":
+			case 'bg-BG':
+			case 'lv-LV':
+			case 'az-Latn-AZ':
+			case "si-LK":
+			case "ar-SA":
+			case 'en-US':
+			case "zh-TW":
+			case 'uk-UA':
+			default:
+				return "and";
+		}
+	}
+
 	function getAlphaBetForOrdinalText(language)
 	{
 		var alphaBet = {};
 		switch (language)
 		{
+			case "sr-Cyrl-RS": {
+				alphaBet = {
+					"нула"      : "нулти",
+					"један"     : "први",
+					"два"       : "други",
+					"три"       : "трећи",
+					"четири"    : "четврти",
+					"пет"       : "пети",
+					"шест"      : "шести",
+					"седам"     : "седми",
+					"осам"      : "осми",
+					"девет"     : "девети",
+					"десет"     : "десети",
+					"једанаест" : "једанаести",
+					"дванаест"  : "дванаести",
+					"тринаест"  : "тринаести",
+					"четрнаест" : "четрнаести",
+					"петнаест"  : "петнаести",
+					"шеснаест"  : "шеснаести",
+					"седамнаест": "седамнаести",
+					"осамнаест" : "осамнаести",
+					"деветнаест": "деветнаести",
+					"двадесет"  : "двадесети",
+					"тридесет"  : "тридесети",
+					"четрдесет" : "четрдесети",
+					"педесет"   : "педесети",
+					"шездесет"  : "шездесети",
+					"седамдесет": "седамдесети",
+					"осамдесет" : "осамдесети",
+					"деведесет" : "деведесети",
+					"сто"       : "стоти",
+					"двјесто"   : "двјестоти",
+					"тристо"    : "тристоти",
+					"четиристо" : "четиристоти",
+					"петсто"    : "петстоти",
+					"шесто"     : "шестстоти",
+					"седамсто"  : "седамстоти",
+					"осамсто"   : "осамстоти",
+					"деветсто"  : "деветстоти",
+					"тисућу"    : "тисућити",
+					"тисуће"    : "тисућити",
+					"тисућа"    : "тисућити"
+				};
+				break;
+			}
+			case "sr-Latn-RS": {
+				alphaBet = {
+					"nula"      : "nulti",
+					"jedan"     : "prvi",
+					"dva"       : "drugi",
+					"tri"       : "treći",
+					"četiri"    : "četvrti",
+					"pet"       : "peti",
+					"šest"      : "šesti",
+					"sedam"     : "sedmi",
+					"osam"      : "osmi",
+					"devet"     : "deveti",
+					"deset"     : "deseti",
+					"jedanaest" : "jedanaesti",
+					"dvanaest"  : "dvanaesti",
+					"trinaest"  : "trinaesti",
+					"četrnaest" : "četrnaesti",
+					"petnaest"  : "petnaesti",
+					"šesnaest"  : "šesnaesti",
+					"sedamnaest": "sedamnaesti",
+					"osamnaest" : "osamnaesti",
+					"devetnaest": "devetnaesti",
+					"dvadeset"  : "dvadeseti",
+					"trideset"  : "trideseti",
+					"četrdeset" : "četrdeseti",
+					"pedeset"   : "pedeseti",
+					"šezdeset"  : "šezdeseti",
+					"sedamdeset": "sedamdeseti",
+					"osamdeset" : "osamdeseti",
+					"devedeset" : "devedeseti",
+					"sto"       : "stoti",
+					"dvjesto"   : "dvjestoti",
+					"tristo"    : "tristoti",
+					"četiristo" : "četiristoti",
+					"petsto"    : "petstoti",
+					"šesto"     : "šeststoti",
+					"sedamsto"  : "sedamstoti",
+					"osamsto"   : "osamstoti",
+					"devetsto"  : "devetstoti",
+					"tisuću"    : "tisućiti",
+					"tisuće"    : "tisućiti",
+					"tisuća"    : "tisućiti"
+
+				};
+				break;
+			}
+			case "tr-TR": {
+				alphaBet = {
+					"sıfır" : "sıfırıncı",
+					"bir"   : "birinci",
+					"iki"   : "ikinci",
+					"üç"    : "üçüncü",
+					"dört"  : "dördüncü",
+					"beş"   : "beşinci",
+					"altı"  : "altıncı",
+					"yedi"  : "yedinci",
+					"sekiz" : "sekizinci",
+					"dokuz" : "dokuzuncu",
+					"on"    : "onuncu",
+					"yirmi" : "yirminci",
+					"otuz"  : "otuzuncu",
+					"kırk"  : "kırkıncı",
+					"elli"  : "ellinci",
+					"altmış": "altmışıncı",
+					"yetmiş": "yetmişinci",
+					"seksen": "sekseninci",
+					"doksan": "doksanıncı",
+					"yüz"   : "yüzüncü",
+					"bin"   : "bininci"
+				};
+				break;
+			}
 			case "bg-BG":
 				alphaBet = {
 					0: ['нулевят'],
@@ -5372,6 +5544,12 @@
 			case 'ko-KR':
 			case 'az-Latn-AZ':
 			case 'en-US':
+			case 'si-LK':
+			case 'ar-SA':
+			case 'gl-ES':
+			case 'hy-AM':
+			case 'ms-MY':
+			case 'zh-TW':
 			case 'vi-VN':
 			case 'en-GB':
 			default:
@@ -5399,6 +5577,76 @@
 		var alphaBet = {};
 		switch (language)
 		{
+			case "eu-ES":
+				alphaBet = {
+					0  : ["zero"],
+					1  : [
+						"bat",
+						"bi",
+						"hiru",
+						"lau",
+						"bost",
+						"sei",
+						"zazpi",
+						"zortzi",
+						"bederatzi",
+						"hamar",
+						"hamaika",
+						"hamabi",
+						"hamairu",
+						"hamalau",
+						"hamabost",
+						"hamasei",
+						"hamazazpi",
+						"hemezortzi",
+						"hemeretzi"
+					],
+					10 : [
+						"hogei",
+						"berrogei",
+						"hirurogei",
+						"laurogei"
+					],
+					100: [
+						"ehun",
+						"berrehun",
+						"hirurehun",
+						"laurehun",
+						"bostehun",
+						"seiehun",
+						"zazpiehun",
+						"zortziehun",
+						"bederatziehun"
+					]
+				};
+				break;
+			case "tr-TR":
+				alphaBet = {
+					0 : ["sıfır"],
+					1 : [
+						"bir",
+						"iki",
+						"üç",
+						"dört",
+						"beş",
+						"altı",
+						"yedi",
+						"sekiz",
+						"dokuz"
+					],
+					10: [
+						"on",
+						"yirmi",
+						"otuz",
+						"kırk",
+						"elli",
+						"altmış",
+						"yetmiş",
+						"seksen",
+						"doksan"
+					]
+				};
+				break;
 			case"bg-BG":
 				alphaBet = {
 					0: ['нула'],
@@ -5452,6 +5700,118 @@
 					'thousandType': [
 						'една',
 						'две'
+					]
+				};
+				break;
+			case "sr-Cyrl-RS":
+				alphaBet = {
+					0: ["нула"],
+					1: [
+						"један",
+						"два",
+						"три",
+						"четири",
+						"пет",
+						"шест",
+						"седам",
+						"осам",
+						"девет",
+						"десет",
+						"једанаест",
+						"дванаест",
+						"тринаест",
+						"четрнаест",
+						"петнаест",
+						"шеснаест",
+						"седамнаест",
+						"осамнаест",
+						"деветнаест"
+					],
+					10: [
+						"двадесет",
+						"тридесет",
+						"четрдесет",
+						"педесет",
+						"шездесет",
+						"седамдесет",
+						"осамдесет",
+						"деведесет"
+					],
+					100: [
+						"сто",
+						"двјесто",
+						"тристо",
+						"четиристо",
+						"петсто",
+						"шесто",
+						"седамсто",
+						"осамсто",
+						"деветсто"
+					],
+					"thousand": [
+						"тисућу",
+						"тисуће",
+						"тисућа"
+					],
+					'thousandType': [
+						"један",
+						"двије"
+					]
+				};
+				break;
+			case "sr-Latn-RS":
+				alphaBet = {
+					0: ["nula"],
+					1: [
+						"jedan",
+						"dva",
+						"tri",
+						"četiri",
+						"pet",
+						"šest",
+						"sedam",
+						"osam",
+						"devet",
+						"deset",
+						"jedanaest",
+						"dvanaest",
+						"trinaest",
+						"četrnaest",
+						"petnaest",
+						"šesnaest",
+						"sedamnaest",
+						"osamnaest",
+						"devetnaest"
+					],
+					10: [
+						"dvadeset",
+						"trideset",
+						"četrdeset",
+						"pedeset",
+						"šezdeset",
+						"sedamdeset",
+						"osamdeset",
+						"devedeset"
+					],
+					100: [
+						"sto",
+						"dvjesto",
+						"tristo",
+						"četiristo",
+						"petsto",
+						"šesto",
+						"sedamsto",
+						"osamsto",
+						"devetsto"
+					],
+					"thousand": [
+						"tisuću",
+						"tisuće",
+						"tisuća"
+					],
+					'thousandType': [
+						"jedan",
+						"dvije"
 					]
 				};
 				break;
@@ -6109,6 +6469,12 @@
 				};
 				break;
 			case 'en-US':
+			case 'si-LK':
+			case 'ar-SA':
+			case 'gl-ES':
+			case 'hy-AM':
+			case 'ms-MY':
+			case 'zh-TW':
 			case 'az-Latn-AZ':
 			case 'en-GB':
 			case 'ja-JP':
@@ -6171,6 +6537,8 @@
 
 		switch (lang)
 		{
+			case 'sr-Latn-RS':
+			case 'sr-Cyrl-RS':
 			case 'ru-RU':
 			case 'uk-UA':
 			case 'cs-CZ':
@@ -6289,7 +6657,7 @@
 					return resArr;
 				};
 
-				if (lang === 'uk-UA' || lang === 'cs-CZ' || lang === 'pl-PL' || lang === 'el-GR' || lang === 'lv-LV')
+				if (lang === 'uk-UA' || lang === 'cs-CZ' || lang === 'pl-PL' || lang === 'el-GR' || lang === 'lv-LV' || lang === 'sr-Latn-RS' || lang === 'sr-Cyrl-RS')
 				{
 					arrAnswer = cardinalSplittingCyrillicMim(nValue, true);
 				} else if (lang === 'ru-RU')
@@ -6794,6 +7162,74 @@
 				};
 				break;
 			}
+			case "eu-ES":
+			{
+				const letterNumberLessThen100EU = function (nNum)
+				{
+					var resArr = [];
+					if (nNum < 100 && nNum > 0)
+					{
+						const nDegree1 = nNum % 20;
+						const nDegree10 = Math.floor(nNum / 20);
+						if (nDegree10 && nDegree1)
+						{
+							resArr.push(alphaBet[10][nDegree10 - 1] + "ta", alphaBet[1][nDegree1 - 1]);
+						}
+						else if (nDegree10)
+						{
+							resArr.push(alphaBet[10][nDegree10 - 1]);
+						}
+						else
+						{
+							resArr.push(alphaBet[1][nDegree1 - 1]);
+						}
+					}
+
+					return resArr;
+				};
+				const cardinalSplittingEU = function (nNum, bNotPushEta)
+				{
+					const resArr = [];
+					if (nNum < 1000000 && nNum > 0)
+					{
+						const oGroups = {};
+						oGroups[1000] = Math.floor(nNum / 1000);
+						nNum %= 1000;
+						oGroups[100] = Math.floor(nNum / 100);
+						nNum %= 100;
+						oGroups[1] = nNum;
+						if (oGroups[1000])
+						{
+							if (oGroups[1000] >= 100)
+							{
+								resArr.push.apply(resArr, cardinalSplittingEU(oGroups[1000], true));
+							}
+							else if (oGroups[1000] !== 1)
+							{
+								resArr.push.apply(resArr, letterNumberLessThen100EU(oGroups[1000]));
+							}
+							resArr.push("mila");
+						}
+
+						if (oGroups[100])
+						{
+							resArr.push(alphaBet[100][oGroups[100] - 1]);
+						}
+
+						if (oGroups[1])
+						{
+							if ((oGroups[100] || oGroups[1000]) && !bNotPushEta)
+							{
+								resArr.push("eta");
+							}
+							resArr.push.apply(resArr, letterNumberLessThen100EU(oGroups[1]));
+						}
+					}
+					return resArr;
+				}
+				arrAnswer = cardinalSplittingEU(nValue);
+				break;
+			}
 			case 'it-IT':
 			{
 				var letterNumberLessThen100IT = function(num)
@@ -7075,7 +7511,77 @@
 
 				break;
 			}
+			case 'tr-TR':
+				const letterNumberLessThen100TR = function (nNum)
+				{
+					const resArr = [];
+					if (nNum < 100 && nNum > 0)
+					{
+						const nDegree1 = nNum % 10;
+						const nDegree10 = Math.floor(nNum / 10);
+
+						if (nDegree10)
+						{
+							resArr.push(alphaBet[10][nDegree10 - 1]);
+						}
+						if (nDegree1)
+						{
+							resArr.push(alphaBet[1][nDegree1 - 1]);
+						}
+					}
+					return resArr;
+				}
+				const cardinalSplittingTR = function (nNum)
+				{
+					const resArr = [];
+					if (nNum < 1000000 && nNum > 0)
+					{
+						const oGroups = {};
+						oGroups[1000] = Math.floor(nNum / 1000);
+						nNum = nNum % 1000;
+						oGroups[100] = Math.floor(nNum / 100);
+						nNum = nNum % 100;
+						oGroups[1] = nNum;
+						if (oGroups[1000])
+						{
+							if (oGroups[1000] >= 100)
+							{
+								resArr.push.apply(resArr, cardinalSplittingTR(oGroups[1000]));
+							}
+							else if (oGroups[1000] !== 1)
+							{
+								resArr.push.apply(resArr, letterNumberLessThen100TR(oGroups[1000]));
+							}
+							resArr.push("bin");
+						}
+						if (oGroups[100])
+						{
+							if (oGroups[100] !== 1)
+							{
+								resArr.push.apply(resArr, letterNumberLessThen100TR(oGroups[100]));
+							}
+							resArr.push("yüz");
+						}
+						if (oGroups[1])
+						{
+							resArr.push.apply(resArr, letterNumberLessThen100TR(oGroups[1]));
+						}
+					}
+					return resArr;
+				}
+				arrAnswer = cardinalSplittingTR(nValue);
+				getConcatStringByRule = function (array)
+				{
+					return array.join("");
+				}
+				break;
 			case 'en-US':
+			case 'gl-ES':
+			case 'si-LK':
+			case 'ar-SA':
+			case 'hy-AM':
+			case 'ms-MY':
+			case 'zh-TW':
 			case 'az-Latn-AZ':
 			case 'en-GB':
 			case 'ja-JP':
@@ -8368,6 +8874,10 @@
 		switch (textLang)
 		{
 			case 'de-DE':
+			case 'eu-ES':
+			case 'tr-TR':
+			case 'sr-Cyrl-RS':
+			case 'sr-Latn-RS':
 			case 'pl-PL':
 			case 'cs-CZ':
 			{
@@ -8431,6 +8941,12 @@
 			}
 			case 'bg-BG':
 			case 'en-GB':
+			case 'gl-ES':
+			case 'si-LK':
+			case 'ar-SA':
+			case 'hy-AM':
+			case 'ms-MY':
+			case 'zh-TW':
 			case 'en-US':
 			case 'zh-CN':
 			case 'uk-UA':
@@ -8619,6 +9135,21 @@
 		return sResult;
 	}
 
+	function getCardinalTextToSentenceCase(sText, sLang)
+	{
+		switch (sLang)
+		{
+			case "tr-TR":
+				if (sText[0] === "i")
+				{
+					return "İ" + sText.slice(1, sText.length);
+				}
+				return sText.sentenceCase();
+			default:
+				return sText.sentenceCase();
+		}
+	}
+
 	function IntToOrdinalText(nValue, nLang)
 	{
 		var textLang = languages[nLang];
@@ -8627,12 +9158,35 @@
 		{
 			if (alphaBet[0] && alphaBet[0][0])
 			{
-				return alphaBet[0][0].sentenceCase();
+				return getCardinalTextToSentenceCase(alphaBet[0][0], textLang);
 			}
 		}
 		var ordinalText = getCardinalTextFromValue(textLang, nValue);
 		switch (textLang)
 		{
+			case 'eu-ES':
+			{
+				const arrOfDigits = ordinalText.arrAnswer;
+				if (nValue === 1)
+				{
+					arrOfDigits[arrOfDigits.length - 1] = "lehenengo";
+				}
+				else if (arrOfDigits[arrOfDigits.length - 1])
+				{
+					arrOfDigits[arrOfDigits.length - 1] = arrOfDigits[arrOfDigits.length - 1] + "garren";
+				}
+				break;
+			}
+			case 'tr-TR':
+			{
+				const arrOfDigits = ordinalText.arrAnswer;
+				const sLastWord = arrOfDigits[arrOfDigits.length - 1];
+				if (alphaBet[sLastWord])
+				{
+					arrOfDigits[arrOfDigits.length - 1] = alphaBet[sLastWord];
+				}
+				break;
+			}
 			case 'de-DE':
 			{
 				var arrOfDigits = ordinalText.arrAnswer;
@@ -8892,6 +9446,28 @@
 				}
 				break;
 			}
+			case 'sr-Cyrl-RS':
+			case 'sr-Latn-RS':
+			{
+				const arrOfDigits = ordinalText.arrAnswer;
+				const sLastWord = arrOfDigits[arrOfDigits.length - 1];
+				if (sLastWord)
+				{
+					const reminder100 = nValue % 100;
+					const degree10 = Math.floor(reminder100 / 10);
+					const degree1 = reminder100 % 10;
+					if (degree10 && degree1 && reminder100 >= 20)
+					{
+						arrOfDigits[arrOfDigits.length - 1] = alphaBet[arrOfDigits[arrOfDigits.length - 1]];
+						arrOfDigits[arrOfDigits.length - 2] = alphaBet[arrOfDigits[arrOfDigits.length - 2]];
+					}
+					else
+					{
+						arrOfDigits[arrOfDigits.length - 1] = alphaBet[arrOfDigits[arrOfDigits.length - 1]];
+					}
+				}
+				break;
+			}
 			case 'uk-UA':
 			case 'pl-PL':
 			case 'ru-RU':
@@ -9057,6 +9633,12 @@
 			case 'ko-KR':
 			case 'az-Latn-AZ':
 			case 'en-US':
+			case 'si-LK':
+			case 'ar-SA':
+			case 'gl-ES':
+			case 'zh-TW':
+			case 'ms-MY':
+			case 'hy-AM':
 			case 'vi-VN':
 			case 'en-GB':
 			default:
@@ -9081,7 +9663,7 @@
 				break;
 			}
 		}
-		return ordinalText.getConcatStringByRule(ordinalText.arrAnswer).sentenceCase();
+		return getCardinalTextToSentenceCase(ordinalText.getConcatStringByRule(ordinalText.arrAnswer), textLang);
 	}
 
 	var splitHindiCounting = function(alphaBet, degrees, num)
@@ -9242,6 +9824,43 @@
 		return resArr;
 	}
 
+	function NumberToDollarText(nValue, nLang, bIsSkipFractValue)
+	{
+		const nIntValue = Math.floor(nValue);
+		const oCardinalText = getCardinalTextFromValue(languages[nLang], nIntValue);
+		const sIntResult = oCardinalText.getConcatStringByRule(oCardinalText.arrAnswer);
+		if (!bIsSkipFractValue)
+		{
+			const nFractValue = Math.round(nValue * 100) % 100;
+			const sFractValue = nFractValue.toString();
+			const sDollarValue = sFractValue.length === 1 ? "0" + sFractValue : sFractValue;
+			const sFractResult = sDollarValue + "/100";
+
+			const sAndConjunction = getANDConjunctionLang(nLang);
+			return sIntResult + (sAndConjunction.length ? " " + sAndConjunction + " " : " ") + sFractResult;
+		}
+		return sIntResult;
+	}
+
+	function NumberToBahtText(nValue, isSkipFractValue)
+	{
+		const nIntValue = Math.floor(nValue);
+		const nFractValue = Math.round(nValue * 100) % 100;
+		const sIntValue = IntToNumberFormat(nIntValue, Asc.c_oAscNumberingFormat.ThaiCounting);
+
+		if (isSkipFractValue)
+		{
+			return sIntValue;
+		}
+		if (nFractValue)
+		{
+			const sFractValue = IntToNumberFormat(nFractValue, Asc.c_oAscNumberingFormat.ThaiCounting);
+			return sIntValue + "บาท" + sFractValue + "สตางค์";
+		}
+
+		return sIntValue + "บาทถ้วน";
+	}
+
 	function IntToThaiCounting(nValue)
 	{
 		var digits = [
@@ -9324,6 +9943,31 @@
 		var digits = ['một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín', 'mười'];
 
 		return vietnameseCounting(nValue, digits).join(' ');
+	}
+
+	function IntToCustomTurkish(nValue, bLowerCase)
+	{
+		let arrLetters;
+		if (bLowerCase)
+		{
+			arrLetters = [0x0061, 0x0062, 0x0063, 0x00e7, 0x0064, 0x0065, 0x0066, 0x0067, 0x011f, 0x0068, 0x0131, 0x0069, 0x006a,
+				0x006b, 0x006c, 0x006d, 0x006e, 0x006f, 0x00f6, 0x0070, 0x0072, 0x0073, 0x015f, 0x0074, 0x0075, 0x00fc, 0x0076,
+				0x0079, 0x007a];
+		}
+		else
+		{
+			arrLetters = [0x0041, 0x0042, 0x0043, 0x00c7, 0x0044, 0x0045, 0x0046, 0x0047, 0x011e, 0x0048, 0x0049, 0x0130, 0x004a,
+				0x004b, 0x004c, 0x004d, 0x004e, 0x004f, 0x00d6, 0x0050, 0x0052, 0x0053, 0x015e, 0x0054, 0x0055, 0x00dc, 0x0056,
+				0x0059, 0x005a];
+		}
+		nValue = repeatNumberingLvl(nValue, 870);
+		const nNum = nValue - 1;
+
+		const nAlphabetLength = arrLetters.length;
+		const nOst   = nNum % nAlphabetLength;
+		const nCount = ((nNum - nOst) / nAlphabetLength) + 1;
+
+		return String.fromCharCode(arrLetters[nOst]).repeat(nCount);
 	}
 
 	function IntToCustomGreece(nValue) {
@@ -9416,12 +10060,14 @@
 	 * Переводим числовое значение в строку с заданным форматом нумерации
 	 * @param nValue {number}
 	 * @param nFormat {Asc.c_oAscNumberingFormat}
-	 * @param [oLang] {AscCommonWord.CLang}
+	 * @param [oPr] {Object}
 	 * @returns {string}
 	 */
-	function IntToNumberFormat(nValue, nFormat, oLang)
+	function IntToNumberFormat(nValue, nFormat, oPr)
 	{
+		oPr = oPr || {};
 		var nLang;
+		const oLang = oPr.lang;
 		if (oLang)
 		{
 			nLang = oLang.Val;
@@ -9698,7 +10344,7 @@
 				break;
 			case Asc.c_oAscNumberingFormat.CardinalText:
 				var cardinalText = getCardinalTextFromValue(languages[nLang], nValue);
-				sResult = cardinalText.getConcatStringByRule(cardinalText.arrAnswer).sentenceCase();
+				sResult = getCardinalTextToSentenceCase(cardinalText.getConcatStringByRule(cardinalText.arrAnswer), languages[nLang]);
 				break;
 
 			case Asc.c_oAscNumberingFormat.Custom:
@@ -9727,16 +10373,39 @@
 				sResult = IntToThaiCounting(nValue, nFormat);
 				break;
 			case Asc.c_oAscNumberingFormat.DollarText:
-				sResult += nValue;
+				if (oPr.isFromField)
+				{
+					sResult = NumberToDollarText(nValue, nLang, oPr.isSkipFractPart);
+				}
+				else
+				{
+					sResult += nValue;
+				}
 				break;
 			case Asc.c_oAscNumberingFormat.BahtText:
-				sResult += nValue;
+				if (oPr.isFromField)
+				{
+					sResult = NumberToBahtText(nValue, oPr.isSkipFractPart);
+				}
+				else
+				{
+					sResult += nValue;
+				}
 				break;
 			case Asc.c_oAscNumberingFormat.VietnameseCounting:
 				sResult = IntToVietnameseCounting(nValue);
 				break;
 			case Asc.c_oAscNumberingFormat.CustomGreece:
 				sResult = IntToCustomGreece(nValue);
+				break;
+			case Asc.c_oAscNumberingFormat.CustomUpperTurkish:
+				sResult = IntToCustomTurkish(nValue);
+				break;
+			case Asc.c_oAscNumberingFormat.CustomLowerTurkish:
+				sResult = IntToCustomTurkish(nValue, true);
+				break;
+			default:
+				break;
 		}
 
 		return sResult;
@@ -13892,6 +14561,10 @@
 			return max;
 		return value;
 	}
+
+	function getArrayRandomElement(aArray) {
+		return aArray[Math.random() * aArray.length | 0];
+	}
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
 	window["AscCommon"].getSockJs = getSockJs;
@@ -14116,6 +14789,7 @@
 	window["AscCommon"].c_oAscImageUploadProp = c_oAscImageUploadProp;
 	window["AscCommon"].trimMinMaxValue = trimMinMaxValue;
 	window["AscCommon"].cStrucTableReservedWords = cStrucTableReservedWords;
+	window["AscCommon"].getArrayRandomElement = getArrayRandomElement;
 })(window);
 
 window["asc_initAdvancedOptions"] = function(_code, _file_hash, _docInfo)

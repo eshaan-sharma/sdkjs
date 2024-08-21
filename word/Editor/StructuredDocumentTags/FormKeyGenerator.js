@@ -70,8 +70,10 @@
 			return this.GetNewKey(form);
 		
 		let checkBoxPr = form.GetCheckBoxPr();
-		
-		let groupKey = checkBoxPr.GetGroupKey();
+		return this.GetNewChoiceByGroupKey(checkBoxPr.GetGroupKey());
+	};
+	CFormKeyGenerator.prototype.GetNewChoiceByGroupKey = function(groupKey)
+	{
 		let buttons  = this.FormManager.GetRadioButtons(groupKey);
 		let choiceKeys = {};
 		for (let index = 0, count = buttons.length; index < count; ++index)
@@ -115,7 +117,7 @@
 		if (!form)
 			return "Form" + counter;
 		else if (form.IsRadioButton())
-			return "Group" + counter;
+			return "Group " + counter; // Добавил пробел, потому что в UI с пробелом генерится, чтобы не было разницы
 		else if (form.IsComplexForm())
 			return "Complex" + counter;
 		else if (form.IsTextForm())

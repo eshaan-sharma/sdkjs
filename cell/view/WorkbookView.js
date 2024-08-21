@@ -3046,7 +3046,7 @@
 				let funcCalc = ws.calculateWizardFormula(_name + '(' + sArguments + ')');
 				_res.functionResult = funcCalc.str;
 				if (funcCalc.obj && funcCalc.obj.type !== AscCommonExcel.cElementType.error) {
-					_res.formulaResult = ws.calculateWizardFormula(t.cellEditor._formula).str;
+					_res.formulaResult = ws.calculateWizardFormula(t.cellEditor.getText().substring(1)).str;
 				}
 			}
 
@@ -5397,7 +5397,11 @@
 										oBinaryFileReader.Read(binaryData, wb);
 									});
 								});
-
+								//g_DefNameWorksheet use on parse def name ref. here need use external ws.
+								let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
+								AscCommonExcel.g_DefNameWorksheet = new AscCommonExcel.Worksheet(wb, -1);
+								wb.dependencyFormulas.initOpen();
+								AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;
 								if (wb.aWorksheets) {
 									eR && eR.updateData(wb.aWorksheets, _arrAfterPromise[i].data);
 								}
