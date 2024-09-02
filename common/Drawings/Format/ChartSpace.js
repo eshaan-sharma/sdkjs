@@ -1081,6 +1081,7 @@ function(window, undefined) {
 			this.extY = fMaxHeight - fDistance;
 		}
 	};
+
 	CLabelsBox.prototype.layoutVertNormal = function (fAxisX, fDistance, fYStart, fInterval, bOnTickMark, fMaxBlockWidth) {
 		var fCurY = bOnTickMark ? fYStart : fYStart + fInterval / 2.0;
 		this.bRotated = false;
@@ -2186,6 +2187,51 @@ function(window, undefined) {
 				}
 			}
 		}
+	};
+
+	CChartSpace.prototype._roundValue = function (num, isStrong, precision) {
+		if (num !== 0 && (!num || !isFinite(num))) {
+			return 1;
+		}
+
+		if (num === 0) {
+			return num;
+		}
+
+		// if num is negative
+		let isNegative = false;
+		if (num < 0) {
+			isNegative = true;
+			num = -num;
+		}
+
+		if (!precision || precision < 0) {
+			//default precision is 9! 
+			precision = 9;
+		}
+
+		let count = 0;
+
+		// Normalize the number by adjusting its scale
+		if (isStrong) {
+			while (num >= 10) {
+				num /= 10;
+				count++;
+			}
+		}
+
+		while (num < 1) {
+			num *= 10;
+			count--;
+		}
+
+		// Round the number to two decimal places
+		const kF = Math.pow(10, precision);
+		const roundedNum = Math.round(num * kF) / kF;
+
+		// Return the normalized number with the appropriate scale
+		num = (count >= 0) ? roundedNum * Math.pow(10, count) : roundedNum / Math.pow(10, -count);
+		return isNegative ? -num : num;
 	};
 	CChartSpace.prototype.recalculateTextPr = function () {
 		if (this.txPr && this.txPr.content) {
@@ -11682,9 +11728,13 @@ function(window, undefined) {
 			this.oStartingDate = date.getDateFromExcel(2);
 		}
 
-		// find label skip
-		this.calculateNLblTickSkip(oLabelsBox, fAxisLength);
-
+		// valAx recalcute the labels, rather than skipping a portion of them as other labels
+		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
+			this.recalculateLabels(oLabelsBox, fAxisLength);
+		} else {
+			// find label skip
+			this.calculateNLblTickSkip(oLabelsBox, fAxisLength);
+		}
 		// if rotation is not set
 		this.calculateRotation(oLabelsBox, fAxisLength);
 	};
@@ -11731,6 +11781,64 @@ function(window, undefined) {
 			this.maxHeight = fRectHeight * heightMultiplier;
 		}
 	};
+
+	CLabelsParameters.prototype.recalculateLabels = function (oLabelsBox, fAxisLength) {
+		const getStepAndMultiplicator = function (axis) {
+			if (!axis || !axis.scale || !Array.isArray(axis.scale)) {return};
+			let prevVal = axis.scale.length > 0 ? Math.abs(axis.scale[0]) : null; 
+			let curVal = axis.scale.length > 1 ? Math.abs(axis.scale[1]) : null; 
+
+			// get general step. Examples: 2, 20, 200, 0.2 tc.
+			let generalStep = 0;
+			if (prevVal !== null && curVal !== null) {
+				high = Math.max(val1, val2);
+				low = Math.min(val1, val2);
+				generalStep = high - low;
+			}
+
+			// if only one label exist
+			if (generalStep === 0) {
+				return { step: 0, multiplicator: 1 }; // Special case for zero
+			}
+			
+			// Calculate the power of ten that brings the number between 1 and 10
+			const exponent = Math.floor(Math.log10(generalStep));
+			
+			// Calculate the state and multiplicator
+			const step = number / Math.pow(10, exponent);
+			const multiplicator = Math.pow(10, exponent);
+			
+			return {
+				step : step,
+				multiplicator : multiplicator
+			};
+		}
+		const getNewStep = function (step, multiplicator) {
+			const getNextStep = function (val) {
+				switch(val) {
+					case 1: 
+						return 2;
+					case 2:
+						return 5;
+					case 5:
+						return 10;
+					default:
+						return 0;
+				}
+			}
+
+			return getNextStep(step) * multiplicator;
+		}
+
+		// find current step info
+		const oStepInfo = getStepAndMultiplicator(oLabelsBox.axis);
+
+		// find new step 
+		const newStep = getNewStep(oStepInfo.step, oStepInfo.multiplicator);
+
+		// check if fits perfectly 
+			// find the 
+	}
 
 	CLabelsParameters.prototype.calculateNLblTickSkip = function (oLabelsBox, fAxisLength) {
 		//default nLblTickSkip should be 1!

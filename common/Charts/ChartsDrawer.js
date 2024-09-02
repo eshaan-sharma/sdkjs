@@ -3824,48 +3824,10 @@ CChartsDrawer.prototype =
 	// if rounding is strong it affects whole number. Example 106.82 -> 107, for the precision 2
 	// if weak, then only decimal places. Example 106.82 ->106.8, for the precision 1
 	_roundValue: function (num, isStrong, precision) {
-		if (num !== 0 && (!num || !isFinite(num))) {
-			return 1;
-		}
-
-		if (num === 0) {
-			return num;
-		}
-
-		// if num is negative
-		let isNegative = false;
-		if (num < 0) {
-			isNegative = true;
-			num = -num;
-		}
-
-		if (!precision || precision < 0) {
-			//default precision is 9! 
-			precision = 9;
-		}
-
-		let count = 0;
-
-		// Normalize the number by adjusting its scale
-		if (isStrong) {
-			while (num >= 10) {
-				num /= 10;
-				count++;
-			}
-		}
-
-		while (num < 1) {
-			num *= 10;
-			count--;
-		}
-
-		// Round the number to two decimal places
-		const kF = Math.pow(10, precision);
-		const roundedNum = Math.round(num * kF) / kF;
-
-		// Return the normalized number with the appropriate scale
-		num = (count >= 0) ? roundedNum * Math.pow(10, count) : roundedNum / Math.pow(10, -count);
-		return isNegative ? -num : num;
+		if (!this.cChartSpace) {
+			return num
+		};
+		return this.cChartSpace._roundValue(num, isStrong, precision);
 	},
 	
 	
