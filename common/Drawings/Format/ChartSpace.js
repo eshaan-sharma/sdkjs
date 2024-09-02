@@ -11783,8 +11783,11 @@ function(window, undefined) {
 	};
 
 	CLabelsParameters.prototype.recalculateLabels = function (oLabelsBox, fAxisLength) {
+		if (!oLabelsBox && !oLabelsBox.axis || !oLabelsBox.axis.scale || !Array.isArray(oLabelsBox.axis.scale) ||
+			!AscFormat.isRealNumber(oLabelsBox.axis.min) || !AscFormat.isRealNumber(oLabelsBox.axis.max)) {
+			return
+		};
 		const getStepAndMultiplicator = function (axis) {
-			if (!axis || !axis.scale || !Array.isArray(axis.scale)) {return};
 			let prevVal = axis.scale.length > 0 ? Math.abs(axis.scale[0]) : null; 
 			let curVal = axis.scale.length > 1 ? Math.abs(axis.scale[1]) : null; 
 
@@ -11837,7 +11840,11 @@ function(window, undefined) {
 		const newStep = getNewStep(oStepInfo.step, oStepInfo.multiplicator);
 
 		// check if fits perfectly 
-			// find the 
+			// find the possible width that can be taken 
+				// divide full length by minMaxWidth
+			// multiply the width with the labels count and check if it is smaller than result
+
+		// create new labels from axis min to axis max with newStep
 	}
 
 	CLabelsParameters.prototype.calculateNLblTickSkip = function (oLabelsBox, fAxisLength) {
