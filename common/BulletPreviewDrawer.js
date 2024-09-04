@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -12,7 +12,7 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * You can contact Ascensio System SIA at 20A-6 Ernesta Birznieka-Upish
  * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
@@ -197,9 +197,7 @@
 		if (!oCanvas)
 		{
 			oCanvas = document.createElement('canvas');
-			oCanvas.style.cssText = "padding:0;margin:0;user-select:none;";
-			oCanvas.style.width = nWidth_px + "px";
-			oCanvas.style.height = nHeight_px + "px";
+			oCanvas.style.cssText = "padding:0;margin:0;user-select:none;width:100%;height:100%;";
 			if (nWidth_px > 0 && nHeight_px > 0)
 			{
 				oDivElement.appendChild(oCanvas);
@@ -233,7 +231,10 @@
 
 		if (this.m_oApi && this.m_oApi.isDarkMode)
 		{
-			oGraphics.darkModeOverride3();
+			if(this.m_oApi.getEditorId() === AscCommon.c_oEditorId.Word)
+			{
+				oGraphics.setDarkMode();
+			}
 		}
 
 		oGraphics.b_color1(this.m_oBackgroundColor.r, this.m_oBackgroundColor.g, this.m_oBackgroundColor.b, 255);
@@ -413,7 +414,7 @@
 		const arrFonts = [];
 		for (let sFamilyName in oFontsDict)
 		{
-			arrFonts.push(new AscFonts.CFont(AscFonts.g_fontApplication.GetFontInfoName(sFamilyName), 0, "", 0, null));
+			arrFonts.push(new AscFonts.CFont(AscFonts.g_fontApplication.GetFontInfoName(sFamilyName)));
 		}
 		AscFonts.FontPickerByCharacter.extendFonts(arrFonts);
 
@@ -434,7 +435,18 @@
 		const oThis = this;
 		this.checkFonts(function ()
 		{
-			oThis.draw();
+
+			if (oThis.m_oLogicDocument && oThis.m_oLogicDocument.IsDocumentEditor())
+			{
+				const bIsOldTrackRevisions = oThis.m_oLogicDocument.GetLocalTrackRevisions();
+				oThis.m_oLogicDocument.SetTrackRevisions(false);
+				oThis.draw();
+				oThis.m_oLogicDocument.SetTrackRevisions(bIsOldTrackRevisions);
+			}
+			else
+			{
+				oThis.draw();
+			}
 		});
 	};
 
@@ -926,7 +938,7 @@
 			AscCommon.stopEvent(e);
 			const nOffsetBase = 10;
 			const nLineWidth = 4;
-			const nHeight = parseInt(this.style.height, 10);
+			const nHeight = oThis.m_oCanvas.clientHeight;
 			const nLineDistance = Math.floor(((nHeight - (nOffsetBase << 1)) - nLineWidth * 10) / 9);
 			const nOffset = (nHeight - (nLineWidth * 10 + nLineDistance * 9)) >> 1;
 			const nCurrentLvl = oThis.m_nCurrentLvl;
@@ -937,7 +949,7 @@
 				nYPos = e.clientY;
 			}
 			nYPos = (nYPos * AscCommon.AscBrowser.zoom);
-			const oClientRect = this.getBoundingClientRect();
+			const oClientRect = AscCommon.UI.getBoundingClientRect(this);
 
 			if (AscFormat.isRealNumber(oClientRect.y))
 			{
@@ -974,11 +986,10 @@
 	};
 	CBulletPreviewDrawerAdvancedOptions.prototype.getNumberingValue = function (nNumberIndex, nDrawingLvl, oLvl)
 	{
-		if (nDrawingLvl <= this.m_nCalcNumberingLvl && this.m_arrCalcNumberingInfo && this.m_arrCalcNumberingInfo[nDrawingLvl])
+		if (nDrawingLvl <= this.m_nCalcNumberingLvl && this.m_arrCalcNumberingInfo && AscFormat.isRealNumber(this.m_arrCalcNumberingInfo[nDrawingLvl]) && AscFormat.isRealNumber(this.m_nSourceStart))
 		{
 			const nCalcValue = this.m_arrCalcNumberingInfo[nDrawingLvl];
-			const nStart = oLvl.GetStart();
-			return nCalcValue - nStart + nNumberIndex;
+			return nCalcValue - this.m_nSourceStart + nNumberIndex;
 		}
 		return nNumberIndex;
 	};
@@ -1069,7 +1080,7 @@
 	};
 	CBulletPreviewDrawerAdvancedOptions.prototype.initNumberingInfo = function ()
 	{
-		var oParagraph = this.m_oLogicDocument.GetCurrentParagraph(true);
+		const oParagraph = this.m_oLogicDocument.GetCurrentParagraph(true);
 		if (!oParagraph)
 			return;
 
@@ -1078,6 +1089,12 @@
 		{
 			this.m_arrCalcNumberingInfo = oNumbering.GetCalculatedNumInfo();
 			this.m_nCalcNumberingLvl = oNumbering.GetCalculatedNumberingLvl();
+			const oNum = this.m_oLogicDocument.GetNumbering().GetNum(oNumbering.GetCalculatedNumId());
+			if (oNum)
+			{
+				const oLvl = oNum.GetLvl(this.m_nCalcNumberingLvl);
+				this.m_nSourceStart = oLvl ? oLvl.GetStart() : null;
+			}
 		}
 	};
 	CBulletPreviewDrawerAdvancedOptions.prototype.drawSingleLvlAdvancedOptions = function ()

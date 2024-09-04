@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -195,7 +195,7 @@ window["DesktopOfflineAppDocumentEndSave"] = function(error, hash, password)
 	editor.LastUserSavedIndex = undefined;
 	
 	if (2 == error)
-		editor.sendEvent("asc_onError", c_oAscError.ID.ConvertationSaveError, c_oAscError.Level.Critical);
+		editor.sendEvent("asc_onError", c_oAscError.ID.ConvertationSaveError, c_oAscError.Level.NoCritical);
 
 	if (0 == error)
 	{

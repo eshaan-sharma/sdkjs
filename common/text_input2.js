@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -48,6 +48,23 @@
 	// baseEditorsApi.prototype.onKeyPress = function(e)
 	// baseEditorsApi.prototype.onKeyUp = function(e)
 	///
+
+	window['AscCommon'] = window['AscCommon'] || {};
+	window['AscCommon'].inputMethodAddInitEvent = function(callback)
+	{
+		AscCommon.g_inputContext_create_events = AscCommon.g_inputContext_create_events || [];
+		AscCommon.g_inputContext_create_events.push(callback);
+	};
+	window['AscCommon'].inputMethodCheckInitEvents = function()
+	{
+		if (!AscCommon.g_inputContext_create_events)
+			return;
+
+		for (let i = 0, len = AscCommon.g_inputContext_create_events.length; i < len; i++)
+			AscCommon.g_inputContext_create_events[i]();
+
+		delete AscCommon.g_inputContext_create_events;
+	};
 
 	var InputTextElementType = {
 		TextArea           : 0,
@@ -109,6 +126,14 @@
 
 		// для сброса текста при фокусе
 		this.checkClearTextOnFocusTimerId = -1;
+
+		this.isDisableKeyboard = false;
+
+		this.moveAccurateInfo = {
+			id : -1,
+			x : 0,
+			y : 0
+		};
 	}
 
 	var CTextInputPrototype = CTextInput2.prototype;
@@ -266,9 +291,11 @@
 		if (!isSpaceAsText)
 			ret = this.Api.onKeyDown(e);
 
+		let isSpecialClearInComposition = true;
 		switch (e.keyCode)
 		{
 			case 8:		// backspace
+				isSpecialClearInComposition = false;
 			case 9:		// tab
 			case 13:	// enter
 			case 37:	// left
@@ -281,7 +308,8 @@
 			case 36: 	// home
 			case 46:	// delete
 			{
-				this.clear();
+				if (!this.IsComposition || isSpecialClearInComposition)
+					this.clear();
 			}
 			default:
 				break;
@@ -533,6 +561,8 @@
 
 		if (!isAsync)
 		{
+			window.LOCK_DRAW = true;
+
 			if (this.IsComposition)
 			{
 				this.compositeReplace(codes);
@@ -835,7 +865,7 @@
 	};
 	CTextInputPrototype.setReadOnlyWrapper = function(val)
 	{
-		this.HtmlArea.readOnly = this.Api.isViewMode ? true : val;
+		this.HtmlArea.readOnly = this.isDisableKeyboard ? true : val;
 	};
 	CTextInputPrototype.setInterfaceEnableKeyEvents = function(value)
 	{
@@ -985,6 +1015,8 @@
 		}
 
 		this.Api.Input_UpdatePos();
+
+		this.checkViewMode();
 	};
 	CTextInputPrototype.appendInputToCanvas = function(parent_id)
 	{
@@ -1018,7 +1050,7 @@
 
 		if (AscCommon.AscBrowser.isChrome)
 		{
-			var rectObject = _elemSrc.getBoundingClientRect();
+			var rectObject = AscCommon.UI.getBoundingClientRect(_elemSrc);
 			this.FixedPosCheckElementX = rectObject.left;
 			this.FixedPosCheckElementY = rectObject.top;
 		}
@@ -1080,6 +1112,24 @@
 			if (document.activeElement != this.HtmlArea)
 				focusHtmlElement(this.HtmlArea);
 		}
+	};
+	CTextInputPrototype.moveAccurate = function(x, y)
+	{
+		if (!this.moveAccurateFunc)
+		{
+			this.moveAccurateFunc = function() {
+				let ctx = AscCommon.g_inputContext;
+				ctx.move(ctx.moveAccurateInfo.x, ctx.moveAccurateInfo.y);
+				ctx.moveAccurateInfo.id = -1;
+			};
+		}
+
+		if (-1 !== this.moveAccurateInfo.id)
+			clearTimeout(this.moveAccurateInfo.id);
+
+		this.moveAccurateInfo.x = x;
+		this.moveAccurateInfo.y = y;
+		this.moveAccurateInfo.id = setTimeout(this.moveAccurateFunc, 20);
 	};
 	CTextInputPrototype.move = function(x, y)
 	{
@@ -1151,6 +1201,31 @@
 		this.setReadOnlyWrapper(false);
 	};
 
+	CTextInputPrototype.checkViewMode = function()
+	{
+		let oldDisableKeyboard = this.isDisableKeyboard;
+		this.isDisableKeyboard = this.Api.isViewMode;
+
+		if (!this.isDisableKeyboard)
+		{
+			if (this.Api.isRestrictionView() && !this.Api.isRestrictionForms() && !this.Api.isPdfEditor())
+			{
+				this.isDisableKeyboard = true;
+			}
+
+			if (this.Api.isPdfEditor() && this.Api.isMobileVersion)
+			{
+				// temporary
+				this.isDisableKeyboard = true;
+			}
+		}
+
+		if (oldDisableKeyboard !== this.isDisableKeyboard)
+		{
+			this.setReadOnlyWrapper(false);
+		}
+	};
+
 	function _getAttirbute(_elem, _attr, _depth)
 	{
 		var _elemTest = _elem;
@@ -1202,6 +1277,8 @@
 		window['AscCommon'].g_inputContext.init(target_id, parent_id);
 		window['AscCommon'].g_clipboardBase.Init(api);
 		window['AscCommon'].g_clipboardBase.inputContext = window['AscCommon'].g_inputContext;
+
+		window['AscCommon'].inputMethodCheckInitEvents();
 
 		if (window['AscCommon'].TextBoxInputMode === true)
 		{
@@ -1348,5 +1425,23 @@
 
 		window['AscCommon'].g_inputContext.debugInputEnable(true);
 		window['AscCommon'].g_inputContext.show();
+	};
+
+	window['AscCommon'].StartIntervalDrawText = function (isStart) {
+		if (isStart) {
+			window.renderIntervalId = setInterval(function(){
+
+				window.LOCK_DRAW = false;
+
+				if (undefined !== window.TEXT_DRAW_INSTANCE)
+					window.TEXT_DRAW_INSTANCE._renderText(window.TEXT_DRAW_INSTANCE_POS);
+
+				window.TEXT_DRAW_INSTANCE = undefined;
+				window.TEXT_DRAW_INSTANCE_POS = 0;
+
+			}, 20);
+		} else {
+			clearInterval(window.renderIntervalId);
+		}
 	};
 })(window);

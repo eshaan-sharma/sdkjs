@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -48,6 +48,8 @@ function MoveShapeImageTrack(originalObject)
     this.originalShape = originalObject;
     this.lastDx = 0;
     this.lastDy = 0;
+
+		this.smartArtParent = this.originalObject.isObjectInSmartArt() ? this.originalObject.group.group.parent : null;
 
     var nObjectType = originalObject.getObjectType && originalObject.getObjectType();
     if(nObjectType === AscDFH.historyitem_type_ChartSpace
@@ -125,6 +127,14 @@ function MoveShapeImageTrack(originalObject)
         {
             global_MatrixTransformer.MultiplyAppend(this.transform, this.originalObject.group.transform);
         }
+	    if (this.smartArtParent)
+	    {
+		    var parent_transform = this.smartArtParent.Get_ParentTextTransform && this.smartArtParent.Get_ParentTextTransform();
+		    if(parent_transform)
+		    {
+			    global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
+		    }
+	    }
         if(AscFormat.isRealNumber(pageIndex))
             this.pageIndex = pageIndex;
 
@@ -651,6 +661,140 @@ function MoveComment(comment)
     };
 }
 
+function MoveAnnotationTrack(originalObject)
+{
+    this.bIsTracked     = false;
+    this.originalObject = originalObject;
+    this.x              = originalObject._pagePos.x;
+    this.y              = originalObject._pagePos.y;
+    this.viewer         = editor.getDocumentRenderer();
+    this.objectToDraw   = originalObject.LazyCopy();
+    this.pageIndex      = originalObject.GetPage();
+
+    this.track = function(dx, dy, pageIndex)
+    {
+        this.bIsTracked = true;
+        this.x = this.originalObject._pagePos.x + dx * AscCommon.g_dKoef_mm_to_pix;
+        this.y = this.originalObject._pagePos.y + dy * AscCommon.g_dKoef_mm_to_pix;
+        this.pageIndex = pageIndex;
+
+        this.initCanvas();
+    };
+    this.initCanvas = function(bStart) {
+        let nPage   = this.pageIndex;
+
+        if (bStart || nPage != this.objectToDraw.GetPage()) {
+            let page = this.viewer.drawingPages[nPage];
+            let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+            let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+
+            this.tmpCanvas = document.createElement('canvas');
+            this.tmpCanvas.width = w;
+            this.tmpCanvas.height = h;
+        }
+    };
+
+    this.draw = function(oDrawer)
+    {
+        // рисуем на отдельном канвасе
+        let nPage = this.pageIndex;
+        this.objectToDraw.SetPage(nPage);
+
+        let page = this.viewer.drawingPages[nPage];
+        if (!page)
+            return;
+
+        if(AscFormat.isRealNumber(nPage) && oDrawer.SetCurrentPage)
+        {
+            oDrawer.SetCurrentPage(nPage);
+        }
+
+        let oOverlay = oDrawer.m_oOverlay || oDrawer;
+        if(oOverlay)
+        {
+            oOverlay.ClearAll = true;
+            oOverlay.CheckRect(0, 0, 5, 5);
+        }
+
+        let xCenter = this.viewer.width >> 1;
+		let yPos = this.viewer.scrollY >> 0;
+		if (this.viewer.documentWidth > this.viewer.width)
+		{
+			xCenter = (this.viewer.documentWidth >> 1) - (this.viewer.scrollX) >> 0;
+		}
+
+        let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+        let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+        
+        let tmpCanvasCtx = this.tmpCanvas.getContext('2d');
+        tmpCanvasCtx.clearRect(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
+
+        let x = ((xCenter * AscCommon.AscBrowser.retinaPixelRatio) >> 0) - (w >> 1);
+        let y = ((page.Y - yPos) * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+        
+        let oGraphicsPDF, oGraphicsWord;
+        oGraphicsPDF = new AscPDF.CPDFGraphics();
+        oGraphicsPDF.Init(tmpCanvasCtx, this.tmpCanvas.width, this.tmpCanvas.height, this.viewer.file.getPageWidth(nPage) , this.viewer.file.getPageHeight(nPage));
+        oGraphicsPDF.SetGlobalAlpha(1);
+
+        oGraphicsPDF.SetCurPage(this.objectToDraw.GetPage());
+        switch (this.objectToDraw.GetType())
+        {
+            case AscPDF.ANNOTATIONS_TYPES.Ink:
+            case AscPDF.ANNOTATIONS_TYPES.Line:
+            case AscPDF.ANNOTATIONS_TYPES.Square:
+            case AscPDF.ANNOTATIONS_TYPES.Polygon:
+            case AscPDF.ANNOTATIONS_TYPES.PolyLine:
+            case AscPDF.ANNOTATIONS_TYPES.FreeText:
+            case AscPDF.ANNOTATIONS_TYPES.Circle: {
+                let nScale  = AscCommon.AscBrowser.retinaPixelRatio * this.viewer.zoom;
+                oGraphicsWord   = new AscCommon.CGraphics();
+
+				oGraphicsWord.init(tmpCanvasCtx, this.tmpCanvas.width * nScale, this.tmpCanvas.height * nScale,
+                    this.tmpCanvas.width * AscCommon.g_dKoef_pix_to_mm, this.tmpCanvas.height * AscCommon.g_dKoef_pix_to_mm);
+				oGraphicsWord.m_oFontManager = AscCommon.g_fontManager;
+				oGraphicsWord.setEndGlobalAlphaColor(255, 255, 255);
+				oGraphicsWord.transform(1, 0, 0, 1, 0, 0);
+                break;
+            }
+        }
+
+        oDrawer.m_oContext.globalAlpha = 0.5;
+
+        this.objectToDraw.SetPosition(this.x, this.y, true);
+        if (this.originalObject.IsNeedDrawFromStream())
+            this.objectToDraw.DrawFromStream(oGraphicsPDF, oGraphicsWord);
+        else
+            this.objectToDraw.Draw(oGraphicsPDF, oGraphicsWord);
+
+        if (true == this.viewer.isLandscapePage(nPage))
+            x = x + (w - h) / 2;
+
+        oDrawer.m_oContext.drawImage(this.tmpCanvas, 0, 0, w, h, x, y, w, h);
+    };
+
+    this.trackEnd = function()
+    {
+        if(!this.bIsTracked){
+            return;
+        }
+
+        this.originalObject.SetPosition(this.x, this.y);
+        this.originalObject.SetPage(this.pageIndex);
+        if (this.originalObject.IsFreeText()) {
+            this.originalObject.onAfterMove();
+        }
+    };
+
+    this.getBounds = function()
+    {
+        return {x: this.x, y: this.y};
+    };
+    
+    this.initCanvas(true);
+}
+
+
 function MoveChartObjectTrack(oObject, oChartSpace)
 {
     this.bIsTracked = false;
@@ -726,9 +870,21 @@ function MoveChartObjectTrack(oObject, oChartSpace)
             oObjectToSet.layout.setW(fLayoutW);
             oObjectToSet.layout.setH(fLayoutH);
         }
-        var pos = this.chartSpace.chartObj.recalculatePositionText(this.originalObject);
-        var fLayoutX = this.chartSpace.calculateLayoutByPos(pos.x, oObjectToSet.layout.xMode, this.x, this.chartSpace.extX);
-        var fLayoutY = this.chartSpace.calculateLayoutByPos(pos.y, oObjectToSet.layout.yMode, this.y, this.chartSpace.extY);
+
+
+        let fLayoutX;
+        let fLayoutY;
+        let pos;
+        if(this.originalObject.parent && this.originalObject.parent.getObjectType() === AscDFH.historyitem_type_TrendLine) {
+            pos = this.chartSpace.chartObj.recalculatePositionText(this.originalObject.parent);
+            fLayoutX = this.chartSpace.calculateLayoutByPos(pos.coordinate.catVal, oObjectToSet.layout.xMode, this.x, this.chartSpace.extX);
+            fLayoutY = this.chartSpace.calculateLayoutByPos(pos.coordinate.valVal, oObjectToSet.layout.yMode, this.y, this.chartSpace.extY);
+        }
+        else {
+            pos = this.chartSpace.chartObj.recalculatePositionText(this.originalObject);
+            fLayoutX = this.chartSpace.calculateLayoutByPos(pos.x, oObjectToSet.layout.xMode, this.x, this.chartSpace.extX);
+            fLayoutY = this.chartSpace.calculateLayoutByPos(pos.y, oObjectToSet.layout.yMode, this.y, this.chartSpace.extY);
+        }
 
         oObjectToSet.layout.setX(fLayoutX);
         oObjectToSet.layout.setY(fLayoutY);
@@ -853,4 +1009,5 @@ function MoveChartObjectTrack(oObject, oChartSpace)
     window['AscFormat'].MoveComment = MoveComment;
     window['AscFormat'].MoveChartObjectTrack = MoveChartObjectTrack;
     window['AscFormat'].CGuideTrack = CGuideTrack;
+    window['AscFormat'].MoveAnnotationTrack = MoveAnnotationTrack;
 })(window);

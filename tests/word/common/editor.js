@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -47,6 +47,7 @@
 		TargetStart : function(){},
 		TargetShow : function(){},
 		TargetEnd : function(){},
+		showTarget : function(){},
 		Set_RulerState_Start : function(){},
 		Set_RulerState_Paragraph : function(){},
 		Set_RulerState_End : function(){},
@@ -63,7 +64,10 @@
 		GetDotsPerMM : function(value) {return 72;},
 		EndTrackTable : function() {},
 		SetCurrentPage : function(pageNum) {},
-		SelectClear : function() {}
+		SelectClear : function() {},
+		Start_CollaborationEditing : function() {},
+		End_CollaborationEditing : function() {},
+		ConvertCoordsToCursorWR : function() {return {X : 0, Y : 0};}
 	};
 
 	drawingDocument.CanvasHit = document.createElement('canvas');
@@ -71,9 +75,12 @@
 	
 	window['asc_docs_api'] = AscCommon.baseEditorsApi;
 	
+	let _callbacks = {};
 	const editor = new AscCommon.baseEditorsApi({});
 	editor.WordControl = drawingDocument;
 	editor.WordControl.m_oDrawingDocument = drawingDocument;
+	editor.WordControl.m_oDrawingDocument.m_oWordControl = drawingDocument;
+	editor.WordControl.m_oApi = editor;
 	editor.sync_BeginCatchRevisionsChanges = function(){};
 	editor.sync_EndCatchRevisionsChanges = function(){};
 	editor.sync_ChangeCommentLogicalPosition = function(){};
@@ -101,6 +108,56 @@
 	editor.sync_ColumnsPropsCallback = function(){};
 	editor.sync_LineNumbersPropsCollback = function(){};
 	editor.sync_SectionPropsCallback = function(){};
+	editor.sendEvent = function()
+	{
+		var name = arguments[0];
+		if (_callbacks.hasOwnProperty(name))
+		{
+			for (var i = 0; i < _callbacks[name].length; ++i)
+			{
+				_callbacks[name][i].apply(this || window, Array.prototype.slice.call(arguments, 1));
+			}
+			return true;
+		}
+		return false;
+	};
+	editor.asc_registerCallback = function(name, callback)
+	{
+		if (!_callbacks.hasOwnProperty(name))
+			_callbacks[name] = [];
+		_callbacks[name].push(callback);
+	};
+	editor.asc_unregisterCallback = function(name, callback)
+	{
+		if (_callbacks.hasOwnProperty(name))
+		{
+			for (var i = _callbacks[name].length - 1; i >= 0; --i)
+			{
+				if (_callbacks[name][i] === callback)
+					_callbacks[name].splice(i, 1);
+			}
+		}
+	};
+	editor.getSelectionState = function()
+	{
+		return AscTest.GetLogicDocument().GetSelectionState();
+	};
+	editor.getSpeechDescription = function()
+	{
+		return AscTest.GetLogicDocument().getSpeechDescription(...arguments);
+	};
+	editor.getGraphicController = function()
+	{
+		return AscTest.GetLogicDocument().DrawingObjects;
+	};
+	editor._addRemoveSpaceBeforeAfterParagraph = AscCommon.DocumentEditorApi.prototype._addRemoveSpaceBeforeAfterParagraph.bind(editor);
+	editor.asc_addSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_addSpaceBeforeParagraph.bind(editor);
+	editor.asc_addSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_addSpaceAfterParagraph.bind(editor);
+	editor.asc_removeSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_removeSpaceBeforeParagraph.bind(editor);
+	editor.asc_removeSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_removeSpaceAfterParagraph.bind(editor);
+	editor.asc_haveSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceBeforeParagraph.bind(editor);
+	editor.asc_haveSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceAfterParagraph.bind(editor);
+	editor.initCollaborativeEditing = AscCommon.DocumentEditorApi.prototype.initCollaborativeEditing.bind(editor);
 	
 	//--------------------------------------------------------export----------------------------------------------------
 	AscTest.DrawingDocument = drawingDocument;
@@ -109,4 +166,6 @@
 	window.editor = editor;
 	Asc['editor'] = Asc.editor = editor;
 
+	// TODO: Заменить на вызов onEndLoadSdk
+	editor.initCollaborativeEditing();
 })(window);

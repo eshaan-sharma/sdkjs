@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -92,7 +92,7 @@ StartAddNewShape.prototype =
         this.startX = x;
         this.startY = y;
         this.drawingObjects.arrPreTrackObjects.length = 0;
-        this.drawingObjects.arrPreTrackObjects.push(new AscFormat.NewShapeTrack(this.preset, x, y, this.drawingObjects.document.theme, null, null, null, pageIndex));
+        this.drawingObjects.arrPreTrackObjects.push(new AscFormat.NewShapeTrack(this.preset, x, y, this.drawingObjects.document.theme, null, null, null, pageIndex, this.drawingObjects));
         this.bStart = true;
         this.drawingObjects.swapTrackObjects();
         return true;
@@ -140,61 +140,122 @@ StartAddNewShape.prototype =
             {
                 if(!oTrack.canCreateShape())
                 {
-                    this.drawingObjects.clearTrackObjects();
-                    this.drawingObjects.clearPreTrackObjects();
+                    this.drawingObjects.resetTrackState();
                     this.drawingObjects.updateOverlay();
-                    this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
                     editor.sync_StartAddShapeCallback( false );
                     editor.sync_EndAddShape();
                     return;
                 }
             }
             var oLogicDocument = this.drawingObjects.document;
-
-			oLogicDocument.StartAction(AscDFH.historydescription_Document_AddNewShape);
-            var bounds = oTrack.getBounds();
-            var shape = oTrack.getShape(true, this.drawingObjects.drawingDocument);
-            var drawing = new ParaDrawing(shape.spPr.xfrm.extX, shape.spPr.xfrm.extY, shape, this.drawingObjects.drawingDocument, this.drawingObjects.document, null);
-            var nearest_pos = this.drawingObjects.document.Get_NearestPos(this.pageIndex, bounds.min_x, bounds.min_y, true, drawing);
-            if(nearest_pos && false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {Type : AscCommon.changestype_2_Element_and_Type , Element : nearest_pos.Paragraph, CheckType : AscCommon.changestype_Paragraph_Content} ))
-            {
-                drawing.Set_DrawingType(drawing_Anchor);
-                drawing.Set_GraphicObject(shape);
-                shape.setParent(drawing);
-                drawing.Set_WrappingType(WRAPPING_TYPE_NONE);
-                drawing.Set_Distance( 3.2,  0,  3.2, 0 );
-                nearest_pos.Paragraph.Check_NearestPos(nearest_pos);
-                nearest_pos.Page = this.pageIndex;
-
-                drawing.Set_XYForAdd(shape.x, shape.y, nearest_pos, this.pageIndex);
-                drawing.AddToDocument(nearest_pos);
-                drawing.CheckWH();
-				let oAPI = this.drawingObjects.getEditorApi();
-	            if(!oAPI.isDrawInkMode())
-	            {
-		            this.drawingObjects.resetSelection();
-		            shape.select(this.drawingObjects, this.pageIndex);
-	            }
-                this.drawingObjects.document.Recalculate();
-				oLogicDocument.FinalizeAction();
-                if(this.preset && (this.preset.indexOf("textRect") === 0))
+			this.drawingObjects.resetTrackState();
+            if (false == Asc.editor.isPdfEditor()) {
+                oLogicDocument.StartAction(AscDFH.historydescription_Document_AddNewShape);
+                var bounds = oTrack.getBounds();
+                var shape = oTrack.getShape(true, this.drawingObjects.drawingDocument);
+                var drawing = new ParaDrawing(shape.spPr.xfrm.extX, shape.spPr.xfrm.extY, shape, this.drawingObjects.drawingDocument, oLogicDocument, null);
+                var nearest_pos = this.drawingObjects.document.Get_NearestPos(this.pageIndex, bounds.min_x, bounds.min_y, true, drawing);
+                if(nearest_pos && false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {Type : AscCommon.changestype_2_Element_and_Type , Element : nearest_pos.Paragraph, CheckType : AscCommon.changestype_Paragraph_Content} ))
                 {
-                    this.drawingObjects.selection.textSelection = shape;
-                    shape.selectionSetStart(e, x, y, pageIndex);
-                    shape.selectionSetEnd(e, x, y, pageIndex);
+                    drawing.Set_DrawingType(drawing_Anchor);
+                    drawing.Set_GraphicObject(shape);
+                    shape.setParent(drawing);
+                    drawing.Set_WrappingType(WRAPPING_TYPE_NONE);
+                    drawing.Set_Distance( 3.2,  0,  3.2, 0 );
+                    nearest_pos.Paragraph.Check_NearestPos(nearest_pos);
+                    nearest_pos.Page = this.pageIndex;
+
+                    drawing.Set_XYForAdd(shape.x, shape.y, nearest_pos, this.pageIndex);
+                    drawing.AddToDocument(nearest_pos);
+                    drawing.CheckWH();
+                    let oAPI = this.drawingObjects.getEditorApi();
+                    if(!oAPI.isDrawInkMode())
+                    {
+                        this.drawingObjects.resetSelection();
+                        shape.select(this.drawingObjects, this.pageIndex);
+                    }
+                    this.drawingObjects.document.Recalculate();
+                    oLogicDocument.FinalizeAction();
+                    if(this.preset && (this.preset.indexOf("textRect") === 0))
+                    {
+                        this.drawingObjects.selection.textSelection = shape;
+                        shape.selectionSetStart(e, x, y, pageIndex);
+                        shape.selectionSetEnd(e, x, y, pageIndex);
+                    }
+                    bRet = true;
                 }
-                bRet = true;
+                else
+                {
+                    this.drawingObjects.document.Document_Undo();
+                    oLogicDocument.FinalizeAction(false);
+                }
             }
             else
             {
-                this.drawingObjects.document.Document_Undo();
-				oLogicDocument.FinalizeAction(false);
+                let oViewer = Asc.editor.getDocumentRenderer();
+                // рисование кистью
+                if (Asc.editor.isInkDrawerOn()) {
+                    oLogicDocument.DoAction(function() {
+                        let nScaleY = oViewer.drawingPages[this.pageIndex].H / oViewer.file.pages[this.pageIndex].H / oViewer.zoom;
+                        let nScaleX = oViewer.drawingPages[this.pageIndex].W / oViewer.file.pages[this.pageIndex].W / oViewer.zoom;
+
+                        // добавлем path если рисование не закончено
+                        if (oLogicDocument.currInkInDrawingProcess && oLogicDocument.currInkInDrawingProcess.GetPage() == this.pageIndex) {
+                            let aInkPath = [];
+                            for (let i = 0; i < oTrack.arrPoint.length; i++) {
+                                aInkPath.push(oTrack.arrPoint[i].x * g_dKoef_mm_to_pix / nScaleX);
+                                aInkPath.push(oTrack.arrPoint[i].y * g_dKoef_mm_to_pix / nScaleY);
+                            }
+                            
+                            oLogicDocument.currInkInDrawingProcess.AddInkPath(aInkPath);
+                        }
+                        else {
+                            var bounds  = oTrack.getBounds();
+                            
+                            let nLineW  = oTrack.pen.w / 36000 * g_dKoef_mm_to_pix;
+                            let aRect   = [(bounds.min_x * g_dKoef_mm_to_pix - nLineW) / nScaleX, (bounds.min_y * g_dKoef_mm_to_pix - nLineW) / nScaleY, (bounds.max_x * g_dKoef_mm_to_pix + nLineW) / nScaleX, (bounds.max_y * g_dKoef_mm_to_pix + nLineW) / nScaleY];
+        
+                            let oInkAnnot = oLogicDocument.AddAnnot({
+                                rect:       aRect,
+                                page:       this.pageIndex,
+                                contents:   null,
+                                type:       AscPDF.ANNOTATIONS_TYPES.Ink,
+                                creationDate:   (new Date().getTime()).toString(),
+                                modDate:        (new Date().getTime()).toString()
+                            });
+        
+                            let oRGBPen = oTrack.pen.Fill.getRGBAColor();
+
+                            let aInkPath = [];
+                            for (let i = 0; i < oTrack.arrPoint.length; i++) {
+                                aInkPath.push(oTrack.arrPoint[i].x * g_dKoef_mm_to_pix / nScaleX);
+                                aInkPath.push(oTrack.arrPoint[i].y * g_dKoef_mm_to_pix / nScaleY);
+                            }
+
+                            oInkAnnot.SetWidth(oTrack.pen.w / (36000  * g_dKoef_pt_to_mm));
+                            oInkAnnot.AddInkPath(aInkPath);
+                            oInkAnnot.SetStrokeColor([oRGBPen.R / 255, oRGBPen.G / 255, oRGBPen.B / 255]);
+                            oInkAnnot.SetOpacity(oTrack.pen.Fill.transparent / 255);
+                            
+                            // запомнили добавленную Ink фигуру, к ней будем добавлять новые path пока рисование не закончится
+                            oLogicDocument.currInkInDrawingProcess = oInkAnnot;
+                        }
+                    }, AscDFH.historydescription_Pdf_AddAnnot, this);
+                }
+                else {
+                    oLogicDocument.DoAction(function() {
+                        // добавление шейпов
+                        let oShape = oTrack.getShape(false, this.drawingObjects.drawingDocument, oLogicDocument);
+                        oLogicDocument.AddDrawing(oShape, this.pageIndex);
+                        oLogicDocument.SetMouseDownObject(oShape);
+                        oShape.select(oLogicDocument.GetController(), this.pageIndex);
+
+                        bRet = true;
+                    }, AscDFH.historydescription_Document_AddNewShape, this);
+                }
             }
         }
-        this.drawingObjects.clearTrackObjects();
-        this.drawingObjects.clearPreTrackObjects();
         this.drawingObjects.updateOverlay();
-        this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
         editor.sync_StartAddShapeCallback( false );
         editor.sync_EndAddShape();
         return bRet;
@@ -340,60 +401,86 @@ NullState.prototype =
             }
         }
 
-        var drawing_page = this.drawingObjects.getGraphicPage && this.drawingObjects.getGraphicPage(pageIndex);
-        if(drawing_page)
-        {
-            ret = AscFormat.handleFloatObjects(this.drawingObjects, drawing_page.beforeTextObjects, e, x, y, null, pageIndex, true);
-            if(ret)
+        if (editor.isDocumentRenderer() == false) {
+            var drawing_page = this.drawingObjects.getGraphicPage && this.drawingObjects.getGraphicPage(pageIndex);
+            if(drawing_page)
             {
-                if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
-                {
-                    end_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
-                    if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content))
-                    {
-                        fRecalculatePages();
-                    }
-                }
-                return ret;
-            }
-
-            var no_shape_child_array = [];
-            for(var i = 0; i < drawing_page.inlineObjects.length; ++i)
-            {
-                if(!(drawing_page.inlineObjects[i].parent && drawing_page.inlineObjects[i].parent.isShapeChild()))
-                    no_shape_child_array.push(drawing_page.inlineObjects[i]);
-            }
-            ret = AscFormat.handleInlineObjects(this.drawingObjects, no_shape_child_array, e, x, y, pageIndex, true);
-            if(ret)
-            {
-                if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
-                {
-                    end_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
-                    if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content))
-                    {
-                        fRecalculatePages();
-                    }
-                }
-                return ret;
-            }
-
-            if(!bTextFlag)
-            {
-                ret = AscFormat.handleFloatObjects(this.drawingObjects, drawing_page.behindDocObjects, e, x, y, null, pageIndex, true);
+                ret = AscFormat.handleFloatObjects(this.drawingObjects, drawing_page.beforeTextObjects, e, x, y, null, pageIndex, true);
                 if(ret)
                 {
                     if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
                     {
                         end_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
-                        if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content)) {
-
+                        if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content))
+                        {
                             fRecalculatePages();
                         }
                     }
                     return ret;
                 }
+
+                var no_shape_child_array = [];
+                for(var i = 0; i < drawing_page.inlineObjects.length; ++i)
+                {
+                    if(!(drawing_page.inlineObjects[i].parent && drawing_page.inlineObjects[i].parent.isShapeChild()))
+                        no_shape_child_array.push(drawing_page.inlineObjects[i]);
+                }
+                ret = AscFormat.handleInlineObjects(this.drawingObjects, no_shape_child_array, e, x, y, pageIndex, true);
+                if(ret)
+                {
+                    if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
+                    {
+                        end_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
+                        if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content))
+                        {
+                            fRecalculatePages();
+                        }
+                    }
+                    return ret;
+                }
+
+                if(!bTextFlag)
+                {
+                    ret = AscFormat.handleFloatObjects(this.drawingObjects, drawing_page.behindDocObjects, e, x, y, null, pageIndex, true);
+                    if(ret)
+                    {
+                        if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
+                        {
+                            end_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
+                            if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content)) {
+
+                                fRecalculatePages();
+                            }
+                        }
+                        return ret;
+                    }
+                }
             }
         }
+        else {
+            let oViewer = Asc.editor.getDocumentRenderer();
+
+            let aDrawings = [];
+
+            aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].drawings);
+            aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].annots);
+
+            ret = AscFormat.handleFloatObjects(this.drawingObjects, aDrawings, e, x, y, null, pageIndex, true);
+
+            if(ret)
+            {
+                if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_HANDLE)
+                {
+                    end_target_doc_content = this.drawingObjects.getTargetDocContent();
+                    if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content)) {
+
+                        this.drawingObjects.checkChartTextSelection();
+                    }
+                }
+                return ret;
+            }
+        }
+        
         if(start_target_doc_content)
         {
             fRecalculatePages();
@@ -525,6 +612,7 @@ MoveInlineObject.prototype =
 
     onMouseUp: function(e, x,y,pageIndex)
     {
+        this.drawingObjects.resetTrackState();
         var check_paragraphs = [];
 
 		if (this.majorObject.parent.CanInsertToPos(this.InlinePos))
@@ -714,7 +802,8 @@ RotateState.prototype =
 
     onMouseUp: function(e, x, y, pageIndex)
     {
-        var aTracks = this.drawingObjects.arrTrackObjects;
+        var aTracks = [].concat(this.drawingObjects.arrTrackObjects);
+        this.drawingObjects.resetTrackState();
         if(aTracks[0] && aTracks[0].chartSpace)
         {
 
@@ -729,13 +818,144 @@ RotateState.prototype =
         else
         {
             var bounds;
+            if (Asc.editor.isPdfEditor()) {
+                let oViewer = Asc.editor.getDocumentRenderer();
+                let oDoc    = oViewer.getPDFDoc();
+
+                oDoc.DoAction(function() {
+                    for (i = 0; i < aTracks.length; ++i)
+                        {   
+                            var oTrack  = aTracks[i];
+                            bounds      = oTrack.getBounds();
+                            
+                            oTrack.trackEnd(false);
+    
+                            // для аннотаций свой расчет ректа и точек, потому что меняем саму геометрию при редактировании
+                            if (oTrack.originalObject.IsAnnot() && (oTrack instanceof AscFormat.ResizeTrackShapeImage || oTrack instanceof AscFormat.EditShapeGeometryTrack)) {
+                                let oAnnot  = oTrack.originalObject;
+                                let aRect   = [bounds.posX * g_dKoef_mm_to_pix, bounds.posY * g_dKoef_mm_to_pix, (bounds.posX + bounds.extX) * g_dKoef_mm_to_pix, (bounds.posY + bounds.extY) * g_dKoef_mm_to_pix];
+                                
+                                if (oTrack.originalFlipV != oTrack.resizedflipV)
+                                    oDoc.History.Add(new CChangesPDFInkFlipV(oAnnot, oTrack.originalFlipV, oTrack.resizedflipV));
+                                if (oTrack.originalFlipH != oTrack.resizedflipH)
+                                    oDoc.History.Add(new CChangesPDFInkFlipH(oAnnot, oTrack.originalFlipH, oTrack.resizedflipH));
+    
+                                if (oAnnot.IsLine()) {
+                                    
+                                    let aPaths = oTrack.geometry.pathLst[0].ArrPathCommand;
+    
+                                    let nPage = oAnnot.GetPage();
+                                    let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
+                                    let nScaleX = oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W / oViewer.zoom;
+    
+                                    let aLinePoints = [];
+                                    let oTranform   = oAnnot.transform;
+                                    // считаем новые точки linePoints (в оригинальных координатах - в пикселях, без скейлов)
+                                    aLinePoints.push(oTranform.TransformPointX(aPaths[0].X, 0) * g_dKoef_mm_to_pix / nScaleX)
+                                    aLinePoints.push(oTranform.TransformPointY(0, aPaths[0].Y) * g_dKoef_mm_to_pix / nScaleY)
+                                    aLinePoints.push(oTranform.TransformPointX(aPaths[1].X, 0) * g_dKoef_mm_to_pix / nScaleX)
+                                    aLinePoints.push(oTranform.TransformPointY(0, aPaths[1].Y) * g_dKoef_mm_to_pix / nScaleY)
+    
+                                    oAnnot.SetLinePoints(aLinePoints);
+                                    oAnnot.SetRect(oAnnot.GetMinShapeRect());
+                                }
+                                else if (oAnnot.IsPolygon()) {
+                                    // меняем только редактируемую точку в массиве vertices
+                                    var pageObject  = oViewer.getPageByCoords(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+                                    let aVertices   = oAnnot.GetVertices().slice();
+                                    
+                                    // если редактируется последняя точка, то надо отредактировать ещё начальную (только у Polygon, в случае если первая совпадает с последней)
+                                    let nStartPos = (oTrack.gmEditPtIdx + 1) * 2;
+    
+                                    let nFirstX = aVertices[0];
+                                    let nFirstY = aVertices[1];
+                                    let nLastX  = aVertices[aVertices.length - 2];
+                                    let nLastY  = aVertices[aVertices.length - 1];
+    
+                                    if (nStartPos == aVertices.length - 2 && nFirstX == nLastX && nFirstY == nLastY) {
+                                        aVertices.splice(0, 2, pageObject.x, pageObject.y);
+                                    }
+    
+                                    let nPage = oAnnot.GetPage();
+                                    let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
+                                    let nScaleX = oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W / oViewer.zoom;
+    
+                                    aVertices.splice(nStartPos, 2, pageObject.x, pageObject.y);
+                                    oAnnot.SetVertices(aVertices);
+    
+                                    // расширяем рект на ширину линии (или на радиус cloud бордера)
+                                    let nLineWidth = oAnnot.GetWidth() * g_dKoef_pt_to_mm * g_dKoef_mm_to_pix;
+                                    if (oAnnot.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.Cloud) {
+                                        aRect[0] -= oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pix * nScaleX;
+                                        aRect[1] -= oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pix * nScaleY;
+                                        aRect[2] += oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pix * nScaleX;
+                                        aRect[3] += oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pix * nScaleY;
+                                    }
+                                    else {
+                                        aRect[0] -= nLineWidth * nScaleX;
+                                        aRect[1] -= nLineWidth * nScaleY;
+                                        aRect[2] += nLineWidth * nScaleX;
+                                        aRect[3] += nLineWidth * nScaleY;
+                                    }
+    
+                                    oAnnot.SetRect(aRect);
+                                }
+                                else if (oAnnot.IsPolyLine()) {
+                                    // меняем только редактируемую точку в массиве vertices
+                                    var pageObject  = oViewer.getPageByCoords(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+                                    let aVertices   = oAnnot.GetVertices().slice();
+                                    let nStartPos   = oTrack.gmEditPtIdx * 2;
+                                    
+                                    let nPage   = oAnnot.GetPage();
+                                    let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
+                                    let nScaleX = oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W / oViewer.zoom;
+    
+                                    aVertices.splice(nStartPos, 2, pageObject.x, pageObject.y);
+                                    oAnnot.SetVertices(aVertices);
+    
+                                    // расширяем рект на ширину линии
+                                    let nLineWidth = oAnnot.GetWidth() * g_dKoef_pt_to_mm * g_dKoef_mm_to_pix;
+                                    aRect[0] -= nLineWidth * nScaleX;
+                                    aRect[1] -= nLineWidth * nScaleY;
+                                    aRect[2] += nLineWidth * nScaleX;
+                                    aRect[3] += nLineWidth * nScaleY;
+    
+                                    // у polyline могут быть окончания линии, их тоже учитываем
+                                    let aResultRect = aRect;
+                                    if (oAnnot.IsPolyLine()) {
+                                        let aMinShapeRect = oAnnot.GetMinShapeRect();
+                                        aResultRect = AscPDF.unionRectangles([aRect, aMinShapeRect]);
+                                    }
+    
+                                    oAnnot.SetRect(aResultRect);
+                                }
+                                else {
+                                    oAnnot.SetRect(aRect);
+                                }
+                            }
+                            if (oTrack.originalObject.IsDrawing() && oTrack instanceof AscFormat.MoveShapeImageTrack) {
+                                if (pageIndex != oTrack.originalObject.pageIndex) {
+                                    oTrack.originalObject.SetPage(pageIndex);
+                                }
+                            }
+                            
+                            oTrack.originalObject.SetNeedRecalc(true);
+                        }
+                }, AscDFH.historydescription_Document_RotateFlowDrawingNoCtrl, this);
+
+                this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
+                this.drawingObjects.clearTrackObjects();
+
+                return;
+            }
+            
             if(this.majorObject.parent.Is_Inline && this.majorObject.parent.Is_Inline())
             {
                 if(this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
                 {
                     this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_RotateInlineDrawing);
-                    this.drawingObjects.arrTrackObjects[0].trackEnd(true);
-                    if(!this.drawingObjects.arrTrackObjects[0].view3D)
+                    aTracks[0].trackEnd(true);
+                    if(!aTracks[0].view3D)
                     {
                         this.majorObject.parent.CheckWH();
                     }
@@ -749,13 +969,17 @@ RotateState.prototype =
                 {
                     var aCheckParagraphs = [], aNearestPos = [], aParentParagraphs = [], aBounds = [], aDrawings = [], bMoveState = (this instanceof MoveState), nearest_pos;
                     var i, j, page_index, para_drawing;
-                    for(i = 0; i < this.drawingObjects.arrTrackObjects.length; ++i)
+                    for(i = 0; i < aTracks.length; ++i)
                     {
-                        aDrawings[i] = this.drawingObjects.arrTrackObjects[i].originalObject.parent;
-                        bounds = this.drawingObjects.arrTrackObjects[i].getBounds();
+                        let oTrack = aTracks[i];
+                        let oDrawing = oTrack.originalObject;
+                        let oParaDrawing = oDrawing.GetParaDrawing()
+                        aDrawings[i] = oParaDrawing;
+                        bounds = oTrack.getBounds();
                         aBounds.push(bounds);
-                        page_index = AscFormat.isRealNumber(this.drawingObjects.arrTrackObjects[i].pageIndex) ? this.drawingObjects.arrTrackObjects[i].pageIndex : this.drawingObjects.arrTrackObjects[i].originalObject.parent.pageIndex;
-                        nearest_pos = this.drawingObjects.document.Get_NearestPos(page_index, bounds.min_x, bounds.min_y, true, this.drawingObjects.arrTrackObjects[i].originalObject.parent);
+                        page_index = AscFormat.isRealNumber(oTrack.pageIndex) ? oTrack.pageIndex : oParaDrawing.pageIndex;
+                        nearest_pos = this.drawingObjects.document.Get_NearestPos(page_index, bounds.min_x, bounds.min_y, true, oParaDrawing);
+                        nearest_pos.Paragraph.MoveCursorToAnchorPos(nearest_pos);
                         aNearestPos.push(nearest_pos);
                         aParentParagraphs.push(aDrawings[i].Get_ParentParagraph());
                     }
@@ -776,7 +1000,7 @@ RotateState.prototype =
                             this.drawingObjects.resetSelection();
                             this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_RotateFlowDrawingCtrl);
                             var aDrawingsToAdd = [];
-							for(i = 0; i < this.drawingObjects.arrTrackObjects.length; ++i)
+							for(i = 0; i < aTracks.length; ++i)
                             {
                                 bounds = aBounds[i];
                                 para_drawing = aDrawings[i].Copy();
@@ -808,8 +1032,13 @@ RotateState.prototype =
                                 {
                                     para_drawing.AddToParagraph(aDrawings[i].Get_ParentParagraph());
                                 }
-                                this.drawingObjects.selectObject(para_drawing.GraphicObj, pageIndex);
 							}
+                            //ToDo: Do not Select drawing on ParaDrawing.prototype.AddToDocument
+                            for(i = 0; i < aDrawingsToAdd.length; ++i)
+                            {
+                                para_drawing = aDrawingsToAdd[i];
+                                this.drawingObjects.selectObject(para_drawing.GraphicObj, pageIndex);
+                            }
                             this.drawingObjects.document.Recalculate();
                             this.drawingObjects.document.FinalizeAction();
                         }
@@ -841,7 +1070,7 @@ RotateState.prototype =
                             for(i = 0; i < aDrawings.length; ++i)
                             {
                                 bounds = aBounds[i];
-                                var oTrack = this.drawingObjects.arrTrackObjects[i];
+                                var oTrack = aTracks[i];
                                 oTrack.trackEnd(true);
                                 var original = aDrawings[i];
                                 if(!bMoveState && !oTrack.view3D && !(oTrack.originalObject && oTrack.originalObject.isCrop))
@@ -906,8 +1135,6 @@ RotateState.prototype =
                 }
             }
         }
-        this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
-        this.drawingObjects.clearTrackObjects();
         this.drawingObjects.updateOverlay();
     }
 };
@@ -1085,7 +1312,7 @@ PreMoveState.prototype =
 
     onMouseMove: function(e, x, y, pageIndex)
     {
-        if(!e.IsLocked || (this.majorObject && this.majorObject.isForm() && this.majorObject.getInnerForm() && this.majorObject.getInnerForm().IsFormLocked()))
+        if(!e.IsLocked || (this.majorObject && this.majorObject.isForm && this.majorObject.isForm() && this.majorObject.getInnerForm() && this.majorObject.getInnerForm().IsFormLocked()))
         {
             this.onMouseUp(e, x, y, pageIndex);
             return;
@@ -1170,13 +1397,16 @@ MoveState.prototype =
 
         var snapHorArray = [], snapVerArray = [];
 
-        var page = this.drawingObjects.document.Pages[pageIndex];
-        snapHorArray.push(page.Margins.Left);
-        snapHorArray.push(page.Margins.Right);
-        snapHorArray.push(page.Width/2);
-        snapVerArray.push(page.Margins.Top);
-        snapVerArray.push(page.Margins.Bottom);
-        snapVerArray.push(page.Height/2);
+        var page = this.drawingObjects.document.Pages ? this.drawingObjects.document.Pages[pageIndex] : null;
+        if (page) {
+            snapHorArray.push(page.Margins.Left);
+            snapHorArray.push(page.Margins.Right);
+            snapHorArray.push(page.Width/2);
+            snapVerArray.push(page.Margins.Top);
+            snapVerArray.push(page.Margins.Bottom);
+            snapVerArray.push(page.Height/2);
+        }
+        
         if(result_x === this.startX)
         {
             min_dx = 0;
@@ -1186,7 +1416,7 @@ MoveState.prototype =
             for(var track_index = 0; track_index < _arr_track_objects.length; ++track_index)
             {
                 var cur_track_original_shape = _arr_track_objects[track_index].originalObject;
-                var trackSnapArrayX = cur_track_original_shape.snapArrayX;
+                var trackSnapArrayX = cur_track_original_shape ? cur_track_original_shape.snapArrayX : null;
                 if(!trackSnapArrayX)
                 {
                     continue;
@@ -1258,7 +1488,7 @@ MoveState.prototype =
             for(track_index = 0; track_index < _arr_track_objects.length; ++track_index)
             {
                 cur_track_original_shape = _arr_track_objects[track_index].originalObject;
-                var trackSnapArrayY = cur_track_original_shape.snapArrayY;
+                var trackSnapArrayY = cur_track_original_shape ? cur_track_original_shape.snapArrayY : null;
                 if(!trackSnapArrayY)
                 {
                     continue;
@@ -1456,17 +1686,22 @@ MoveInGroupState.prototype =
 
     onMouseUp: function(e, x, y, pageIndex)
     {
-        var parent_paragraph = this.group.parent.Get_ParentParagraph();
-        var check_paragraphs = [];
-        if(this.group.parent.Is_Inline())
-        {
-            check_paragraphs.push(parent_paragraph);
+        let isPdf = Asc.editor.isPdfEditor();
+        if (false == isPdf) {
+            var parent_paragraph = this.group.parent.Get_ParentParagraph();
+            var check_paragraphs = [];
+            if(this.group.parent.Is_Inline())
+            {
+                check_paragraphs.push(parent_paragraph);
+            }
         }
-        if(false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props, {Type : changestype_2_ElementsArray_and_Type , Elements : check_paragraphs, CheckType : AscCommon.changestype_Paragraph_Content}))
+
+        var tracks = [].concat(this.drawingObjects.arrTrackObjects);
+        this.drawingObjects.resetTrackState();
+        if(isPdf || false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props, {Type : changestype_2_ElementsArray_and_Type , Elements : check_paragraphs, CheckType : AscCommon.changestype_Paragraph_Content}))
         {
-			this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_MoveInGroup);
+			!isPdf && this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_MoveInGroup);
             var i;
-            var tracks = this.drawingObjects.arrTrackObjects;
             if(this instanceof MoveInGroupState && e.CtrlKey && !this.hasObjectInSmartArt)
             {
                 this.group.resetSelection();
@@ -1486,44 +1721,275 @@ MoveInGroupState.prototype =
             }
             else
             {
-                for(i = 0; i < this.drawingObjects.arrTrackObjects.length; ++i)
+                for(i = 0; i < tracks.length; ++i)
                 {
-                    this.drawingObjects.arrTrackObjects[i].trackEnd(true);
+                    isPdf && tracks[i].originalObject.group.SetWasChanged(true);
+                    isPdf && tracks[i].originalObject.group.AddToRedraw();
+                    tracks[i].trackEnd(true);
                 }
             }
-            var oPosObject = this.group.updateCoordinatesAfterInternalResize();
-            this.group.recalculate();
-            var posX = oPosObject.posX;
-            var posY = oPosObject.posY;
-            this.group.spPr.xfrm.setOffX(0);
-            this.group.spPr.xfrm.setOffY(0);
-            if(this.group.parent.Is_Inline())
-            {
-                this.group.parent.CheckWH();
+            
+            if (isPdf == false) {
+                var oPosObject = this.group.updateCoordinatesAfterInternalResize();
+                this.group.recalculate();
+                var posX = oPosObject.posX;
+                var posY = oPosObject.posY;
+                this.group.spPr.xfrm.setOffX(0);
+                this.group.spPr.xfrm.setOffY(0);
+
+                if(this.group.parent.Is_Inline())
+                {
+                    this.group.parent.CheckWH();
+                }
+                else
+                {
+                    this.group.parent.CheckWH();
+                    let nPageNum;
+                    if(this.group && this.group.parent)
+                    {
+                        nPageNum = this.group.parent.pageIndex;
+                    }
+                    else if(AscFormat.isRealNumber(this.startPageIndex))
+                    {
+                        nPageNum = this.startPageIndex;
+                    }
+                    else
+                    {
+                        nPageNum = 0;
+                    }
+                    this.group.parent.Set_XY(this.group.posX + posX, this.group.posY + posY, parent_paragraph, nPageNum, false);
+                }
+                this.drawingObjects.document.Recalculate();
+                this.drawingObjects.document.FinalizeAction();
             }
-            else
-            {
-                this.group.parent.CheckWH();
-				let nPageNum;
-	            if(this.group && this.group.parent)
-				{
-		            nPageNum = this.group.parent.pageIndex;
-	            }
-				else if(AscFormat.isRealNumber(this.startPageIndex))
-				{
-		            nPageNum = this.startPageIndex;
-	            }
-				else
-	            {
-					nPageNum = 0;
-	            }
-                this.group.parent.Set_XY(this.group.posX + posX, this.group.posY + posY, parent_paragraph, nPageNum, false);
+            else {
+                let oViewer = Asc.editor.getDocumentRenderer();
+                let oDoc    = oViewer.getPDFDoc();
+                let nPage   = this.group.GetPage();
+                let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
+                let nScaleX = oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W / oViewer.zoom;
+
+                let xMin;
+                let yMin;
+                let xMax;
+                let yMax;
+
+                let oFreeText       = this.group;
+                let oFreeTextRect   = oFreeText.GetRect();
+                let aTextBoxRect    = oFreeText.GetTextBoxRect();
+                let aCallout        = oFreeText.GetCallout();
+                let aNewCallout     = aCallout.slice();
+                let aCurRD          = oFreeText.GetRectangleDiff();
+                let aNewRD          = [];
+                let aNewRect        = [];
+
+                function findBoundingRectangle(points) {
+                    if (!points || points.length == 0) {
+                        return null;
+                    }
+                    
+                    let minX = points[0];
+                    let minY = points[1];
+                    let maxX = points[0];
+                    let maxY = points[1];
+                
+                    for (let i = 2; i < points.length; i += 2) {
+                        minX = Math.min(minX, points[i]);
+                        maxX = Math.max(maxX, points[i]);
+                        minY = Math.min(minY, points[i + 1]);
+                        maxY = Math.max(maxY, points[i + 1]);
+                    }
+                
+                    return [minX, minY, maxX, maxY];
+                }
+
+                let oTrack = tracks[0];
+                if (this.majorObject.getPresetGeom() == "line") { 
+                     // если изменяли callout
+                    if (this.handleNum == 0) { // x1, y1 точка callout
+                        let oXY = oTrack.correctXYForPdfFreeText(x, y);
+                        aNewCallout[0 * 2] = oXY.x * g_dKoef_mm_to_pix / nScaleX;
+                        aNewCallout[0 * 2 + 1] = oXY.y * g_dKoef_mm_to_pix / nScaleY;
+                    }
+                    else if (this.handleNum === 4) { // x2, y2 точка callout
+                        let oXY = oTrack.correctXYForPdfFreeText(x, y);
+                        aNewCallout[1 * 2] = oXY.x * g_dKoef_mm_to_pix / nScaleX;
+                        aNewCallout[1 * 2 + 1] = oXY.y * g_dKoef_mm_to_pix / nScaleY;
+                    }
+
+                    // находим рект стрелки, учитывая окончание линии
+                    let aArrowRect = oFreeText.GetArrowRect([aNewCallout[2], aNewCallout[3], aNewCallout[0], aNewCallout[1]])
+
+                    aNewRect = AscPDF.unionRectangles([aArrowRect, aTextBoxRect, findBoundingRectangle(aNewCallout)]).map(function(measure, idx) {
+                        return idx % 2 ? measure * nScaleY : measure * nScaleX;
+                    });
+
+                    // пересчитываем RD.
+                    aNewRD = [
+                        aCurRD[0] + (oFreeTextRect[0] - aNewRect[0]) / nScaleX,
+                        aCurRD[1] + (oFreeTextRect[1] - aNewRect[1]) / nScaleY,
+                        aCurRD[2] + (aNewRect[2] - oFreeTextRect[2]) / nScaleX,
+                        aCurRD[3] + (aNewRect[3] - oFreeTextRect[3]) / nScaleY
+                    ];
+                }
+                else {
+                    // находим координаты textbox
+                    xMin = oTrack.transform.TransformPointX(0, 0) * g_dKoef_mm_to_pix;
+                    yMin = oTrack.transform.TransformPointY(0, 0) * g_dKoef_mm_to_pix;
+                    if (oTrack.resizedExtX) {
+                        xMax = (oTrack.transform.TransformPointX(0, 0) + oTrack.resizedExtX) * g_dKoef_mm_to_pix;
+                    }
+                    else {
+                        xMax = (oTrack.transform.TransformPointX(0, 0) + oTrack.originalShape.extX) * g_dKoef_mm_to_pix;
+                    }
+                    if (oTrack.resizedExtY) {
+                        yMax = (oTrack.transform.TransformPointY(0, 0) + oTrack.resizedExtY) * g_dKoef_mm_to_pix;
+                    }
+                    else {
+                        yMax = (oTrack.transform.TransformPointY(0, 0) + oTrack.originalShape.extY) * g_dKoef_mm_to_pix;
+                    }
+                    
+                    // находим точку выхода callout для нового ректа textbox
+                    let nCalloutExitPos = oFreeText.GetCalloutExitPos([xMin, yMin, xMax, yMax].map(function(measure, idx) {
+                        return idx % 2 ? measure / nScaleY : measure / nScaleX;
+                    }));
+
+                    // значит стрелка внутри textbox, нужно скорректировать координаты textbox
+                    if (nCalloutExitPos == undefined) {
+                        let x = aNewCallout[0 * 2] * nScaleX;
+                        let y = aNewCallout[0 * 2 + 1] * nScaleY;
+
+                        // Проверяем, находится ли точка внутри прямоугольника
+                        if (x > xMin && x < xMax && y > yMin && y < yMax) {
+                            // Находим центр прямоугольника
+                            const centerX   = (xMin + xMax) / 2;
+                            const centerY   = (yMin + yMax) / 2;
+                            const nWidth    = (xMax - xMin) / 2;
+                            const nHeight   = (yMax - yMin) / 2;
+
+                            // Определяем направление сдвига прямоугольника
+                            const deltaX = x - centerX;
+                            const deltaY = y - centerY;
+                    
+                            // Сдвигаем прямоугольник в направлении, противоположном положению точки
+                            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                                // Сдвигаем по горизонтали
+                                if (deltaX < 0) {
+                                    // Точка справа от центра, сдвигаем прямоугольник влево
+                                    xMin += Math.max(nWidth + 1, 2 * oFreeText.defaultPerpLength);
+                                    xMax += Math.max(nWidth + 1, 2 * oFreeText.defaultPerpLength);
+                                } else {
+                                    // Точка слева от центра, сдвигаем прямоугольник вправо
+                                    xMin -= Math.max(nWidth + 1, 2 * oFreeText.defaultPerpLength);
+                                    xMax -= Math.max(nWidth + 1, 2 * oFreeText.defaultPerpLength);
+                                }
+                            } else {
+                                // Сдвигаем по вертикали
+                                if (deltaY < 0) {
+                                    // Точка выше центра, сдвигаем прямоугольник вниз
+                                    yMin += Math.max(nHeight + 1, 2 * oFreeText.defaultPerpLength);
+                                    yMax += Math.max(nHeight + 1, 2 * oFreeText.defaultPerpLength);
+                                } else {
+                                    // Точка ниже центра, сдвигаем прямоугольник вверх
+                                    yMin -= Math.max(nHeight + 1, 2 * oFreeText.defaultPerpLength);
+                                    yMax -= Math.max(nHeight + 1, 2 * oFreeText.defaultPerpLength);
+                                }
+                            }
+                        }
+
+                        nCalloutExitPos = oFreeText.GetCalloutExitPos([xMin, yMin, xMax, yMax].map(function(measure, idx) {
+                            return idx % 2 ? measure / nScaleY : measure / nScaleX;
+                        }));
+                    }
+
+                    // пересчитываем callout
+                    switch (nCalloutExitPos) {
+                        case AscPDF.CALLOUT_EXIT_POS.left: {
+                            // точка выхода (x3, y3)
+                            aNewCallout[2 * 2]      = xMin / nScaleX;
+                            aNewCallout[2 * 2 + 1]  = (yMin + (yMax - yMin) / 2) / nScaleY;
+
+                            // точка начала стрелки
+                            aNewCallout[2 * 1]      = xMin / nScaleX - oFreeText.defaultPerpLength;
+                            aNewCallout[2 * 1 + 1]  = (yMin + (yMax - yMin) / 2) / nScaleY;
+                            break;
+                        }
+                        case AscPDF.CALLOUT_EXIT_POS.top: {
+                            aNewCallout[2 * 2]      = (xMin + (xMax - xMin) / 2) / nScaleX;
+                            aNewCallout[2 * 2 + 1]  = yMin / nScaleY;
+
+                            aNewCallout[2 * 1]      = (xMin + (xMax - xMin) / 2) / nScaleX;
+                            aNewCallout[2 * 1 + 1]  = yMin / nScaleY - oFreeText.defaultPerpLength;
+                            break;
+                        }
+                        case AscPDF.CALLOUT_EXIT_POS.right: {
+                            aNewCallout[2 * 2]      = xMax / nScaleX;
+                            aNewCallout[2 * 2 + 1]  = (yMin + (yMax - yMin) / 2) / nScaleY;
+
+                            aNewCallout[2 * 1]      = xMax / nScaleX + oFreeText.defaultPerpLength;
+                            aNewCallout[2 * 1 + 1]  = (yMin + (yMax - yMin) / 2) / nScaleY;
+                            break;
+                        }
+                        case AscPDF.CALLOUT_EXIT_POS.bottom: {
+                            aNewCallout[2 * 2]      = (xMin + (xMax - xMin) / 2) / nScaleX;
+                            aNewCallout[2 * 2 + 1]  = yMax / nScaleY;
+
+                            aNewCallout[2 * 1]      = (xMin + (xMax - xMin) / 2) / nScaleX;
+                            aNewCallout[2 * 1 + 1]  = yMax / nScaleY + oFreeText.defaultPerpLength;
+                            break;
+                        }
+                    }
+
+                    let aNewTextBoxRect = [xMin / nScaleX, yMin / nScaleY, xMax / nScaleX, yMax / nScaleY];
+                    // расширяем рект на ширину линии (или на радиус cloud бордера)
+                    let nLineWidth = oFreeText.GetWidth() * g_dKoef_pt_to_mm * g_dKoef_mm_to_pix;
+                    if (oFreeText.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.Cloud) {
+                        aNewTextBoxRect[0] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pix * nScaleX;
+                        aNewTextBoxRect[1] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pix * nScaleY;
+                        aNewTextBoxRect[2] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pix * nScaleX;
+                        aNewTextBoxRect[3] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pix * nScaleY;
+                    }
+                    else {
+                        aNewTextBoxRect[0] -= nLineWidth * nScaleX;
+                        aNewTextBoxRect[1] -= nLineWidth * nScaleY;
+                        aNewTextBoxRect[2] += nLineWidth * nScaleX;
+                        aNewTextBoxRect[3] += nLineWidth * nScaleY;
+                    }
+
+                    // находим рект стрелки, учитывая окончание линии
+                    let aArrowRect = aNewCallout.length ? oFreeText.GetArrowRect([aNewCallout[2], aNewCallout[3], aNewCallout[0], aNewCallout[1]]) : null;
+
+                    // находим результирующий rect аннотации
+                    aNewRect = AscPDF.unionRectangles([aArrowRect, aNewTextBoxRect, findBoundingRectangle(aNewCallout)]).map(function(measure, idx) {
+                        return idx % 2 ? measure * nScaleY : measure * nScaleX;
+                    });
+
+                    // пересчитываем RD.
+                    aNewRD = [
+                        (xMin - aNewRect[0]) / nScaleX,
+                        (yMin - aNewRect[1]) / nScaleY,
+                        (aNewRect[2] - xMax) / nScaleX,
+                        (aNewRect[3] - yMax) / nScaleY
+                    ];
+                }
+
+                oDoc.DoAction(function() {
+                    if (aNewCallout.length != 0) {
+                        oFreeText.SetCallout(aNewCallout);
+                    }
+                    
+                    oFreeText.SetRectangleDiff(aNewRD);
+                    oFreeText.SetRect(aNewRect);
+                    oFreeText.onAfterMove();
+                    oViewer.DrawingObjects.drawingObjects.length = 0;
+                }, AscDFH.historydescription_Pdf_FreeTextGeom, this);
             }
-            this.drawingObjects.document.Recalculate();
-			this.drawingObjects.document.FinalizeAction();
         }
-        this.drawingObjects.clearTrackObjects();
-        this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
+        if (isPdf) {
+            let oViewer = Asc.editor.getDocumentRenderer();
+            oViewer.onUpdateOverlay();
+        }
+        
         this.drawingObjects.updateOverlay();
     }
 };
@@ -1722,6 +2188,11 @@ TextAddState.prototype =
             if(oCheckObject && oCheckObject.parent){
                 return {cursorType: "default", objectId: oCheckObject.Get_Id()};
             }
+            else if (Asc.editor.isPdfEditor()) {
+                if (oCheckObject.IsTextShape()) {
+                    return {cursorType: "text", objectId: oCheckObject.Get_Id()};
+                }   
+            }
         }
     },
     onMouseMove: function(e, x, y, pageIndex)
@@ -1844,6 +2315,8 @@ ChangeWrapContour.prototype.onMouseMove = function(e, x, y, pageIndex)
 };
 ChangeWrapContour.prototype.onMouseUp = function(e, x, y, pageIndex)
 {
+    const aTracks = [].concat(this.drawingObjects.arrTrackObjects);
+    this.drawingObjects.resetTrackState();
     if(false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props))
     {
 		this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_ChangeWrapContour);
@@ -1852,8 +2325,8 @@ ChangeWrapContour.prototype.onMouseUp = function(e, x, y, pageIndex)
         {
             calc_points[i] = {x: this.majorObject.parent.wrappingPolygon.calculatedPoints[i].x, y: this.majorObject.parent.wrappingPolygon.calculatedPoints[i].y};
         }
-        calc_points[this.drawingObjects.arrTrackObjects[0].point].x = this.drawingObjects.arrTrackObjects[0].pointCoord.x;
-        calc_points[this.drawingObjects.arrTrackObjects[0].point].y = this.drawingObjects.arrTrackObjects[0].pointCoord.y;
+        calc_points[aTracks[0].point].x = aTracks[0].pointCoord.x;
+        calc_points[aTracks[0].point].y = aTracks[0].pointCoord.y;
         var invert_transform = this.majorObject.invertTransform;
         for(i = 0; i < calc_points.length; ++i)
         {
@@ -1868,8 +2341,7 @@ ChangeWrapContour.prototype.onMouseUp = function(e, x, y, pageIndex)
         this.drawingObjects.document.Recalculate();
 		this.drawingObjects.document.FinalizeAction();
     }
-    this.drawingObjects.clearTrackObjects();
-    this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
+    this.drawingObjects.updateOverlay();
 };
 
 function PreChangeWrapContourAddPoint(drawingObjects, majorObject, pointNum1, startX, startY)
@@ -1940,15 +2412,17 @@ ChangeWrapContourAddPoint.prototype.onMouseMove = function(e, x, y, pageIndex)
 };
 ChangeWrapContourAddPoint.prototype.onMouseUp = function(e, x, y, pageIndex)
 {
+    const aTracks = [].concat(this.drawingObjects.arrTrackObjects);
+    this.drawingObjects.resetTrackState();
     if(false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props))
     {
 		this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_ChangeWrapContourAddPoint);
         var calc_points = [], calc_points2 = [], i;
-        for(i = 0; i < this.drawingObjects.arrTrackObjects[0].arrPoints.length; ++i)
+        for(i = 0; i < aTracks[0].arrPoints.length; ++i)
         {
-            calc_points[i] = {x: this.drawingObjects.arrTrackObjects[0].arrPoints[i].x, y: this.drawingObjects.arrTrackObjects[0].arrPoints[i].y};
+            calc_points[i] = {x: aTracks[0].arrPoints[i].x, y: aTracks[0].arrPoints[i].y};
         }
-        //calc_points.splice(this.drawingObjects.arrTrackObjects[0].point1, 0, )
+        //calc_points.splice(aTracks[0].point1, 0, )
         var invert_transform = this.majorObject.invertTransform;
         for(i = 0; i < calc_points.length; ++i)
         {
@@ -1963,8 +2437,7 @@ ChangeWrapContourAddPoint.prototype.onMouseUp = function(e, x, y, pageIndex)
         this.drawingObjects.document.Recalculate();
 		this.drawingObjects.document.FinalizeAction();
     }
-    this.drawingObjects.clearTrackObjects();
-    this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
+    this.drawingObjects.updateOverlay();
 };
 
 
@@ -2500,9 +2973,8 @@ PolyLineAddState2.prototype =
         }
         else
         {
-            this.drawingObjects.clearTrackObjects();
+            this.drawingObjects.resetTrackState();
             this.drawingObjects.updateOverlay();
-            this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
         }
 
     }

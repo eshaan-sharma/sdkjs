@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -141,6 +141,9 @@ var c_oAscError = Asc.c_oAscError;
 		if (this.isFrameEditor() || AscCommon.c_oAscAdvancedOptionsAction.None !== this.advancedOptionsAction)
 			return;
 
+		//is cell editor active - try to close
+		this.asc_closeCellEditor();
+
 		var t = this;
 		if (true !== isNoUserSave)
 			this.IsUserSave = true;
@@ -190,6 +193,30 @@ var c_oAscError = Asc.c_oAscError;
 		printOptionsObj["locale"] = asc["editor"].asc_getLocale();
 		printOptionsObj["translate"] = AscCommon.translateManager.mapTranslate;
 		return printOptionsObj;
+	};
+
+	spreadsheet_api.prototype["asc_changeExternalReference"] = function(eR)
+	{
+		let wb = this.wb;
+		if (!wb) {
+			return;
+		}
+		window["AscDesktopEditor"]["OpenFilenameDialog"]("cell", false, function(_file) {
+			let file = _file;
+			if (Array.isArray(file))
+				file = file[0];
+			if (!file)
+				return;
+
+			//if not saved - put absolute path
+			let isSavedFile = window["AscDesktopEditor"]["LocalFileGetSaved"]();
+			let relativePath = isSavedFile && window["AscDesktopEditor"]["LocalFileGetRelativePath"](file);
+
+			let obj = {};
+			obj["path"] = relativePath;
+			obj["filePath"] = file;
+			wb.changeExternalReference(eR, obj);
+		});
 	};
 
 	/////////////////////////////////////////////////////////
@@ -257,6 +284,14 @@ var c_oAscError = Asc.c_oAscError;
 			try
 			{
 				var printOptionsObj = asc["editor"]["getAdditionalSaveParams"]();
+
+				if (options && options.advancedOptions)
+				{
+					let nativeOptions = options.advancedOptions.asc_getNativeOptions();
+					if (nativeOptions)
+						printOptionsObj["nativeOptions"] = nativeOptions;
+				}
+
 				printOptions = JSON.stringify(printOptionsObj);
 			}
 			catch (e)

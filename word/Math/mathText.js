@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -269,7 +269,9 @@ CMathText.prototype.private_getCode = function()
     // Mathematical Alphanumeric Characters
     // http://www.w3.org/TR/2014/REC-xml-entity-names-20140410/Overview.html#alphabets
 
-    if(code == 0x2A)      // "*"
+	if (code == 0x2061) // \funcapply ⁡
+        code = 8196;
+    else if(code == 0x2A)      // "*"
         code = 0x2217;
     else if(code == 0x2D) // "-"
         code = 0x2212;
@@ -696,6 +698,10 @@ CMathText.prototype.SetPlaceholder = function()
     this.Type = para_Math_Placeholder;
     this.value = StartTextElement;
 };
+CMathText.prototype.IsAccent = function ()
+{
+	return AscMath.MathLiterals.accent.SearchU[String.fromCharCode(this.value)] != undefined;
+}
 CMathText.prototype.Measure = function(oMeasure, TextPr, InfoMathText)
 {
     /*
@@ -771,12 +777,12 @@ CMathText.prototype.Measure = function(oMeasure, TextPr, InfoMathText)
 
         ascent  =  metricsA.Height;
     }
-    else if(this.RecalcInfo.bSpaceSpecial)
-    {
-        width = 0;
-        height = 0;
-        ascent = 0;
-    }
+    // else if(this.RecalcInfo.bSpaceSpecial) // show funcapply
+    // {
+    //     width = 0;
+    //     height = 0;
+    //     ascent = 0;
+    // }
     else
     {
         //  смещения
@@ -813,6 +819,11 @@ CMathText.prototype.PreRecalc = function(Parent, ParaMath)
 };
 CMathText.prototype.Draw = function(x, y, pGraphics, InfoTextPr)
 {
+	// bug 46069
+	// 0x200C has a non-empty glyph in CambriaMath
+	if (this.value === 0x200C)
+		return;
+	
     var X = this.pos.x + x,
         Y = this.pos.y + y;
 
@@ -860,11 +871,42 @@ CMathText.prototype.Draw = function(x, y, pGraphics, InfoTextPr)
             pGraphics.SetFontSlot(this.FontSlot, FontKoef);
         }
 
-        if(this.RecalcInfo.bAccentIJ)
-            pGraphics.tg(this.RecalcInfo.StyleCode, X, Y);
-        else
-            pGraphics.FillTextCode(X, Y, this.RecalcInfo.StyleCode);    //на отрисовку символа отправляем положение baseLine
-    }
+		if (this.RecalcInfo.bAccentIJ)
+		{
+			pGraphics.tg(this.RecalcInfo.StyleCode, X, Y);
+		}
+		else if (Asc.editor.ShowParaMarks && (this.value === 8195 || this.value === 8194 || this.value === 160))
+		{
+			let widthOfCircle = g_oTextMeasurer.MeasureCode(176).Width / 2;
+			pGraphics.FillTextCode(X + this.size.width / 2 - widthOfCircle, Y, 176);
+			pGraphics.FillTextCode(X, Y, this.value);
+		}
+		else if (Asc.editor.ShowParaMarks && this.value === 8197) //draw \thicksp
+		{
+			// for some reason, word does not use a Unicode character for "Four-Per-Em Space", but a drawn rectangle
+			pGraphics.FillTextCode(X + this.size.width, Y, this.value)
+			let heightOfRect = this.size.width * 3;
+
+			let penW = 0.02;
+
+			let nWidth = this.size.width;
+			let nShrinkWidth = nWidth * 0.9;
+			let nPadding = (nWidth - nShrinkWidth) / 2;
+
+			let x1 = X + nPadding;
+			let x2 = X + nShrinkWidth + nPadding;
+			let y1 = Y;
+			let y2 = y - heightOfRect;
+
+			pGraphics.drawHorLine(0, y1, x1, x2, penW);
+			pGraphics.drawHorLine(0, y2, x1, x2, penW);
+			pGraphics.drawVerLine(0, x1, y1, y2, penW);
+			pGraphics.drawVerLine(0, x2, y1, y2, penW);
+		} else
+		{
+			pGraphics.FillTextCode(X, Y, this.RecalcInfo.StyleCode);    //на отрисовку символа отправляем положение baseLine}
+		}
+	}
 };
 CMathText.prototype.setPosition = function(pos)
 {
@@ -936,6 +978,14 @@ CMathText.prototype.IsMathText = function()
 {
     return true;
 };
+CMathText.prototype.IsCombiningMark = function()
+{
+	return AscWord.isCombiningMark(this.value);
+};
+CMathText.prototype.IsBreakOperator = function ()
+{
+	return this.private_Is_BreakOperator(this.value);
+};
 CMathText.prototype.private_Is_BreakOperator = function(val)
 {
     var rOper = q_Math_BreakOperators[val];
@@ -954,6 +1004,18 @@ CMathText.prototype.Is_RightBracket = function()
 {
     return this.value == 0x29 || this.value == 0x7D || this.value == 0x5D || this.value == 0x27E9 || this.value == 0x230B || this.value == 0x2309 || this.value == 0x27E7 || this.value == 0x232A;
 };
+CMathText.prototype.IsNBSP = function()
+{
+    let strValue = String.fromCharCode(this.value);
+    return AscMath.MathLiterals.space.SearchU(strValue);
+};
+CMathText.prototype.SetParent = function (oParent)
+{
+	if (!oParent)
+		return;
+
+	this.Parent = oParent;
+}
 ////
 CMathText.prototype.setCoeffTransform = function(sx, shx, shy, sy)
 {
@@ -1019,35 +1081,26 @@ CMathText.prototype.ToSearchElement = function(oProps)
 
 	return new AscCommonWord.CSearchTextItemChar(nCodePoint);
 };
-CMathText.prototype.GetTextOfElement = function(isLaTeX) {
-	var strPre = "";
+CMathText.prototype.GetTextOfElement = function(oMathText)
+{
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
 
-	if (this.Parent) {
-		var oParentMathPrp = this.Parent.MathPrp.scr;
+	if (this.value && this.value !== 11034)
+	{
+		let strValue = AscCommon.encodeSurrogateChar(this.value);
 
-		if (1 === oParentMathPrp) {
-			strPre = '\\script';
-		} else if (2 === oParentMathPrp) {
-			strPre = '\\fraktur';
-		} else if (3 === oParentMathPrp) {
-			strPre = '\\double';
+		if (oMathText.IsLaTeX())
+		{
+			let strMath = AscMath.SymbolsToLaTeX[strValue];
+			if (strMath)
+				strValue = strMath;
 		}
+
+		let oText = new AscMath.MathText(strValue, this.Parent)
+		oMathText.AddText(oText);
 	}
 
-    if (isLaTeX)
-    {
-        let str = AscMath.SymbolsToLaTeX[String.fromCharCode(this.value)];
-        if (str)
-        {
-            return str + " ";
-        }
-
-    }
-
-    if (this.value && this.value !== 11034)
-        return strPre + AscCommon.encodeSurrogateChar(this.value);
-
-	return "";
+    return oMathText;
 };
 CMathText.prototype.GetCodePoint = function()
 {
@@ -1150,7 +1203,7 @@ CMathAmp.prototype.Draw = function(x, y, pGraphics, InfoTextPr)
 {
     if(this.bAlignPoint == false)
         this.AmpText.Draw(x + this.GapLeft, y, pGraphics, InfoTextPr);
-    else if(editor.ShowParaMarks) // показать метки выравнивания, если включена отметка о знаках параграфа
+    else if(Asc.editor.ShowParaMarks) // показать метки выравнивания, если включена отметка о знаках параграфа
     {
         var X  = x + this.pos.x + this.GetWidthVisible(),
             Y  = y + this.pos.y,
@@ -1171,6 +1224,13 @@ CMathAmp.prototype.Copy = function()
 {
     return new CMathAmp();
 };
+CMathAmp.prototype.SetParent = function (oParent)
+{
+	if (!oParent)
+		return;
+
+	this.Parent = oParent;
+}
 CMathAmp.prototype.Write_ToBinary = function(Writer)
 {
     // Long : Type
@@ -1179,11 +1239,13 @@ CMathAmp.prototype.Write_ToBinary = function(Writer)
 CMathAmp.prototype.Read_FromBinary = function(Reader)
 {
 };
-CMathAmp.prototype.GetTextOfElement = function(isLaTeX)
+CMathAmp.prototype.GetTextOfElement = function(oMathText)
 {
-	return '&'
-};
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
+	oMathText.AddText(new AscMath.MathText("&", this.Parent ? this.Parent : oMathText.GetFirstStyle()));
 
+	return oMathText;
+};
 
 function CMathInfoTextPr(InfoTextPr)
 {

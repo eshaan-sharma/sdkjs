@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -34,19 +34,28 @@
 
 function CMathLimitPr()
 {
-    this.type = LIMIT_LOW;
+	this.type = LIMIT_LOW;
+	this.ctrPr   = new CMathCtrlPr();
+}
+
+CMathLimitPr.prototype.GetRPr = function ()
+{
+	return this.ctrPr.GetRPr();
 }
 
 CMathLimitPr.prototype.Set_FromObject = function(Obj)
 {
     if (undefined !== Obj.type && null !== Obj.type)
         this.type = Obj.type;
+
+	this.ctrPr.SetRPr(Obj.ctrPrp);
 };
 
 CMathLimitPr.prototype.Copy = function()
 {
     var NewPr = new CMathLimitPr();
     NewPr.type = this.type;
+	NewPr.ctrPr   = this.ctrPr;
     return NewPr;
 };
 
@@ -54,12 +63,18 @@ CMathLimitPr.prototype.Write_ToBinary = function(Writer)
 {
     // Long : type
     Writer.WriteLong(this.type);
+	Writer.WriteBool(true);
+	this.ctrPr.Write_ToBinary(Writer);
 };
 
 CMathLimitPr.prototype.Read_FromBinary = function(Reader)
 {
     // Long : type
     this.type = Reader.GetLong();
+	if (Reader.GetBool())
+	{
+		this.ctrPr.Read_FromBinary(Reader);
+	}
 };
 
 /**
@@ -215,6 +230,10 @@ function CLimit(props)
     if(props !== null && typeof(props) !== "undefined")
         this.init(props);
 
+	// согласно формату CtrPrp должен находится в LimitPr, пока оставляем this.CtrPrp, но приравняем к значению из Pr
+	if (this.Pr.ctrPr.rPr)
+		this.CtrPrp = this.Pr.ctrPr.rPr;
+
     AscCommon.g_oTableId.Add( this, this.Id );
 }
 CLimit.prototype = Object.create(CMathBase.prototype);
@@ -315,37 +334,46 @@ CLimit.prototype.Can_ModifyArgSize = function()
 {
     return this.CurPos == 1 && false === this.Is_SelectInside();
 };
-CLimit.prototype.GetTextOfElement = function(isLaTeX) {
-	var strTemp = "";
-	var strLimitSymbol = "";
-	var strFuncName = this.getFName().GetMultipleContentForGetText(isLaTeX, true);
-	var strArgument = this.getIterator().GetMultipleContentForGetText(isLaTeX, true);
-	var strStartBracet = this.GetStartBracetForGetTextContent(isLaTeX);
-	var strCloseBracet = this.GetEndBracetForGetTextContent(isLaTeX);
+/**
+ *
+ * @param {MathTextAndStyles | boolean} oMathText
+ * @constructor
+ */
+CLimit.prototype.GetTextOfElement = function(oMathText)
+{
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
 
-	if (isLaTeX)
-    {
-        strLimitSymbol = (this.Pr.type == 1) ? "\\above" : "\\below";
-		if (strFuncName === 'lim' ||
-			strFuncName === 'log' ||
-			strFuncName === 'max' ||
-			strFuncName === 'min' ||
-			strFuncName === 'ln')
-        {
-            strLimitSymbol = (this.Pr.type == 1) ? "^" : "_";
-            strFuncName = '\\' + strFuncName;
+	let strLimitSymbol	= "";
+	let oFuncName		= this.getFName();
+	let oArgument		= this.getIterator();
+
+	if (oMathText.IsLaTeX())
+	{
+		oMathText.ResetGlobalStyle();
+		oMathText.Add(oFuncName, false);
+		oMathText.AddText(new AscMath.MathText((this.Pr.type == 1) ? "\\above" : "\\below", oMathText.GetStyleFromFirst()));
+		oMathText.SetNotGetStyleFromFirst();
+		// check when word fix bug, for now always wrap
+		oMathText.Add(oArgument, true, 2);
+	}
+	else
+	{
+		if (Number.isInteger(this.Pr.type))
+		{
+			strLimitSymbol = (this.Pr.type === 1) ? "┴" : "┬";
 		}
-	}
-    else
-    {
-		strLimitSymbol = (this.Pr.type == 1) ? "┴" : "┬";
+		else
+		{
+			strLimitSymbol = (this.Pr.type.type === 2) ? "┴" : "┬";
+		}
+
+		let oNamePos = oMathText.Add(oFuncName, true);
+
+		oMathText.AddAfter(oNamePos, new AscMath.MathText(strLimitSymbol, this));
+		oMathText.Add(oArgument, true);
 	}
 
-	if (strArgument.length > 1 || isLaTeX)
-		strArgument = strStartBracet + strArgument + strCloseBracet;
-
-	strTemp = strFuncName + strLimitSymbol+ strArgument;
-	return strTemp;
+	return oMathText;
 };
 
 /**
@@ -379,6 +407,37 @@ window["CMathMenuLimit"] = CMathMenuLimit;
 CMathMenuLimit.prototype["get_Pos"] = CMathMenuLimit.prototype.get_Pos;
 CMathMenuLimit.prototype["put_Pos"] = CMathMenuLimit.prototype.put_Pos;
 
+function CMathFuncPr()
+{
+	this.ctrPr   = new CMathCtrlPr();
+}
+CMathFuncPr.prototype.GetRPr = function ()
+{
+	return this.ctrPr.GetRPr();
+};
+CMathFuncPr.prototype.Set_FromObject = function(Obj)
+{
+	this.ctrPr.SetRPr(Obj.ctrPrp);
+};
+CMathFuncPr.prototype.Copy = function()
+{
+	let NewPr = new CMathFuncPr();
+	NewPr.ctrPr = this.ctrPr;
+	return NewPr;
+};
+CMathFuncPr.prototype.Write_ToBinary = function(Writer)
+{
+	Writer.WriteBool(true);
+	this.ctrPr.Write_ToBinary(Writer);
+};
+CMathFuncPr.prototype.Read_FromBinary = function(Reader)
+{
+	if (Reader.GetBool())
+	{
+		this.ctrPr.Read_FromBinary(Reader);
+	}
+};
+
 /**
  *
  * @param props
@@ -391,10 +450,14 @@ function CMathFunc(props)
 
 	this.Id = AscCommon.g_oIdCounter.Get_NewId();
 
-    this.Pr = new CMathBasePr();
+    this.Pr = new CMathFuncPr();
 
     if(props !== null && typeof(props) !== "undefined")
         this.init(props);
+
+	// согласно формату CtrPrp должен находится в FuncPr, пока оставляем this.CtrPrp, но приравняем к значению из Pr
+	if (this.Pr.ctrPr.rPr)
+		this.CtrPrp = this.Pr.ctrPr.rPr;
 
     AscCommon.g_oTableId.Add( this, this.Id );
 }
@@ -448,71 +511,36 @@ CMathFunc.prototype.fillContent = function()
     this.elements[0][0] = this.getFName();
     this.elements[0][1] = this.getArgument();
 };
-CMathFunc.prototype.GetTextOfElement = function(isLaTeX) {
-	var strTemp = "";
-	var strFuncName = this.getFName().GetMultipleContentForGetText(isLaTeX, true);
-	var strArgument = this.getArgument().GetMultipleContentForGetText(isLaTeX, true);
+CMathFunc.prototype.GetTextOfElement = function(oMathText)
+{
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
+	let oFuncName = this.getFName();
+	let oArgument = this.getArgument();
+	oMathText.SetGlobalStyle(this);
 
-    if (!isLaTeX)
-    {
-        if (!this.getArgument().IsOneElementInContentForGetText())
-        {
-            strArgument =  " 〖" + strArgument + "〗";
-        }
-        else
-        {
-            strArgument = " " + strArgument;
-        }
-    }
-    if (isLaTeX)
-    {
-        strArgument = "{" + strArgument + "}";
-    }
-	//	Unicode
-	//	if strArgument is block.. such as (2+1), then don't add brackets
+	if (oMathText.IsLaTeX())
+	{
+		let oArgPos = oMathText.Add(oArgument, true, 2);
+		let oNamePos = oMathText.AddBefore(oArgPos, oFuncName.GetTextOfElement(true));
+		oMathText.AddBefore(oNamePos, new AscMath.MathText("\\", oMathText.GetStyleFromFirst()));
+	}
+	else
+	{
+		let oNamePos		= oMathText.Add(oFuncName, true, 0);
+		let oArgumentPos	= oMathText.Add(oArgument, true, 0);
+		let oArgumentToken	= oMathText.GetExact(oArgumentPos);
 
-	if (isLaTeX) {
-		switch (strFuncName) {
-			case 'cos':
-			case 'sin':
-			case 'tan':
-			case 'sec':
-			case 'cot':
-			case 'csc':
-			case 'arcsin':
-			case 'arccos':
-			case 'arctan':
-			case 'arcsec':
-			case 'arccot':
-			case 'arccsc':
-			case 'sinh':
-			case 'cosh':
-			case 'tanh':
-			case 'coth':
-			case 'sech':
-			case 'csch':
-			case 'srcsinh':
-			case 'arctanh':
-			case 'arcsech':
-			case 'arccosh':
-			case 'arccoth':
-			case 'arccsch':
-			case 'log':
+		oMathText.AddAfter(oNamePos, new AscMath.MathText("⁡", this.Pr.GetRPr()));
 
-			case 'lin':
-			case 'ln':
-			case 'max':
-			case 'min':
-			case 'exp': strFuncName = '\\'+ strFuncName; break;
-			default: break;
+		if (oArgument.haveMixedContent() && !oArgumentToken.IsBracket)
+		{
+			oMathText.SetGlobalStyle(this.Pr.GetRPr());
+			oMathText.WrapExactElement(oArgumentPos, "〖", "〗");
 		}
 	}
 
-	strTemp = strFuncName + strArgument;
-
-	return strTemp;
+	return oMathText;
 };
-
 
 //--------------------------------------------------------export----------------------------------------------------
 window['AscCommonWord'] = window['AscCommonWord'] || {};

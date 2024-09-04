@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -312,7 +312,7 @@ ObjectToDraw.prototype =
                         this.brush = AscFormat.G_O_NO_ACTIVE_COMMENT_BRUSH;
                     }
                     var oComm = this.Comment;
-                    if(!graphics.IsSlideBoundsCheckerType && !AscCommon.IsShapeToImageConverter) 
+                    if(!graphics.isBoundsChecker() && !AscCommon.IsShapeToImageConverter)
                     {
                         oComments.Add_DrawingRect(oComm.x0, oComm.y0, oComm.x1 - oComm.x0, oComm.y1 - oComm.y0, graphics.PageNum, this.Comment.Additional.CommentId, global_MatrixTransformer.Invert(oTransform));
                     }
@@ -341,7 +341,7 @@ ObjectToDraw.prototype =
         graphics.transform3(oTransform, false);
         var shape_drawer = new AscCommon.CShapeDrawer();
         shape_drawer.fromShape2(this, graphics, this.geometry);
-        if(graphics.IsSlideBoundsCheckerType)
+        if(graphics.isBoundsChecker())
         {
             shape_drawer.bIsNoFillAttack = false;
         }
@@ -365,6 +365,8 @@ function RotateTrackShapeImage(originalObject)
     this.bIsTracked = false;
     this.originalObject = originalObject;
     this.transform = new CMatrix();
+
+		this.smartArtParent = this.originalObject.isObjectInSmartArt() ? this.originalObject.group.group.parent : null;
     var brush;
     if(originalObject.blipFill)
     {
@@ -430,6 +432,14 @@ function RotateTrackShapeImage(originalObject)
         {
             global_MatrixTransformer.MultiplyAppend(this.transform, this.originalObject.group.transform);
         }
+	    if (this.smartArtParent)
+	    {
+		    var parent_transform = this.smartArtParent.Get_ParentTextTransform && this.smartArtParent.Get_ParentTextTransform();
+		    if(parent_transform)
+		    {
+			    global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
+		    }
+	    }
         if(this.originalObject.parent)
         {
             var parent_transform = this.originalObject.parent.Get_ParentTextTransform && this.originalObject.parent.Get_ParentTextTransform();
@@ -610,6 +620,14 @@ function RotateTrackGroup(originalObject)
             global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
         global_MatrixTransformer.RotateRadAppend(this.transform, -this.angle);
         global_MatrixTransformer.TranslateAppend(this.transform, this.originalObject.x + hc, this.originalObject.y + vc);
+	    if(this.originalObject.parent)
+	    {
+		    var parent_transform = this.originalObject.parent.Get_ParentTextTransform && this.originalObject.parent.Get_ParentTextTransform();
+		    if(parent_transform)
+		    {
+			    global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
+		    }
+	    }
         for(var i = 0; i < this.overlayObjects.length; ++i)
         {
             var new_transform = this.arrTransforms2[i].CreateDublicate();

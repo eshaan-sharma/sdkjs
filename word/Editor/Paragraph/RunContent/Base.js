@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -64,7 +64,7 @@
 	};
 	CRunElementBase.prototype.GetWidth = function()
 	{
-		return (this.Width / TEXTWIDTH_DIVIDER);
+		return (this.Width > 0 ? this.Width / TEXTWIDTH_DIVIDER : 0);
 	};
 	CRunElementBase.prototype.Set_Width = function(nWidth)
 	{
@@ -86,9 +86,9 @@
 	CRunElementBase.prototype.GetWidthVisible = function()
 	{
 		if (undefined !== this.WidthVisible)
-			return (this.WidthVisible / TEXTWIDTH_DIVIDER);
+			return (this.WidthVisible > 0 ? this.WidthVisible / TEXTWIDTH_DIVIDER : 0);
 
-		return (this.Width / TEXTWIDTH_DIVIDER);
+		return (this.Width > 0 ? this.Width / TEXTWIDTH_DIVIDER : 0);
 	};
 	CRunElementBase.prototype.SetWidthVisible = function(nWidthVisible)
 	{
@@ -106,7 +106,7 @@
 	};
 	CRunElementBase.prototype.Copy = function()
 	{
-		return new CRunElementBase();
+		return new this.constructor();
 	};
 	CRunElementBase.prototype.Write_ToBinary = function(Writer)
 	{
@@ -205,6 +205,14 @@
 		return false;
 	};
 	/**
+	 * Нужно ли ставить дефис для автоматического переноса
+	 * @returns {boolean}
+	 */
+	CRunElementBase.prototype.isHyphenAfter = function()
+	{
+		return false;
+	};
+	/**
 	 * Является ли данный элемент буквой (не цифрой, не знаком пунктуации и т.д.)
 	 * @returns {boolean}
 	 */
@@ -265,6 +273,14 @@
 	 * @returns {boolean}
 	 */
 	CRunElementBase.prototype.IsText = function()
+	{
+		return false;
+	};
+	/**
+	 * Является ли данный элемент текстовым элементом внутри математического выражения
+	 * @returns {boolean}
+	 */
+	CRunElementBase.prototype.IsMathText = function()
 	{
 		return false;
 	};
@@ -340,6 +356,13 @@
 		return false;
 	};
 	/**
+	 * return {AscBidi.TYPE}
+	 */
+	CRunElementBase.prototype.getBidiType = function()
+	{
+		return AscBidi.TYPE.ON;
+	};
+	/**
 	 * @return {number}
 	 */
 	CRunElementBase.prototype.GetCombWidth = function()
@@ -372,7 +395,7 @@
 			oCurTextPr.SetFontFamily(sFont);
 
 			oContext.SetTextPr(oCurTextPr, oTheme);
-			oContext.SetFontSlot(this.RGapFontSlot, oTextPr.Get_FontKoef());
+			oContext.SetFontSlot(this.RGapFontSlot, oTextPr.getFontCoef());
 		}
 
 		this.RGapCharWidth = !nCharCode ? nCombBorderW : Math.max(oContext.MeasureCode(nCharCode).Width + oTextPr.Spacing + nCombBorderW, nCombBorderW);
@@ -392,7 +415,7 @@
 			oCurTextPr.SetFontFamily(this.RGapFont);
 
 			oGraphics.SetTextPr(oCurTextPr, PDSE.Theme);
-			oGraphics.SetFontSlot(this.RGapFontSlot, oTextPr.Get_FontKoef());
+			oGraphics.SetFontSlot(this.RGapFontSlot, oTextPr.getFontCoef());
 		}
 
 		if (this.RGap && this.RGapCount)

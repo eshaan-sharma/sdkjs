@@ -1,5 +1,5 @@
 ﻿/*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -670,8 +670,10 @@
 		calculationChain: {dir: "", filename: "calcChain.xml", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain"},
 		cellMetadata: {dir: "", filename: "cellMetadata.xml", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata"},
 		chart: {dir: "../charts", filename: "chart[N].xml", contentType: "application/vnd.openxmlformats-officedocument.drawingml.chart+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"},
+		chartEx: {dir: "../charts", filename: "chartEx[N].xml", contentType: "application/vnd.ms-office.chartex+xml", relationType: "http://schemas.microsoft.com/office/2014/relationships/chartEx"},
 		chartWord: {dir: "charts", filename: "chart[N].xml", contentType: "application/vnd.openxmlformats-officedocument.drawingml.chart+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"},
 		chartColorStyle: {dir: "", filename: "color[N].xml", contentType: "application/vnd.ms-office.chartcolorstyle+xml", relationType: "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle"},
+		chartExColorStyle: {dir: "", filename: "colors[N].xml", contentType: "application/vnd.ms-office.chartcolorstyle+xml", relationType: "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle"},
 		chartDrawing: {dir: "../drawings", filename: "drawing[N].xml", contentType: "application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartUserShapes", enumerateType: "drawings/drawing"},
 		chartsheet: {dir: "chartsheets", filename: "sheet[N].xml", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet"},
 		chartStyle: {dir: "", filename: "style[N].xml", contentType: "application/vnd.ms-office.chartstyle+xml", relationType: "http://schemas.microsoft.com/office/2011/relationships/chartStyle"},
@@ -762,12 +764,15 @@
 		worksheetSortMap: {dir: "", filename: "worksheetSortMap.xml", contentType: "application/vnd.ms-excel.wsSortMap+xml", relationType: "http://schemas.microsoft.com/office/2006/relationships/wsSortMap"},
 		xmlSignature: {dir: "", filename: "xmlSignature.xml", contentType: "application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml", relationType: "http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature"},
 		hyperlink: {dir: "", filename: "", contentType: "", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"},
+		metadata: {dir: "xl", filename: "metadata.xml", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata"},
 
 		threadedComment: {dir: "../threadedComments", filename: "threadedComment[N].xml", contentType: "application/vnd.ms-excel.threadedcomments+xml", relationType: "http://schemas.microsoft.com/office/2017/10/relationships/threadedComment"},
 		person: {dir: "../persons", filename: "person.xml", contentType: "application/vnd.ms-excel.person+xml", relationType: "http://schemas.microsoft.com/office/2017/10/relationships/person"},
 		ctrlProp: {dir: "../ctrlProps", filename: "ctrlProp[N].xml", contentType: "application/vnd.ms-excel.controlproperties+xml", relationType: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/ctrlProp"},
 		namedSheetViews: {dir: "../namedSheetViews", filename: "namedSheetView[N].xml", contentType: "application/vnd.ms-excel.namedsheetviews+xml", relationType: "http://schemas.microsoft.com/office/2019/04/relationships/namedSheetView"},
 		workbookComment: {dir: "", filename: "workbookComments.bin", contentType: "application/octet-stream", relationType: "http://schemas.onlyoffice.com/workbookComments"},
+		timelines: {dir: "../timelines", filename: "timeline[N].xml", contentType: "application/vnd.ms-excel.timeline+xml", relationType: "http://schemas.microsoft.com/office/2011/relationships/timeline"},
+		timelineCaches: {dir: "timelineCaches", filename: "timelineCache[N].xml", contentType: "application/vnd.ms-excel.timelineCache+xml", relationType: "http://schemas.microsoft.com/office/2011/relationships/timelineCache"},
 
 		jsaProject: {dir: "", filename: "jsaProject.bin", contentType: "application/octet-stream", relationType: "http://schemas.onlyoffice.com/jsaProject"},
 		vbaProject: {dir: "", filename: "vbaProject.bin", contentType: "application/octet-stream", relationType: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"},

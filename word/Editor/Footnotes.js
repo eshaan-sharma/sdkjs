@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -1453,12 +1453,12 @@ CFootnotesController.prototype.AddNewParagraph = function(bRecalculate, bForceAd
 
 	return this.CurFootnote.AddNewParagraph(bRecalculate, bForceAdd);
 };
-CFootnotesController.prototype.AddInlineImage = function(nW, nH, oImage, oChart, bFlow)
+CFootnotesController.prototype.AddInlineImage = function(nW, nH, oImage, oGraphicObject, bFlow)
 {
 	if (false === this.private_CheckFootnotesSelectionBeforeAction())
 		return false;
 
-	return this.CurFootnote.AddInlineImage(nW, nH, oImage, oChart, bFlow);
+	return this.CurFootnote.AddInlineImage(nW, nH, oImage, oGraphicObject, bFlow);
 };
 CFootnotesController.prototype.AddImages = function(aImages)
 {
@@ -2478,13 +2478,13 @@ CFootnotesController.prototype.GetCalculatedParaPr = function()
 };
 CFootnotesController.prototype.GetCalculatedTextPr = function()
 {
-	var StartPr = this.CurFootnote.GetCalculatedTextPr();
+	var StartPr = this.CurFootnote.GetCalculatedTextPr(true);
 	var Pr = StartPr.Copy();
 
 	for (var sId in this.Selection.Footnotes)
 	{
 		var oFootnote = this.Selection.Footnotes[sId];
-		var TempPr = oFootnote.GetCalculatedTextPr();
+		var TempPr = oFootnote.GetCalculatedTextPr(true);
 		Pr = Pr.Compare(TempPr);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -54,8 +54,6 @@ var HitInLine = AscFormat.HitInLine;
 var HitInBezier4 = AscFormat.HitInBezier4;
 var HitInBezier3 = AscFormat.HitInBezier3;
 var MOVE_DELTA = AscFormat.MOVE_DELTA;
-
-    var History = AscCommon.History;
 
 var cToRad2 = (Math.PI/60000)/180;
 
@@ -273,32 +271,32 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
     };
     Path.prototype.setStroke = function(pr)
     {
-        History.CanAddChanges() && History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_PathSetStroke, this.stroke, pr));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_PathSetStroke, this.stroke, pr));
         this.stroke = pr;
     };
     Path.prototype.setExtrusionOk = function(pr)
     {
-        History.CanAddChanges() && History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_PathSetExtrusionOk, this.extrusionOk, pr));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_PathSetExtrusionOk, this.extrusionOk, pr));
         this.extrusionOk = pr;
     };
     Path.prototype.setFill = function(pr)
     {
-        History.CanAddChanges() && History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_PathSetFill, this.fill, pr));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_PathSetFill, this.fill, pr));
         this.fill = pr;
     };
     Path.prototype.setPathH = function(pr)
     {
-        History.CanAddChanges() && History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_PathSetPathH, this.pathH, pr));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_PathSetPathH, this.pathH, pr));
         this.pathH = pr;
     };
     Path.prototype.setPathW = function(pr)
     {
-        History.CanAddChanges() && History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_PathSetPathW, this.pathW, pr));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_PathSetPathW, this.pathW, pr));
         this.pathW = pr;
     };
     Path.prototype.addPathCommand = function(cmd)
     {
-        History.CanAddChanges() && History.Add(new CChangesDrawingsAddPathCommand(this, cmd, this.ArrPathCommandInfo.length));
+        AscCommon.History.CanAddChanges() && AscCommon.History.Add(new CChangesDrawingsAddPathCommand(this, cmd, this.ArrPathCommandInfo.length));
         this.ArrPathCommandInfo.push(cmd);
     };
     Path.prototype.moveTo = function(x, y)
@@ -1228,6 +1226,115 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
             }
         }
         oPath.recalculate({}, true);
+    };
+    Path.prototype.isEqual = function(oPath) {
+        if(!oPath) {
+            return false;
+        }
+        if(this.stroke !== oPath.stroke) {
+            return false;
+        }
+        if(this.extrusionOk !== oPath.extrusionOk) {
+            return false;
+        }
+        if(this.fill !== oPath.fill) {
+            return false;
+        }
+        if(this.pathH !== oPath.pathH) {
+            return false;
+        }
+        if(this.pathW !== oPath.pathW) {
+            return false;
+        }
+        if(this.ArrPathCommandInfo.length !== oPath.ArrPathCommandInfo.length) {
+            return false;
+        }
+        for(let nCmd = 0; nCmd < this.ArrPathCommandInfo.length; ++nCmd) {
+            let oCmd1 = this.ArrPathCommandInfo[nCmd];
+            let oCmd2 = oPath.ArrPathCommandInfo[nCmd];
+            if(oCmd1.id !== oCmd2.id) {
+                return false;
+            }
+            switch(oCmd1.id)
+            {
+                case moveTo:
+                case lineTo:
+                {
+                    if(oCmd1.X !== oCmd2.X) {
+                        return false;
+                    }
+                    if(oCmd1.Y !== oCmd2.Y) {
+                        return false;
+                    }
+                    break;
+                }
+                case bezier3:
+                {
+                    if(oCmd1.X0 !== oCmd2.X0) {
+                        return false;
+                    }
+                    if(oCmd1.X1 !== oCmd2.X1) {
+                        return false;
+                    }
+                    if(oCmd1.Y0 !== oCmd2.Y0) {
+                        return false;
+                    }
+                    if(oCmd1.Y1 !== oCmd2.Y1) {
+                        return false;
+                    }
+                    break;
+                }
+                case bezier4:
+                {
+
+                    if(oCmd1.X0 !== oCmd2.X0) {
+                        return false;
+                    }
+                    if(oCmd1.X1 !== oCmd2.X1) {
+                        return false;
+                    }
+                    if(oCmd1.X2 !== oCmd2.X2) {
+                        return false;
+                    }
+                    if(oCmd1.Y0 !== oCmd2.Y0) {
+                        return false;
+                    }
+                    if(oCmd1.Y1 !== oCmd2.Y1) {
+                        return false;
+                    }
+                    if(oCmd1.Y2 !== oCmd2.Y2) {
+                        return false;
+                    }
+                    break;
+                }
+                case arcTo:
+                {
+
+                    if(oCmd1.wR !== oCmd2.wR) {
+                        return false;
+                    }
+                    if(oCmd1.hR !== oCmd2.hR) {
+                        return false;
+                    }
+                    if(oCmd1.stAng !== oCmd2.stAng) {
+                        return false;
+                    }
+                    if(oCmd1.swAng !== oCmd2.swAng) {
+                        return false;
+                    }
+                    break;
+                }
+                case close:
+                {
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
+        return true;
     };
     function CPathCmd() {
         AscFormat.CBaseNoIdObject.call(this);
@@ -2561,6 +2668,81 @@ function partition_bezier4(x0, y0, x1, y1, x2, y2, x3, y3, epsilon)
         return splitBezier4(x0, y0, x1, y1, x2, y2, x3, y3, aParameters);
     }
 
+
+    function getEllipsePoint(dXCE, dYCE, dA, dB, dAlpha) {
+        return {
+            x: dXCE + dA * Math.cos(dAlpha),
+            y: dYCE + dB * Math.sin(dAlpha)
+        };
+    }
+
+    function getLineLength(oPt1, oPt2) {
+        return Math.sqrt(Math.pow(oPt2.x - oPt1.x, 2) + Math.pow(oPt2.y - oPt1.y, 2));
+    }
+
+    function isInsideEllipse(dXCE, dYCE, dA, dB, p) {
+        let dX = p.x;
+        let dY = p.y;
+        let dXVal = dX - dXCE;
+        let dYVal = dY - dYCE;
+        return (dXVal * dXVal) / (dA * dA) + (dYVal * dYVal) / (dB * dB) < 1;
+    }
+
+    function ellipseCircleIntersection(dXCE, dYCE, dA, dB, dStartAngle, dR) {
+        const dTolerance = 0.001;
+        let dAlpha1 = dStartAngle;
+        let dAlpha2 = dStartAngle + Math.PI / 4;
+        let pStart = getEllipsePoint(dXCE, dYCE, dA, dB, dStartAngle);
+        let p1 = getEllipsePoint(dXCE, dYCE, dA, dB, dAlpha1);
+        let p2 = getEllipsePoint(dXCE, dYCE, dA, dB, dAlpha2);
+
+        let dAlphaMiddle = (dAlpha1 + dAlpha2) / 2.0;
+        while (Math.abs(dAlpha1 - dAlpha2) > dTolerance) {
+            dAlphaMiddle = (dAlpha1 + dAlpha2) / 2.0;
+            let pMiddle = getEllipsePoint(dXCE, dYCE, dA, dB, dAlphaMiddle);
+            if(isInsideEllipse(pStart.x, pStart.y, dR, dR, pMiddle)) {
+                p1 = pMiddle;
+                dAlpha1 = dAlphaMiddle;
+            }
+            else {
+                p2 = pMiddle;
+                dAlpha2 = dAlphaMiddle;
+            }
+        }
+        return {p: p1, alpha: dAlphaMiddle};
+    }
+
+
+    function circlesIntersection(x1, y1, r1, x2, y2, r2) {
+        let dDx = x1 - x2;
+        let dDy = y1 - y2;
+        let R = Math.sqrt(dDx * dDx + dDy * dDy);
+        if (!(Math.abs(r1 - r2) <= R && R <= r1 + r2)) {
+            return [];
+        }
+
+        let R2 = R * R;
+        let R4 = R2 * R2;
+        let a = (r1 * r1 - r2 * r2) / (2 * R2);
+        let r2r2 = (r1 * r1 - r2 * r2);
+        let c = Math.sqrt(2 * (r1 * r1 + r2 * r2) / R2 - (r2r2 * r2r2) / R4 - 1);
+
+        let fx = (x1+x2) / 2 + a * (x2 - x1);
+        let gx = c * (y2 - y1) / 2;
+        let ix1 = fx + gx;
+        let ix2 = fx - gx;
+
+        let fy = (y1+y2) / 2 + a * (y2 - y1);
+        let gy = c * (x1 - x2) / 2;
+        let iy1 = fy + gy;
+        let iy2 = fy - gy;
+
+        return [{x: ix1, y: iy1}, {x:ix2, y: iy2}];
+    }
+
+
+
+
     //--------------------------------------------------------export----------------------------------------------------
     window['AscFormat'] = window['AscFormat'] || {};
     window['AscFormat'].moveTo = moveTo;
@@ -2577,4 +2759,8 @@ function partition_bezier4(x0, y0, x1, y1, x2, y2, x3, y3, epsilon)
     window['AscFormat'].partition_bezier4 = partition_bezier4;
     window['AscFormat'].splitBezier4 = splitBezier4;
     window['AscFormat'].splitBezier4OnParts = splitBezier4OnParts;
+    window['AscFormat'].ellipseCircleIntersection = ellipseCircleIntersection;
+    window['AscFormat'].getLineLength = getLineLength;
+    window['AscFormat'].getEllipsePoint = getEllipsePoint;
+    window['AscFormat'].circlesIntersection = circlesIntersection;
 })(window);

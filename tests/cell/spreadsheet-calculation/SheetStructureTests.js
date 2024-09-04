@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -78,6 +78,15 @@ $(function () {
 	};
 	AscCommonExcel.WorksheetView.prototype._prepareCellTextMetricsCache = function () {
 	};
+	AscCommonExcel.WorksheetView.prototype._getCellCache = function (col, row) {
+		let _cell = null;
+		this.model.getRange3(row, col, row, col)._foreachNoEmpty(function(cell, row, col) {
+			if (cell && !cell.isEmptyTextString()) {
+				_cell = {cellType: cell.getType()}
+			}
+		}, null, true);
+		return _cell;
+	};
 
 	AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function () {
 	};
@@ -99,6 +108,14 @@ $(function () {
 	AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function () {
 	};
 	Asc.ReadDefTableStyles = function(){};
+
+	function openDocument(){
+		AscCommon.g_oTableId.init();
+		api._onEndLoadSdk();
+		api.isOpenOOXInBrowser = false;
+		api._openDocument(AscCommon.getEmpty());
+		api._openOnClient();
+	}
 
 	var api = new Asc.spreadsheet_api({
 		'id-view': 'editor_sdk'
@@ -155,6 +172,7 @@ $(function () {
 	};
 	const clearData = function (c1, r1, c2, r2) {
 		ws.autoFilters.deleteAutoFilter(getRange(0,0,0,0));
+		ws.TableParts = [];
 		ws.removeRows(r1, r2, false);
 		ws.removeCols(c1, c2);
 	};
@@ -1915,7 +1933,7 @@ $(function () {
 		//nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
 		getVerticalAutofillCases(0, 9, 0, 12, assert, [expectedDataCapitalized,
 			expectedDataUpper, expectedDataLower, expectedDataShortCapitalized, expectedDataShortUpper, expectedDataShortLower], 3);
-		clearData(0, 0, 0, 12)
+		clearData(0, 0, 0, 12);
 
 		// Reverse case
 		expectedDataCapitalized = [['November'], ['September'], ['July']];
@@ -1999,7 +2017,7 @@ $(function () {
 		//nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
 		getVerticalAutofillCases(0, 1, 0, 4, assert, [expectedDataCapitalized,
 			expectedDataUpper, expectedDataLower, expectedDataShortCapitalized, expectedDataShortUpper, expectedDataShortLower], 3);
-		clearData(0, 0, 0, 4)
+		clearData(0, 0, 0, 4);
 
 		// Reverse case
 		expectedDataCapitalized = [['January'], ['November'], ['September']];
@@ -2084,7 +2102,7 @@ $(function () {
 		//nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
 		getVerticalAutofillCases(0, 1, 0, 4, assert, [expectedDataCapitalized,
 			expectedDataUpper, expectedDataLower, expectedDataShortCapitalized, expectedDataShortUpper, expectedDataShortLower], 3);
-		clearData(0, 0, 0, 4)
+		clearData(0, 0, 0, 4);
 
 		// Reverse case
 		expectedDataCapitalized = [['April'], ['March'], ['February']];
@@ -2253,7 +2271,2256 @@ $(function () {
 
 		clearData(0, 0, 4, 13);
 	});
+	QUnit.test('Autofill: Days of week and months with spaces and "." - Horizontal sequence', function (assert) {
+		function getAutofillCase(aFrom, aTo, nFillHandleArea, sDescription, expectedData) {
+			const [c1From, c2From, rFrom] = aFrom;
+			const [c1To, c2To, rTo] = aTo;
+			const nHandleDirection = 0; // 0 - Horizontal, 1 - Vertical
+			const autofillC1 =  nFillHandleArea === 3 ? c2From + 1 : c1From - 1;
+			const autoFillAssert = nFillHandleArea === 3 ? autofillData : reverseAutofillData;
 
+			ws.selectionRange.ranges = [getRange(c1From, rFrom, c2From, rFrom)];
+			wsView = getAutoFillRange(wsView, c1To, rTo, c2To, rTo, nHandleDirection, nFillHandleArea);
+			let autoFillRange = getRange(autofillC1, rTo, c2To, rTo);
+			autoFillAssert(assert, autoFillRange, [expectedData], sDescription);
+		}
+		const testData = [
+			['monday '],
+			['monday ', 'tuesday'],
+			[' monday ', 'tuesday '],
+			['mon.'],
+			['mon.', 'tue'],
+			['mon ', 'tue'],
+			[' mon ', 'tue '],
+			['january '],
+			['january ', 'february'],
+			[' january ', 'february'],
+			['jan.'],
+			['jan.', 'feb'],
+			['mon.day']
+		];
+		// Asc cases
+		let range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		// nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
+		getAutofillCase([0, 0, 0], [0, 6, 0], 3, 'Day of week with space. Asc sequence. Range 1 cell', ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+		getAutofillCase([0, 1, 1], [0, 5, 1], 3, 'Day of week with space. Asc sequence. Range 2 cell', ['wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+		getAutofillCase([0, 1, 2], [0, 5, 2], 3, 'Day of week with space. Asc sequence. Range 2 cell', ['wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+		getAutofillCase([0, 0, 3], [0, 6, 3], 3, 'Day of week short with ".". Asc sequence. Range 1 cell', ['tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+		getAutofillCase([0, 1, 4], [0, 5, 4], 3, 'Day of week short with ".". Asc sequence. Range 2 cell', ['wed', 'thu', 'fri', 'sat', 'sun']);
+		getAutofillCase([0, 1, 5], [0, 5, 5], 3, 'Day of week short with space. Asc sequence. Range 2 cell', ['wed', 'thu', 'fri', 'sat', 'sun']);
+		getAutofillCase([0, 1, 6], [0, 5, 6], 3, 'Day of week short with spaces. Asc sequence. Range 2 cell', ['wed', 'thu', 'fri', 'sat', 'sun']);
+		getAutofillCase([0, 0, 7], [0, 6, 7], 3, 'Month with space. Asc sequence. Range 1 cell', ['february', 'march', 'april', 'may', 'june', 'july']);
+		getAutofillCase([0, 1, 8], [0, 6, 8], 3, 'Month with space. Asc sequence. Range 2 cell', ['march', 'april', 'may', 'june', 'july', 'august']);
+		getAutofillCase([0, 1, 9], [0, 6, 9], 3, 'Month with spaces. Asc sequence. Range 2 cell', ['march', 'april', 'may', 'june', 'july', 'august']);
+		getAutofillCase([0, 0, 10], [0, 6, 10], 3, 'Month short with ".". Asc sequence. Range 1 cell', ['feb','mar', 'apr', 'may', 'jun', 'jul']);
+		getAutofillCase([0, 1, 11], [0, 6, 11], 3, 'Month short with ".". Asc sequence. Range 2 cell', ['mar', 'apr', 'may', 'jun', 'jul', 'aug']);
+		getAutofillCase([0, 0, 12], [0, 2, 12], 3, 'mon.day. Asc sequence. Range 1 cell', ['mon.day', 'mon.day']);
+		clearData(0, 0, 6, 12);
+		// Reverse cases
+		range = ws.getRange4(0, 7);
+		range.fillData(testData);
+		// nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
+		getAutofillCase([7, 7, 0], [6, 0, 0], 1, 'Day of week with space. Reverse sequence. Range 1 cell', ['sunday', 'saturday', 'friday', 'thursday', 'wednesday', 'tuesday', 'monday']);
+		getAutofillCase([7, 8, 1], [6, 0, 1], 1, 'Day of week with space. Reverse sequence. Range 2 cell', ['sunday', 'saturday', 'friday', 'thursday', 'wednesday', 'tuesday', 'monday']);
+		getAutofillCase([7, 8, 2], [6, 0, 2], 1, 'Day of week with space. Reverse sequence. Range 2 cell', ['sunday', 'saturday', 'friday', 'thursday', 'wednesday', 'tuesday', 'monday']);
+		getAutofillCase([7, 7, 3], [6, 0, 3], 1, 'Day of week short with ".". Reverse sequence. Range 1 cell', ['sun', 'sat', 'fri', 'thu', 'wed', 'tue', 'mon']);
+		getAutofillCase([7, 8, 4], [6, 0, 4], 1, 'Day of week short with ".". Reverse sequence. Range 2 cell', ['sun', 'sat', 'fri', 'thu', 'wed', 'tue', 'mon']);
+		getAutofillCase([7, 8, 5], [6, 0, 5], 1, 'Day of week short with space. Reverse sequence. Range 2 cell', ['sun', 'sat', 'fri', 'thu', 'wed', 'tue', 'mon']);
+		getAutofillCase([7, 8, 6], [6, 0, 6], 1, 'Day of week short with spaces. Reverse sequence. Range 2 cell', ['sun', 'sat', 'fri', 'thu', 'wed', 'tue', 'mon']);
+		getAutofillCase([7, 7, 7], [6, 0, 7], 1, 'Month with space. Reverse sequence. Range 1 cell', ['december', 'november', 'october', 'september', 'august', 'july', 'june']);
+		getAutofillCase([7, 8, 8], [6, 0, 8], 1, 'Month with space. Reverse sequence. Range 2 cell', ['december', 'november', 'october', 'september', 'august', 'july', 'june']);
+		getAutofillCase([7, 8, 9], [6, 0, 9], 1, 'Month with spaces. Reverse sequence. Range 2 cell', ['december', 'november', 'october', 'september', 'august', 'july', 'june']);
+		getAutofillCase([7, 7, 10], [6, 0, 10], 1, 'Month short with ".". Reverse sequence. Range 1 cell', ['dec', 'nov', 'oct', 'sep', 'aug', 'jul', 'jun']);
+		getAutofillCase([7, 8, 11], [6, 0, 11], 1, 'Month short with ".". Reverse sequence. Range 2 cell', ['dec', 'nov', 'oct', 'sep', 'aug', 'jul', 'jun']);
+		getAutofillCase([7, 7, 12], [6, 5, 12], 1, 'mon.day. Reverse sequence. Range 1 cell', ['mon.day', 'mon.day']);
+		clearData(0, 0, 8, 12);
+	});
+	QUnit.test('Autofill: Days of week and months with spaces and "." - Vertical sequence.', function (assert) {
+		function getAutofillCase(aFrom, aTo, nFillHandleArea, sDescription, expectedData) {
+			const [r1From, r2From, cFrom] = aFrom;
+			const [r1To, r2To, cTo] = aTo;
+			const nHandleDirection = 1; // 0 - Horizontal, 1 - Vertical
+			const autofillR1 =  nFillHandleArea === 3 ? r2From + 1 : r1From - 1;
+			const autoFillAssert = nFillHandleArea === 3 ? autofillData : reverseAutofillData;
+
+			ws.selectionRange.ranges = [getRange(cFrom, r1From, cFrom, r2From)];
+			wsView = getAutoFillRange(wsView, cTo, r1To, cTo, r2To, nHandleDirection, nFillHandleArea);
+			let autoFillRange = getRange(cTo, autofillR1, cTo, r2To);
+			autoFillAssert(assert, autoFillRange, expectedData, sDescription);
+		}
+		const testData = [
+			['monday ', 'monday ', ' monday ', 'mon.', 'mon.', 'mon ', ' mon ', 'january ', 'january ', ' january ', 'jan.', 'jan.', 'mon.day'],
+			['', 'tuesday', 'tuesday ', '', 'tue', 'tue', 'tue ', '', 'february', 'february', '', 'feb', '']
+		];
+
+		// Asc cases
+		let range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		// nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
+		getAutofillCase([0, 0, 0], [0, 6, 0], 3, 'Day of week with space. Asc sequence. Range 1 cell', [['tuesday'], ['wednesday'], ['thursday'], ['friday'], ['saturday'], ['sunday']]);
+		getAutofillCase([0, 1, 1], [0, 5, 1], 3, 'Day of week with space. Asc sequence. Range 2 cell', [['wednesday'], ['thursday'], ['friday'], ['saturday'], ['sunday']]);
+		getAutofillCase([0, 1, 2], [0, 5, 2], 3, 'Day of week with space. Asc sequence. Range 2 cell', [['wednesday'], ['thursday'], ['friday'], ['saturday'], ['sunday']]);
+		getAutofillCase([0, 0, 3], [0, 6, 3], 3, 'Day of week short with ".". Asc sequence. Range 1 cell', [['tue'], ['wed'], ['thu'], ['fri'], ['sat'], ['sun']]);
+		getAutofillCase([0, 1, 4], [0, 5, 4], 3, 'Day of week short with ".". Asc sequence. Range 2 cell', [['wed'], ['thu'], ['fri'], ['sat'], ['sun']]);
+		getAutofillCase([0, 1, 5], [0, 5, 5], 3, 'Day of week short with space. Asc sequence. Range 2 cell', [['wed'], ['thu'], ['fri'], ['sat'], ['sun']]);
+		getAutofillCase([0, 1, 6], [0, 5, 6], 3, 'Day of week short with spaces. Asc sequence. Range 2 cell', [['wed'], ['thu'], ['fri'], ['sat'], ['sun']]);
+		getAutofillCase([0, 0, 7], [0, 6, 7], 3, 'Month with space. Asc sequence. Range 1 cell', [['february'], ['march'], ['april'], ['may'], ['june'], ['july']]);
+		getAutofillCase([0, 1, 8], [0, 6, 8], 3, 'Month with space. Asc sequence. Range 2 cell', [['march'], ['april'], ['may'], ['june'], ['july'], ['august']]);
+		getAutofillCase([0, 1, 9], [0, 6, 9], 3, 'Month with spaces. Asc sequence. Range 2 cell', [['march'], ['april'], ['may'], ['june'], ['july'], ['august']]);
+		getAutofillCase([0, 0, 10], [0, 6, 10], 3, 'Month short with ".". Asc sequence. Range 1 cell', [['feb'],['mar'], ['apr'], ['may'], ['jun'], ['jul']]);
+		getAutofillCase([0, 1, 11], [0, 6, 11], 3, 'Month short with ".". Asc sequence. Range 2 cell', [['mar'], ['apr'], ['may'], ['jun'], ['jul'], ['aug']]);
+		getAutofillCase([0, 0, 12], [0, 2, 12], 3, 'mon.day. Asc sequence. Range 1 cell', [['mon.day'], ['mon.day']]);
+		clearData(0, 0, 6, 11);
+		// Reverse cases
+		range = ws.getRange4(7, 0);
+		range.fillData(testData);
+		// nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
+		getAutofillCase([7, 7, 0], [6, 0, 0], 1, 'Day of week with space. Reverse sequence. Range 1 cell', [['sunday'], ['saturday'], ['friday'], ['thursday'], ['wednesday'], ['tuesday'], ['monday']]);
+		getAutofillCase([7, 8, 1], [6, 0, 1], 1, 'Day of week with space. Reverse sequence. Range 2 cell', [['sunday'], ['saturday'], ['friday'], ['thursday'], ['wednesday'], ['tuesday'], ['monday']]);
+		getAutofillCase([7, 8, 2], [6, 0, 2], 1, 'Day of week with space. Reverse sequence. Range 2 cell', [['sunday'], ['saturday'], ['friday'], ['thursday'], ['wednesday'], ['tuesday'], ['monday']]);
+		getAutofillCase([7, 7, 3], [6, 0, 3], 1, 'Day of week short with ".". Reverse sequence. Range 1 cell', [['sun'], ['sat'], ['fri'], ['thu'], ['wed'], ['tue'], ['mon']]);
+		getAutofillCase([7, 8, 4], [6, 0, 4], 1, 'Day of week short with ".". Reverse sequence. Range 2 cell', [['sun'], ['sat'], ['fri'], ['thu'], ['wed'], ['tue'], ['mon']]);
+		getAutofillCase([7, 8, 5], [6, 0, 5], 1, 'Day of week short with space. Reverse sequence. Range 2 cell', [['sun'], ['sat'], ['fri'], ['thu'], ['wed'], ['tue'], ['mon']]);
+		getAutofillCase([7, 8, 6], [6, 0, 6], 1, 'Day of week short with spaces. Reverse sequence. Range 2 cell', [['sun'], ['sat'], ['fri'], ['thu'], ['wed'], ['tue'], ['mon']]);
+		getAutofillCase([7, 7, 7], [6, 0, 7], 1, 'Month with space. Reverse sequence. Range 1 cell', [['december'], ['november'], ['october'], ['september'], ['august'], ['july'], ['june']]);
+		getAutofillCase([7, 8, 8], [6, 0, 8], 1, 'Month with space. Reverse sequence. Range 2 cell', [['december'], ['november'], ['october'], ['september'], ['august'], ['july'], ['june']]);
+		getAutofillCase([7, 8, 9], [6, 0, 9], 1, 'Month with spaces. Reverse sequence. Range 2 cell', [['december'], ['november'], ['october'], ['september'], ['august'], ['july'], ['june']]);
+		getAutofillCase([7, 7, 10], [6, 0, 10], 1, 'Month short with ".". Reverse sequence. Range 1 cell', [['dec'], ['nov'], ['oct'], ['sep'], ['aug'], ['jul'], ['jun']]);
+		getAutofillCase([7, 8, 11], [6, 0, 11], 1, 'Month short with ".". Reverse sequence. Range 2 cell', [['dec'], ['nov'], ['oct'], ['sep'], ['aug'], ['jul'], ['jun']]);
+		getAutofillCase([7, 7, 12], [6, 5, 12], 1, 'mon.day. Reverse sequence. Range 1 cell', [['mon.day'], ['mon.day']]);
+		clearData(0, 0, 8, 11);
+	});
+
+	QUnit.test('Autofill: test toolbar down/up/left/right', function (assert) {
+		clearData(0, 0, 6, 11);
+
+		const testData = [
+			['1', 'Test', 'Test1', '01/01/2000']
+		];
+
+		// Asc cases
+		let range = ws.getRange4(0, 0);
+		range.fillData(testData);
+
+		let fillRange = new Asc.Range(0, 0, 0, 3);
+		wsView.setSelection(fillRange);
+		api.asc_FillCells(Asc.c_oAscFillType.fillDown);
+
+		checkUndoRedo(function (_desc) {
+			compareData(assert, fillRange, [["1"], [""], [""], [""]], _desc);
+		}, function (_desc) {
+			compareData(assert, fillRange, [["1"], ["1"], ["1"], ["1"]], _desc);
+		}, "Autofill: down fill number");
+
+		fillRange = new Asc.Range(1, 0, 1, 3);
+		wsView.setSelection(fillRange);
+		api.asc_FillCells(Asc.c_oAscFillType.fillDown);
+
+		checkUndoRedo(function (_desc) {
+			compareData(assert, fillRange, [["Test"], [""], [""], [""]], _desc);
+		}, function (_desc) {
+			compareData(assert, fillRange, [["Test"], ["Test"], ["Test"], ["Test"]], _desc);
+		}, "Autofill: down fill text");
+
+		fillRange = new Asc.Range(2, 0, 2, 3);
+		wsView.setSelection(fillRange);
+		api.asc_FillCells(Asc.c_oAscFillType.fillDown);
+
+		checkUndoRedo(function (_desc) {
+			compareData(assert, fillRange, [["Test1"], [""], [""], [""]], _desc);
+		}, function (_desc) {
+			compareData(assert, fillRange, [["Test1"], ["Test1"], ["Test1"], ["Test1"]], _desc);
+		}, "Autofill: down fill text + number");
+
+
+		fillRange = new Asc.Range(3, 0, 3, 3);
+		wsView.setSelection(fillRange);
+		api.asc_FillCells(Asc.c_oAscFillType.fillDown);
+
+		checkUndoRedo(function (_desc) {
+			compareData(assert, fillRange, [["36526"], [""], [""], [""]], _desc);
+		}, function (_desc) {
+			compareData(assert, fillRange, [["36526"], ["36526"], ["36526"], ["36526"]], _desc);
+		}, "Autofill: down fill date");
+
+
+		fillRange = new Asc.Range(2, 0, 4, 0);
+		wsView.setSelection(fillRange);
+		api.asc_FillCells(Asc.c_oAscFillType.fillRight);
+
+		checkUndoRedo(function (_desc) {
+			compareData(assert, fillRange, [["Test1", "36526", "", ""]], _desc);
+		}, function (_desc) {
+			compareData(assert, fillRange, [["Test1", "Test1", "Test1", "Test1"]], _desc);
+		}, "Autofill: right fill text + number");
+
+
+		clearData(0, 0, 6, 11);
+
+	});
+
+	QUnit.test('Table selection for formula', function (assert) {
+
+		let tableOptions = new AscCommonExcel.AddFormatTableOptions();
+		tableOptions.range = "A100:C103";
+		api.asc_addAutoFilter("TableStyleMedium2", tableOptions);
+
+		let tables = wsView.model.autoFilters.getTablesIntersectionRange(new Asc.Range(0, 100, 0, 100));
+		assert.strictEqual(tables.length, 1, "compare tables length");
+
+		let table = tables[0];
+		let tableName = table.DisplayName;
+		let activeCell = new AscCommon.CellBase(10, 10);
+		let handleSelectionRange = new Asc.Range(0, 1, 0, 1);
+		let sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, null, "check selection not table");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 0, 100);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, null, "check selection not table_2");
+
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 0, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[Column1]", "check selection column1");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 1, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[Column1]:[Column2]]", "check selection table data from column1 to column2");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 2, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName, "check selection all table");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 2, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName, "check selection table data from column1 to column2");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 1, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#All],[Column1]:[Column2]]", "check selection table data from column1 to column2 + header");
+
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 2, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[#All]", "check all selection table");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 2, 99);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[#Headers]", "check all selection table");
+
+		assert.strictEqual(table.isTotalsRow(), false, "check total before total added");
+		wsView.af_changeFormatTableInfo(tableName, Asc.c_oAscChangeTableStyleInfo.rowTotal, true);
+		assert.strictEqual(table.isTotalsRow(), true, "check total added");
+
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 2, 104);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#Data],[#Totals]]", "check data + totals selection table");
+
+		//Table5[[#Data];[#Totals];[Column1]:[Column2]]
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 100, 1, 104);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#Data],[#Totals],[Column1]:[Column2]]", "check data + totals selection table");
+
+		//Table5[[#All];[Column1]]
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 0, 104);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#All],[Column1]]", "check all column1 selection table");
+
+
+		//Table5[[#All];[Column1]:[Column2]]
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 1, 104);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#All],[Column1]:[Column2]]", "check all column1:column2 selection table");
+
+		//Table5[[#Headers];[#Data];[Column1]:[Column2]]
+		activeCell = new AscCommon.CellBase(10, 10);
+		handleSelectionRange = new Asc.Range(0, 99, 1, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#Headers],[#Data],[Column1]:[Column2]]", "check headers + data + column1:column2 selection table");
+
+		//@
+		//Table5[@]
+		activeCell = new AscCommon.CellBase(101, 4);
+		handleSelectionRange = new Asc.Range(0, 101, 2, 101);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+	
+		assert.strictEqual(sTableData, tableName + "[@]", "check intersection all row");
+
+		//Table5[@[Column1]:[Column2]]
+		activeCell = new AscCommon.CellBase(101, 4);
+		handleSelectionRange = new Asc.Range(0, 101, 1, 101);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+		
+		assert.strictEqual(sTableData, tableName + "[@[Column1]:[Column2]]", "check intersection column1:column2 row");
+
+		//Table5[@Column1]
+		activeCell = new AscCommon.CellBase(101, 4);
+		handleSelectionRange = new Asc.Range(0, 101, 0, 101);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+		
+		assert.strictEqual(sTableData, tableName + "[@Column1]", "check intersection column1 row");
+
+		//Table5[#Headers]
+		activeCell = new AscCommon.CellBase(99, 4);
+		handleSelectionRange = new Asc.Range(0, 99, 2, 99);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[#Headers]", "check selection Headers");
+
+		// Table5[[#Headers],[#Data]]
+		activeCell = new AscCommon.CellBase(99, 4);
+		handleSelectionRange = new Asc.Range(0, 99, 2, 103);
+		sTableData = table.getSelectionString(activeCell, handleSelectionRange);
+
+		assert.strictEqual(sTableData, tableName + "[[#Headers],[#Data]]", "check selection Headers Data");
+
+
+		clearData(0, 99, 0, 105);
+	});
+
+	QUnit.test('Table values/values for edit tests', function (assert) {
+		/*This test checks whether the string is parsed and changed correctly when working with tables */
+		let array;
+		ws.getRange2("A100:C103").setValue("1");
+
+		let tableOptions = new AscCommonExcel.AddFormatTableOptions();
+		tableOptions.range = "A100:C103";
+		api.asc_addAutoFilter("TableStyleMedium2", tableOptions);	// create table in A100:C103 range
+
+		let tables = wsView.model.autoFilters.getTablesIntersectionRange(new Asc.Range(0, 100, 0, 100));
+		assert.strictEqual(tables.length, 1, "compare tables length");
+
+		let table = tables[0];
+		let tableName = table.DisplayName;	// due to the fact that other tables are used in file, get the name of the one we need by this way
+		wsView.af_changeFormatTableInfo(tableName, Asc.c_oAscChangeTableStyleInfo.rowTotal, true);
+
+		// calc res check
+		let cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 5);
+		let oParser = new AscCommonExcel.parserFormula(tableName + "[@]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[@][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[@][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), 1, 'Result of Table[@][0,2]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 5);
+		resCell.setValue("=" + tableName +"[@]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@]", "Value for edit in cell after Table[@] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#This Row]", "Formula in cell after Table[@] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 10);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[#This Row]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[#This Row][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[#This Row][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), 1, 'Result of Table[#This Row][0,2]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 10);
+		resCell.setValue("=" + tableName +"[#This Row]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@]", "Value for edit in cell after Table[#This Row] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#This Row]", "Formula in cell after Table[#This Row] is typed");
+
+		// =Table[[#This Row]] => =Table[@]
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 15);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[[#This Row]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[[#This Row]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), 1, 'Result of Table[[#This Row]][0,2]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 15);
+		resCell.setValue("=" + tableName +"[[#This Row]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@]", "Value for edit in cell after Table[@] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#This Row]", "Formula in cell after Table[@] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 20);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[@Column1]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 1, 'Result of Table[@Column1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 20);
+		resCell.setValue("=" + tableName +"[@Column1]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@Column1]", "Value for edit in cell after Table[@Column1] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]]", "Formula in cell after Table[@Column1] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 25);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row],[Column1]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 1, 'Result of Table[[#This Row],[Column1]]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 25);
+		resCell.setValue("=" + tableName +"[[#This Row],[Column1]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@Column1]", "Value for edit in cell after Table[[#This Row],[Column1]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]]", "Formula in cell after Table[[#This Row],[Column1]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 30);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[@[Column1]:[Column2]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[@[Column1]:[Column2]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[@[Column1]:[Column2]][0,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 30);
+		resCell.setValue("=" + tableName +"[@[Column1]:[Column2]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@[Column1]:[Column2]]", "Value for edit in cell after Table[@[Column1]:[Column2]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]:[Column2]]", "Formula in cell after Table[@[Column1]:[Column2]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 35);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row],[Column1]:[Column2]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[[#This Row],[Column1]:[Column2]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[[#This Row],[Column1]:[Column2]][0,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 35);
+		resCell.setValue("=" + tableName +"[[#This Row],[Column1]:[Column2]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@[Column1]:[Column2]]", "Value for edit in cell after Table[[#This Row],[Column1]:[Column2]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]:[Column2]]", "Formula in cell after Table[[#This Row],[Column1]:[Column2]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 40);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row],[Column1]:[Column2]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[[#This Row],[Column1]:[Column2]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[[#This Row],[Column1]:[Column2]][0,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 40);
+		resCell.setValue("=" + tableName +"[[#This Row],[Column1]:[Column2]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@[Column1]:[Column2]]", "Value for edit in cell after Table[[#This Row],[Column1]:[Column2]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]:[Column2]]", "Formula in cell after Table[[#This Row],[Column1]:[Column2]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 45);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[@[Column1]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 1, 'Result of Table[@[Column1]]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 45);
+		resCell.setValue("=" + tableName +"[@[Column1]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[@Column1]", "Value for edit in cell after Table[@[Column1]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#This Row],[Column1]]", "Formula in cell after Table[@[Column1]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 50);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[#Headers]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[#Headers][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[#Headers][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), "Column3", 'Result of Table[#Headers][0,2]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 50);
+		resCell.setValue("=" + tableName +"[#Headers]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[#Headers]", "Value for edit in cell after Table[#Headers] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#Headers]", "Formula in cell after Table[#Headers] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 55);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Headers]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[[#Headers]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[[#Headers]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), "Column3", 'Result of Table[[#Headers]][0,2]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 55);
+		resCell.setValue("=" + tableName +"[[#Headers]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[#Headers]", "Value for edit in cell after Table[[#Headers]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#Headers]", "Formula in cell after Table[[#Headers]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 60);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Headers],[Column2]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "Column2", 'Result of Table[[#Headers],[Column2]]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 60);
+		resCell.setValue("=" + tableName +"[[#Headers],[Column2]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[[#Headers],[Column2]]", "Value for edit in cell after Table[[#Headers],[Column2]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#Headers],[Column2]]", "Formula in cell after Table[[#Headers],[Column2]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 65);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Headers],[Column2]:[Column3]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column2", 'Result of Table[[#Headers],[Column2]:[Column3]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column3", 'Result of Table[[#Headers],[Column2]:[Column3]][0,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 65);
+		resCell.setValue("=" + tableName +"[[#Headers],[Column2]:[Column3]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[[#Headers],[Column2]:[Column3]]", "Value for edit in cell after Table[[#Headers],[Column2]:[Column3]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#Headers],[Column2]:[Column3]]", "Formula in cell after Table[[#Headers],[Column2]:[Column3]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 70);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[#All]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[#All][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[#All][0,1]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[#All][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[#All][1,1]');
+		assert.strictEqual(array.getValueByRowCol(3, 0).getValue(), 1, 'Result of Table[#All][3,0]');
+		assert.strictEqual(array.getValueByRowCol(3, 1).getValue(), 1, 'Result of Table[#All][3,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 70);
+		resCell.setValue("=" + tableName +"[#All]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName, "Value for edit in cell after Table[#All] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName, "Formula in cell after Table[#All] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 75);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#All]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[[#All]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[[#All]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[[#All]][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[[#All]][1,1]');
+		assert.strictEqual(array.getValueByRowCol(3, 0).getValue(), 1, 'Result of Table[[#All]][3,0]');
+		assert.strictEqual(array.getValueByRowCol(3, 1).getValue(), 1, 'Result of Table[[#All]][3,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 75);
+		resCell.setValue("=" + tableName +"[[#All]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[#All]", "Value for edit in cell after Table[[#All]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#All]", "Formula in cell after Table[[#All]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 80);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[#Data]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[#Data][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[#Data][0,1]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[#Data][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[#Data][1,1]');
+		assert.strictEqual(array.getValueByRowCol(2, 0).getValue(), 1, 'Result of Table[#Data][2,0]');
+		assert.strictEqual(array.getValueByRowCol(2, 1).getValue(), 1, 'Result of Table[#Data][2,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 80);
+		resCell.setValue("=" + tableName +"[#Data]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName, "Value for edit in cell after Table[#Data] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName, "Formula in cell after Table[#Data] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 85);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Data]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[[#Data]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[[#Data]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[[#Data]][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[[#Data]][1,1]');
+		assert.strictEqual(array.getValueByRowCol(2, 0).getValue(), 1, 'Result of Table[[#Data]][2,0]');
+		assert.strictEqual(array.getValueByRowCol(2, 1).getValue(), 1, 'Result of Table[[#Data]][2,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 85);
+		resCell.setValue("=" + tableName +"[[#Data]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[#Data]", "Value for edit in cell after Table[[#Data]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#Data]", "Formula in cell after Table[[#Data]] is typed");
+
+		
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 90);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Totals]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Summary", 'Result of Table[[#Totals]][0,0]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 90);
+		resCell.setValue("=" + tableName +"[[#Totals]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[#Totals]", "Value for edit in cell after Table[#Totals]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[#Totals]", "Formula in cell after Table[[#Totals]] is typed");
+
+
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 95);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Data],[#Totals]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), 1, 'Result of Table[[#Data],[#Totals]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), 1, 'Result of Table[[#Data],[#Totals]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[[#Data],[#Totals]][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[[#Data],[#Totals]][1,1]');
+		assert.strictEqual(array.getValueByRowCol(2, 0).getValue(), 1, 'Result of Table[[#Data],[#Totals]][2,0]');
+		assert.strictEqual(array.getValueByRowCol(2, 1).getValue(), 1, 'Result of Table[[#Data],[#Totals]][2,1]');
+		assert.strictEqual(array.getValueByRowCol(4, 0).getValue(), "Summary", 'Result of Table[[#Data],[#Totals]][4,0]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 95);
+		resCell.setValue("=" + tableName +"[[#Data],[#Totals]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[[#Data],[#Totals]]", "Value for edit in cell after Table[[#Data],[#Totals]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#Data],[#Totals]]", "Formula in cell after Table[[#Data],[#Totals]] is typed");
+
+
+		// =Table3[[#This Row],[#Data]]
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 100);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row],[#Data]]", cellWithFormula, ws);
+		// assert.ok(oParser.parse()); // false
+		array = oParser.calculate();
+		assert.strictEqual(oParser.calculate().getValue(), "#NAME?", 'Result of Table[[#This Row],[#Data]]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 100);
+		resCell.setValue("=" + tableName +"[[#This Row],[#Data]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "", "Value for edit in cell after Table[[#This Row],[#Data]] is typed");
+		assert.strictEqual(resCell.getFormula(), "", "Formula in cell after Table[[#This Row],[#Data]] is typed");
+
+
+		// =Table3[[#This Row],[#All]]
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 105);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#This Row],[#All]]", cellWithFormula, ws);
+		// assert.ok(oParser.parse()); // false
+		array = oParser.calculate();
+		assert.strictEqual(oParser.calculate().getValue(), "#NAME?", 'Result of Table[[#This Row],[#All]]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 105);
+		resCell.setValue("=" + tableName +"[[#This Row],[#All]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "", "Value for edit in cell after Table[[#This Row],[#All]] is typed");
+		assert.strictEqual(resCell.getFormula(), "", "Formula in cell after Table[[#This Row],[#All]] is typed");
+
+
+		// =Table3[[#Headers],[#Data]]
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 90);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Headers],[#Data]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[[#Headers],[#Data]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[[#Headers],[#Data]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), "Column3", 'Result of Table[[#Headers],[#Data]][0,2]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[[#Headers],[#Data]][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[[#Headers],[#Data]][1,1]');
+		assert.strictEqual(array.getValueByRowCol(2, 0).getValue(), 1, 'Result of Table[[#Headers],[#Data]][2,0]');
+		assert.strictEqual(array.getValueByRowCol(2, 1).getValue(), 1, 'Result of Table[[#Headers],[#Data]][2,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 90);
+		resCell.setValue("=" + tableName +"[[#Headers],[#Data]]");
+		
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[[#Headers],[#Data]]", "Value for edit in cell after Table[[#Headers],[#Data]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#Headers],[#Data]]", "Formula in cell after Table[[#Headers],[#Data]] is typed");
+		
+		// todo
+		// This entry is swapped in ms(Data is swapped with Headers) and is written as: =Table[[#Headers],[#Data]] and exactly the same is written to the file
+		// Our editor does not have such functionality, but it does not affect the final result of the calculation
+		// The only difference is that the string in the cell will differ from ms
+		// calc res check
+		cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 101, 95);
+		oParser = new AscCommonExcel.parserFormula(tableName + "[[#Data],[#Headers]]", cellWithFormula, ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getValueByRowCol(0, 0).getValue(), "Column1", 'Result of Table[[#Data],[#Headers]][0,0]');
+		assert.strictEqual(array.getValueByRowCol(0, 1).getValue(), "Column2", 'Result of Table[[#Data],[#Headers]][0,1]');
+		assert.strictEqual(array.getValueByRowCol(0, 2).getValue(), "Column3", 'Result of Table[[#Data],[#Headers]][0,2]');
+		assert.strictEqual(array.getValueByRowCol(1, 0).getValue(), 1, 'Result of Table[[#Data],[#Headers]][1,0]');
+		assert.strictEqual(array.getValueByRowCol(1, 1).getValue(), 1, 'Result of Table[[#Data],[#Headers]][1,1]');
+		assert.strictEqual(array.getValueByRowCol(2, 0).getValue(), 1, 'Result of Table[[#Data],[#Headers]][2,0]');
+		assert.strictEqual(array.getValueByRowCol(2, 1).getValue(), 1, 'Result of Table[[#Data],[#Headers]][2,1]');
+
+		// value for edit and formula in cell check
+		resCell = ws.getRange4(101, 95);
+		resCell.setValue("=" + tableName +"[[#Data],[#Headers]]");
+		
+		//"=" + tableName + "[[#Headers],[#Data]]"
+		assert.strictEqual(resCell.getValueForEdit(), "=" + tableName + "[[#Data],[#Headers]]", "Value for edit in cell after Table[[#Data],[#Headers]] is typed");
+		assert.strictEqual(resCell.getFormula(), tableName + "[[#Data],[#Headers]]", "Formula in cell after Table[[#Data],[#Headers]] is typed");
+
+		clearData(0, 99, 0, 105);
+	});
+
+	QUnit.test('autoCompleteFormula', function (assert) {
+		let resCell, range, fillRange, autoCompleteRes;
+
+		ws.getRange2("A1:Z100").cleanAll();
+
+		let testData = [
+			// ['1', 'Test', 'Test1', '01/01/2000']
+			['1'],
+			['Test'],
+			['Test1'],
+			['01/01/2000']
+		];
+
+		// Asc cases
+		range = ws.getRange2("A1");
+		range.fillData(testData);
+		// ws.getRange2("A1").setValue("1");
+		// ws.getRange2("A2").setValue("Test");
+		// ws.getRange2("A3").setValue("Test1");
+		// ws.getRange2("A4").setValue("01/01/2000");
+
+		// c1, r1, c2, r2
+		// fillRange = new Asc.Range(0, 0, 0, 3);
+		fillRange = ws.getRange2("A1:A4");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+		
+		resCell = ws.getRange2("A5");
+		assert.strictEqual(resCell.getValueWithFormat(), "36527", "Value after A1:A4 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A1:A4)", "Formula after A1:A4 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A1:A5", "Selection after A1:A4 autosum");
+
+		range = ws.getRange2("B1");
+		ws.getRange2("B1").setValue("ds");
+		ws.getRange2("B2").setValue("1");
+
+		// fillRange = new Asc.Range(1, 0, 1, 1);
+		fillRange = ws.getRange2("B1:B2");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("B3");
+		assert.strictEqual(resCell.getValueWithFormat(), "", "Value after B1:B2 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "", "Formula after B1:B2 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B1:B2", "Selection after B1:B2 autosum");
+
+
+		ws.getRange2("C1").setValue("ds");
+		ws.getRange2("C2").setValue("1");
+		ws.getRange2("C3").setValue("1");
+
+		// fillRange = new Asc.Range(2, 0, 2, 2);
+		fillRange = ws.getRange2("C1:C3");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("C4");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after C1:C3 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(C2:C3)", "Formula after C1:C3 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "C2:C4", "Selection after C1:C3 autosum");
+
+
+		ws.getRange2("D2").setValue("ds");
+		ws.getRange2("D4").setValue("1");
+
+		// fillRange = new Asc.Range(3, 0, 3, 3);
+		fillRange = ws.getRange2("D1:D4");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("D5");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after D1:D4 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(D1:D4)", "Formula after D1:D4 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "D1:D5", "Selection after D1:D4 autosum");
+
+
+		ws.getRange2("E1").setValue("ds");
+		ws.getRange2("E3").setValue("1");
+		ws.getRange2("E4").setValue("");
+
+		// fillRange = new Asc.Range(4, 0, 4, 3);
+		fillRange = ws.getRange2("E1:E4");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+
+		resCell = ws.getRange2("E4");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after E1:E4 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(E3)", "Formula after E1:E4 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "E3:E4", "Selection after E1:E4 autosum");
+
+
+		ws.getRange2("F1").setValue("ds");
+		ws.getRange2("F3").setValue("1");
+		ws.getRange2("F4").setValue("1");
+
+		// fillRange = new Asc.Range(5, 0, 5, 3);
+		fillRange = ws.getRange2("F1:F4");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("F5");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after F1:F4 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(F3:F4)", "Formula after F1:F4 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "F3:F5", "Selection after F1:F4 autosum");
+
+
+		ws.getRange2("G2").setValue("ds");
+		ws.getRange2("G4").setValue("1");
+		ws.getRange2("G5").setValue("1");
+
+		// fillRange = new Asc.Range(6, 0, 6, 4);
+		fillRange = ws.getRange2("G1:G5");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("G6");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after G1:G5 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(G1:G5)", "Formula after G1:G5 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "G1:G6", "Selection after G1:G5 autosum");
+
+		// col tests
+		ws.getRange2("A10").setValue("ds");
+		ws.getRange2("B10").setValue("1");
+		ws.getRange2("C10").setValue("1");
+
+		// fillRange = new Asc.Range(0, 9, 2, 9);
+		fillRange = ws.getRange2("A10:C10");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("D10");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A10:C10 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B10:C10)", "Formula after A10:C10 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B10:D10", "Selection after A10:C10 autosum");
+
+
+		ws.getRange2("A11").setValue("ds");
+		ws.getRange2("B11").setValue("1");
+
+		// fillRange = new Asc.Range(0, 10, 2, 10);
+		fillRange = ws.getRange2("A11:C11");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("C11");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after A11:C11 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B11)", "Formula after A11:C11 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B11:C11", "Selection after A11:C11 autosum");
+		
+
+		ws.getRange2("B12").setValue("ds");
+		ws.getRange2("D12").setValue("1");
+		ws.getRange2("E12").setValue("1");
+
+		// fillRange = new Asc.Range(0, 11, 4, 11);
+		fillRange = ws.getRange2("A12:E12");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("F12");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A12:E12 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A12:E12)", "Formula after A12:E12 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A12:F12", "Selection after A12:E12 autosum");
+
+		// row + col tests
+		ws.getRange2("A20").setValue("ds");
+		ws.getRange2("A21").setValue("1");
+		ws.getRange2("A22").setValue("1");
+		ws.getRange2("B20").setValue("ds");
+		ws.getRange2("B21").setValue("1");
+		ws.getRange2("B23").setValue("1");
+
+		// fillRange = new Asc.Range(0, 19, 1, 22);
+		fillRange = ws.getRange2("A20:B23");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A24");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A20:B23 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A21:A23)", "Formula after A20:B23 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A21:B24", "Selection after A20:B23 autosum");
+		resCell = ws.getRange2("B24");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A20:B23 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B21:B23)", "Formula after A20:B23 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A21:B24", "Selection after A20:B23 autosum");
+
+
+		ws.getRange2("K1").setValue("ds");
+		ws.getRange2("L1").setValue("ds");
+		ws.getRange2("K3").setValue("1");
+
+		// fillRange = new Asc.Range(10, 0, 11, 2);
+		fillRange = ws.getRange2("K1:L3");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("L3");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after K1:L3 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(K3)", "Formula after K1:L3 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "K3:L3", "Selection after K1:L3 autosum");
+
+
+		ws.getRange2("K5:L10").cleanAll();
+		ws.getRange2("K6").setValue("ds");
+		ws.getRange2("K8").setValue("1");
+
+		// fillRange = new Asc.Range(10, 4, 11, 8);
+		fillRange = ws.getRange2("K5:L9");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("L8");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after K5:L9 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(K8)", "Formula after K5:L9 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "K8:L9", "Selection after K5:L9 autosum");
+		resCell = ws.getRange2("K9");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after K5:L9 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(K8)", "Formula after K5:L9 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "K8:L9", "Selection after K5:L9 autosum");
+		resCell = ws.getRange2("L9");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after K5:L9 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(K9)", "Formula after K5:L9 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "K8:L9", "Selection after K5:L9 autosum");
+
+
+		ws.getRange2("A12:M14").cleanAll();
+		ws.getRange2("K13").setValue("1");
+		ws.getRange2("L13").setValue("1");
+
+		// fillRange = new Asc.Range(9, 11, 12, 13);
+		fillRange = ws.getRange2("A12:M14");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("M13");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A12:M14 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A13:L13)", "Formula after A12:M14 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A13:M14", "Selection after A12:M14 autosum");
+		resCell = ws.getRange2("M14");
+		assert.strictEqual(resCell.getValueWithFormat(), "2", "Value after A12:M14 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A14:L14)", "Formula after A12:M14 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A13:M14", "Selection after A12:M14 autosum");
+		resCell = ws.getRange2("K14");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after A12:M14 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(K13)", "Formula after A12:M14 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A13:M14", "Selection after A12:M14 autosum");
+		resCell = ws.getRange2("L14");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after A12:M14 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(L13)", "Formula after A12:M14 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A13:M14", "Selection after A12:M14 autosum");
+		
+		// for bug 32959
+		ws.getRange2("B10:B14").cleanAll();
+		ws.getRange2("B11").setValue("1");
+		ws.getRange2("B12").setValue("ds");
+
+		// B11:B12
+		fillRange = ws.getRange2("B11:B12");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("B13");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B11:B12 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B11:B12)", "Formula after B11:B12 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B11:B13", "Selection after B11:B12 autosum");
+
+		// B11:B13
+		ws.getRange2("B13:B14").cleanAll();
+		fillRange = ws.getRange2("B11:B13");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("B13");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B11:B13 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B11:B12)", "Formula after B11:B13 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B11:B13", "Selection after B11:B13 autosum");
+
+		// B10:B12
+		ws.getRange2("B13:B14").cleanAll();
+		fillRange = ws.getRange2("B10:B12");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("B13");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B10:B12 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B10:B12)", "Formula after B10:B12 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B10:B13", "Selection after B10:B12 autosum");
+
+		// B10:B13
+		ws.getRange2("B13:B14").cleanAll();
+		fillRange = ws.getRange2("B10:B13");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("B13");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B10:B13 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B10:B12)", "Formula after B10:B13 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B10:B13", "Selection after B10:B13 autosum");
+
+		
+		ws.getRange2("B20:F20").cleanAll();
+		ws.getRange2("C20").setValue("1");
+		ws.getRange2("D20").setValue("ds");
+		// C20:D20
+		ws.getRange2("E20:F20").cleanAll();
+		fillRange = ws.getRange2("C20:D20");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("E20");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after C20:D20 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(C20:D20)", "Formula after C20:D20 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "C20:E20", "Selection after C20:D20 autosum");
+
+		// C20:E20
+		ws.getRange2("E20:F20").cleanAll();
+		fillRange = ws.getRange2("C20:E20");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("E20");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after C20:E20 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(C20:D20)", "Formula after C20:E20 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "C20:E20", "Selection after C20:E20 autosum");
+
+		// B20:D20
+		ws.getRange2("E20:F20").cleanAll();
+		fillRange = ws.getRange2("B20:D20");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("E20");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B20:D20 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B20:D20)", "Formula after B20:D20 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B20:E20", "Selection after B20:D20 autosum");
+
+		// B20:E20
+		ws.getRange2("E20:F20").cleanAll();
+		fillRange = ws.getRange2("B20:E20");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("E20");
+		assert.strictEqual(resCell.getValueWithFormat(), "1", "Value after B20:E20 autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(B20:D20)", "Formula after B20:E20 autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "B20:E20", "Selection after B20:E20 autosum");
+
+		// for bug 37318
+		ws.getRange2("A20:A22").cleanAll();
+		ws.getRange2("A20:A22").setValue("1");
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("m/d/yyyy");		// change to the short date format
+		// wsView.setSelectionInfo("format", "m/d/yyyy");
+
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "", "Value after A20:A22(only dates in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "", "Formula after A20:A22(only dates in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A22", "Selection after A20:A22(only dates in range) autosum");
+
+
+		// number 
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("0.00"); 	// change to the number format
+
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "3", "Value after A20:A22(only number in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A20:A22)", "Formula after A20:A22(only number in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A23", "Selection after A20:A22(only number in range) autosum");
+
+
+		// fraction
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("# ?/?"); 	// change to the fraction format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "3", "Value after A20:A22(only fraction in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A20:A22)", "Formula after A20:A22(only fraction in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A23", "Selection after A20:A22(only fraction in range) autosum");
+
+
+		// scientific
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("0.00E+00"); 	// change to the scientific format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "3", "Value after A20:A22(only scientific in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A20:A22)", "Formula after A20:A22(only scientific in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A23", "Selection after A20:A22(only scientific in range) autosum");
+
+
+		// accounting
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("_([$$-409]* #,##0.00_);_([$$-409]* \\(#,##0.00\\);_([$$-409]* \"-\"??_);_(@_)"); 	// change to the accounting format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "3", "Value after A20:A22(only accounting in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A20:A22)", "Formula after A20:A22(only accounting in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A23", "Selection after A20:A22(only accounting in range) autosum");
+
+
+		// percentage
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("0.00%"); 	// change to the percentage format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "3", "Value after A20:A22(only percents in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "=SUM(A20:A22)", "Formula after A20:A22(only percents in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A23", "Selection after A20:A22(only percents in range) autosum");
+
+
+		// l.date
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("[$-F800]dddd\,\ mmmm\ d\,\ yyyy"); 	// change to the long date format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "", "Value after A20:A22(only dates in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "", "Formula after A20:A22(only dates in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A22", "Selection after A20:A22(only dates in range) autosum");
+
+
+		// text
+		fillRange = ws.getRange2("A20:A22");
+		fillRange.setNumFormat("@"); 	// change to the text format
+		ws.getRange2("A23").cleanAll();
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		resCell = ws.getRange2("A23");
+		assert.strictEqual(resCell.getValueWithFormat(), "", "Value after A20:A22(only text in range) autosum");
+		assert.strictEqual(resCell.getValueForEdit(), "", "Formula after A20:A22(only text in range) autosum");
+		assert.strictEqual(wsView.model.selectionRange.getLast().getName(), "A20:A22", "Selection after A20:A22(only text in range) autosum");
+
+		/* activeCell tests */
+		/* if the data type does not allow the formula to be executed, the active cell is moved to the end of the select */
+		let activeCell, supposedActiveCell;
+
+		ws.getRange2("A1:Z100").cleanAll();
+		ws.getRange2("B10").setValue("111");
+		ws.getRange2("B20:B22").setValue("ds");
+		fillRange = ws.getRange2("B20:B22");
+		fillRange.setNumFormat("@");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		activeCell = ws.selectionRange.activeCell;
+		supposedActiveCell = ws.getCell2("B22");
+		assert.strictEqual(activeCell.col === supposedActiveCell.bbox.c1 && activeCell.row === supposedActiveCell.bbox.r1, true, "Active cell test. B20:B22(only text in range) autosum");
+
+
+		ws.getRange2("B10").cleanAll();
+		ws.getRange2("A20:A21").setValue("111");
+		fillRange = ws.getRange2("B20:B22");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		activeCell = ws.selectionRange.activeCell;
+		supposedActiveCell = ws.getCell2("B22");
+		assert.strictEqual(activeCell.col === supposedActiveCell.bbox.c1 && activeCell.row === supposedActiveCell.bbox.r1, true, "Active cell test. B20:B22(only text in range) autosum");
+
+
+		ws.getRange2("A22").setValue("111");
+		fillRange = ws.getRange2("B20:B22");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		autoCompleteRes = wsView.autoCompleteFormula("SUM");
+
+		activeCell = ws.selectionRange.activeCell;
+		supposedActiveCell = ws.getCell2("B22");
+		assert.strictEqual(activeCell.col === supposedActiveCell.bbox.c1 && activeCell.row === supposedActiveCell.bbox.r1, true, "Active cell test. B20:B22(only text in range) autosum");
+
+		
+		ws.getRange2("A1:Z100").cleanAll();
+	});
+
+	QUnit.test('sortRangeTest', function (assert) {
+		let range, expectedRes;
+
+		ws.getRange2("A1:Z100").cleanAll();
+
+		let testData = [
+			['a'],
+			['h'],
+			['f'],
+			['é'],
+			['e'],
+			['d'],
+			['c'],
+			['b'],
+			['á'],
+			['g']
+		];
+
+		range = ws.getRange2("A1:A10");
+		range.fillData(testData);
+
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, [['a'],['á'],['b'],['c'],['d'],['e'],['é'],['f'],['g'],['h']], "check_sort_1");
+
+		range = ws.getRange2("A1:A10");
+		range.fillData(testData);
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, [['h'],['g'],['f'],['é'],['e'],['d'],['c'],['b'],['á'],['a']], "check_sort_2");
+
+		testData = [
+			['1'],
+			['g'],
+			['2'],
+			['é'],
+			['TEST3'],
+			['á'],
+			['c'],
+			['Test2'],
+			['test1'],
+			['a']
+		];
+
+		range = ws.getRange2("A1:A10");
+		range.fillData(testData);
+
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, [['1'],['2'],['a'],['á'],['c'],['é'],['g'],['test1'],['Test2'],['TEST3']], "check_sort_3");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, [['TEST3'],['Test2'],['test1'],['g'],['é'],['c'],['á'],['a'],['2'],['1']], "check_sort_4");
+
+		testData = [
+			['-2'],
+			['Test2'],
+			['test1'],
+			['g'],
+			['é'],
+			['12345'],
+			['á'],
+			['a'],
+			['안세요'],
+			['녕하'],
+			['TEST0'],
+			['하'],
+			['TEST2'],
+			['аА'],
+			['é'],
+			['1'],
+			['2'],
+			['АА'],
+			['аа'],
+			['-1']
+		];
+
+		range = ws.getRange2("A1:A20");
+		range.fillData(testData);
+
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, [['-2'],['-1'],['1'],['2'],['12345'],['a'],['á'],['é'],['é'],['g'],['TEST0'],['test1'],['Test2'],['TEST2'],['аА'],['АА'],['аа'],['녕하'],['안세요'],['하']], "check_sort_5");
+
+		/* MS puts Arabic alphabet above Japanese, javascript sorts differently*/
+
+		testData = [
+			['أ'],	// arabic
+			['А'],	// russian
+			['あ'],	// japanese
+		];
+
+		range = ws.getRange2("A1:A3");
+		range.fillData(testData);
+
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, [['А'],['أ'],['あ']], "Asc check_sort_6");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, [['あ'],['أ'],['А']], "Desc check_sort_6");
+
+		testData = [
+			['A'],	// english
+			['A'],	// spanish
+			['A'],	// german
+			['Ä'],	// german
+			['A'],	// french
+			['À'],	// french
+			['A'],	// hungarian
+			['Á'],	// hungarian
+			['A'],	// turkish
+			['أ'],	// arabic
+			['А'],	// russian
+			['あ'],	// japanese
+		];
+
+		range = ws.getRange2("A1:A12");
+		range.fillData(testData);
+
+		expectedRes = [['A'],['A'],['A'],['A'],['A'],['A'],['Á'],['À'],['Ä'],['А'],['أ'],['あ']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_7");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_7");
+		
+		// Tests with more of languages
+		testData = [
+			['City'],	// eng
+			['城市'],	// cn
+			['शहर'],	// hindi
+			['Ciudad'],	// esp
+			['Ville'],	// fr
+			['مدينة'],	// arabic
+			['শহর'],	// bengal
+			['Город'],	// ru
+			['Cidade'],	// pt-pt
+			['Kota'],	// indonesian
+			['Város'],	// Magyar
+			['Stadt']	// Dutch
+		];
+
+		range = ws.getRange2("A1:A12");
+		range.fillData(testData);
+
+		expectedRes = [['Cidade'],['City'],['Ciudad'],['Kota'],['Stadt'],['Város'],['Ville'],['Город'],['مدينة'],['शहर'],['শহর'],['城市']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_8");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_8");
+		
+		testData = [
+			['123City'],	// eng
+			['123城市'],	// cn
+			['123शहर'],		// hindi
+			['123Ciudad'],	// esp
+			['123Ville'],	// fr
+			['123' + 'مدينة'],	// arabic
+			['123শহর'],		// bengal
+			['123Город'],	// ru
+			['123Cidade'],	// pt-pt
+			['123Kota'],	// indonesian
+			['123Város'],	// Magyar
+			['123Stadt']	// Dutch
+		];
+
+		range = ws.getRange2("A1:A12");
+		range.fillData(testData);
+
+		expectedRes = [['123Cidade'],['123City'],['123Ciudad'],['123Kota'],['123Stadt'],['123Város'],['123Ville'],['123Город'],['123مدينة'],['123शहर'],['123শহর'],['123城市']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_9");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_9");
+
+		testData = [
+			['2e2de2'],
+			['zxc'],
+			['f'],
+			['_d'],
+			['edasd'],
+			['SiM`Gl23'],
+			['dd23dd'],	
+			['3e2de2'],
+			['SDY'],
+			['3e2de3'],
+			['2e3de2'],
+			['__z']
+		];
+
+		range = ws.getRange2("A1:A12");
+		range.fillData(testData);
+
+		expectedRes = [['__z'],['_d'],['2e2de2'],['2e3de2'],['3e2de2'],['3e2de3'],['dd23dd'],['edasd'],['f'],['SDY'],['SiM`Gl23'],['zxc']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_10");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_10");
+
+		// sorting specials characters does not coincide with the sorting in ms (but the same as in gs and libre)
+		/*
+		testData = [
+			['!a'],
+			['#a'],
+			['$a'],
+			['^a'],
+			['&a'],
+			['*a'],
+			['(a'],	
+			[')a'],
+			['_a'],
+			['[a'],
+			[']a'],
+			['{a'],
+			['}a'],
+			['\a'],
+			['/a'],
+			['|a'],
+			[';a'],
+			[':a'],
+			['a'],	
+			[',a'],
+			['.a'],
+			['`a'],
+			['>a'],
+			['<a'],
+			['?a'],
+			['~a'],
+		];
+
+		range = ws.getRange2("A1:A26");
+		range.fillData(testData);
+
+		expectedRes = [['!a'],['#a'],['$a'],['&a'],['(a'],[')a'],['*a'],[',a'],['.a'],['/a'],[':a'],[';a'],['?a'],['[a'],['\a'],[']a'],['^a'],['_a'],['`a'],['{a'],['|a'],['}a'],['~a'],['<a'],['>a'],['a']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_11");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_11");
+
+		// letters with diacritics sorting also does not coincide with the sorting in ms (but the same as in gs and libre)
+		testData = [
+			['á'],
+			['Á'],
+			['à'],
+			['ă'],
+			['â'],
+			['Â'],
+			['å'],
+			['ä'],
+			['ã'],
+			['Ą'],
+			['ā'],
+			['Ā'],
+		];
+		
+		range = ws.getRange2("A1:A4");
+		range.fillData(testData);
+
+		expectedRes = [['á'],['Á'],['à'],['â'], ['Â'],['ä'],['ă'],['ā'],['Ā'],['ã'],['å'],['Ą'],];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_12");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_12");
+		*/
+
+		// english
+		testData = [
+			['Test1'],
+			['TEST1'],
+			['tESt1'],
+			['TesT1'],
+		];
+
+		range = ws.getRange2("A1:A4");
+		range.fillData(testData);
+
+		expectedRes = [['Test1'],['TEST1'],['tESt1'],['TesT1']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_13");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes, "Desc check_sort_13");
+
+		// hungarian
+		testData = [
+			['Köszönöm1'],
+			['KÖSZÖNÖM1'],
+			['köSzÖnÖm1'],
+			['KöszönöM1'],
+		];
+
+		range = ws.getRange2("A1:A4");
+		range.fillData(testData);
+
+		expectedRes = [['Köszönöm1'],['KÖSZÖNÖM1'],['köSzÖnÖm1'],['KöszönöM1']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_14");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes, "Desc check_sort_14");
+
+		testData = [
+			['ZZ'],['á'], ['é'],['í'], ['ó'], 
+			['ö'], ['ő'], ['ú'], ['ü'], ['ű'],['a']
+		];
+
+		range = ws.getRange2("A1:A11");
+		range.fillData(testData);
+
+		expectedRes = [
+			['a'],['á'],['é'], ['í'], ['ó'],
+			['ö'], ['ő'], ['ú'], ['ü'], ['ű'],['ZZ']
+		];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_15");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_15");
+
+
+		// turkish
+		testData = [
+			['C'],['Ç'],['ç'],['Ğ'],['ğ'],
+			['Ö'],['ö'],['Ş'],['ş'],['Ü'],['ü']
+		];
+
+		range = ws.getRange2("A1:A11");
+		range.fillData(testData);
+
+		expectedRes = [
+			['C'],['Ç'],['ç'],['Ğ'],['ğ'],
+			['Ö'],['ö'],['Ş'],['ş'],['Ü'],['ü']
+		];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_16");
+
+		expectedRes = [
+			['Ü'],['ü'],['Ş'],['ş'],['Ö'],
+			['ö'],['Ğ'],['ğ'],['Ç'],['ç'],['C'],
+		];
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes, "Desc check_sort_16");
+
+
+		testData = [
+			['ALİ'],
+			['MURAT'],
+			['İSMAİL']
+		];
+
+		range = ws.getRange2("A1:A3");
+		range.fillData(testData);
+
+		expectedRes = [['ALİ'],['İSMAİL'],['MURAT']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_17");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_17");
+
+
+		// hungarian, portugese, deutsch, turkish
+		testData = [
+			['Évad'],
+			['Óculos'],
+			['Äpfel'],
+			['Şehir']
+		];
+
+		range = ws.getRange2("A1:A4");
+		range.fillData(testData);
+
+		expectedRes = [['Äpfel'],['Évad'],['Óculos'],['Şehir']];
+		range.sort(Asc.c_oAscSortOptions.Ascending, 0);
+		compareData(assert, range.bbox, expectedRes, "Asc check_sort_18");
+
+		range.sort(Asc.c_oAscSortOptions.Descending, 0);
+		compareData(assert, range.bbox, expectedRes.reverse(), "Desc check_sort_18");
+
+	});
+	QUnit.test("Autofill - format Date, Date & Time and Time.", function (assert) {
+		function getAutofillCase(aFrom, aTo, nFillHandleArea, sDescription, expectedData) {
+			const [c1From, c2From, r1From, r2From] = aFrom;
+			const [c1To, c2To, r1To, r2To] = aTo;
+			const nHandleDirection = r1To === r2To ? 0 : 1; // 0 - Horizontal, 1 - Vertical
+			const autoFillAssert = nFillHandleArea === 3 ? autofillData : reverseAutofillData;
+			let  autoFillRange;
+
+			if (nHandleDirection === 0) {
+				let autofillC1 = nFillHandleArea === 3 ? c2From + 1 : c1From - 1;
+				autoFillRange = getRange(autofillC1, r1To, c2To, r2To);
+			} else {
+				let autofillR1 = nFillHandleArea === 3 ? r2From + 1 : r1From - 1;
+				autoFillRange = getRange(c1To, autofillR1, c2To, r2To);
+			}
+			ws.selectionRange.ranges = [getRange(c1From, r1From, c2From, r2From)];
+			wsView = getAutoFillRange(wsView, c1To, r1To, c2To, r2To, nHandleDirection, nFillHandleArea);
+			let undoRes = nHandleDirection === 0 ? [undoData] : undoData;
+			let expectedRes = nHandleDirection === 0 ? [expectedData] : expectedData;
+			checkUndoRedo(function (_desc) {
+				autoFillAssert(assert, autoFillRange, undoRes, _desc);
+			}, function (_desc) {
+				autoFillAssert(assert, autoFillRange, expectedRes, _desc);
+			}, sDescription);
+		}
+
+		ws.getRange2('A1:Z100').cleanAll();
+		// Case #1: Format Date. Asc sequence. Vertical. Selected 2 cell
+		let testData = [
+			['12/12/2000', '12/12/2000'],
+			['12/13/2000', '12/14/2000']
+		];
+		let range = ws.getRange4(0,0);
+		range.fillData(testData);
+		let undoData = [[''], [''], [''], ['']];
+
+		// nFillHandleArea: 1 - Reverse, 3 - asc sequence, 2 - Reverse 1 elem.
+		// aFrom, aTo: [c1,c2,r1,r2]
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, 'Format Date. Asc sequence. Vertical. Selected 2 cell', [['36874'], ['36875'], ['36876'], ['36877']]);
+		getAutofillCase([1, 1, 0, 1], [1, 1, 2, 5], 3, 'Format Date. Asc sequence. Vertical. Selected 2 cell, even step.', [['36876'], ['36878'], ['36880'], ['36882']]);
+		// Case #2: Format Date. Reverse sequence. Vertical. Selected 2 cell
+		undoData = [[''],[''],['36873'], ['36872']];
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+
+		getAutofillCase([0, 0, 4, 5], [0, 0, 3, 0], 1, 'Format Date. Reverse sequence. Vertical. Selected 2 cell', [['36871'], ['36870'], ['36869'], ['36868']]);
+		undoData = [[''],[''],['36874'], ['36872']];
+		getAutofillCase([1, 1, 4, 5], [1, 1, 3, 0], 1, 'Format Date. Reverse sequence. Vertical. Selected 2 cell, even step', [['36870'], ['36868'], ['36866'], ['36864']]);
+		// Case #3: Format Date. Asc sequence. Horizontal. Selected 1 cell
+		clearData(0, 0, 1, 5);
+		testData = [
+			['12/12/2000']
+		];
+		undoData = ['', '', '', ''];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+
+		getAutofillCase([0, 0, 0, 0], [1, 4, 0, 0], 3, 'Format Date. Asc sequence. Horizontal. Selected 1 cell', ['36873', '36874', '36875', '36876']);
+		// Case #4: Format Date. Reverse sequence. Horizontal. Selected 1 cell
+		undoData = ['', '', '', '36872'];
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+
+		getAutofillCase([4, 4, 0, 0], [3, 0, 0, 0], 1, 'Format Date. Reverse sequence. Horizontal. Selected 1 cell', ['36871', '36870', '36869', '36868']);
+		// Case #5: Format Date. Asc sequence. Vertical. Selected 3 cells. Negative case - 12/12/2000, 12/13/2000, 12/12/2000.
+		testData = [
+			['12/12/2000'],
+			['12/13/2000'],
+			['12/12/2000']
+		];
+		undoData = [[''], [''], [''], ['']];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Format Date. Asc sequence. Vertical. Selected 3 cells. Negative case - 12/12/2000, 12/13/2000, 12/12/2000.', [['36872'], ['36873'], ['36872'], ['36872']]);
+		// Case #6: Format Date. Reverse sequence. Vertical. Selected 3 cells. Negative case - 12/12/2000, 12/13/2000, 12/12/2000.
+		undoData = [[''], ['36872'], ['36873'], ['36872']];
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Format Date. Reverse sequence. Vertical. Selected 3 cells. Negative case - 12/12/2000, 12/13/2000, 12/12/2000.', [['36872'], ['36873'], ['36872'], ['36872']]);
+		// Case #7: Format Date. Asc sequence. Horizontal. Selected 4 cells. Negative case - 12/12/2000, 12/13/2000, 12/14/2000, 12/16/2000.
+		clearData(0, 0, 0, 6);
+		testData = [
+			['12/12/2000', '12/13/2000', '12/14/2000', '12/16/2000']
+		];
+		undoData = ['', '', '', '', ''];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+
+		getAutofillCase([0, 3, 0, 0], [4, 8, 0, 0], 3, 'Format Date. Asc sequence. Horizontal. Selected 4 cells. Negative case - 12/12/2000, 12/13/2000, 12/14/2000, 12/16/2000.', ['36872', '36873', '36874', '36876', '36872']);
+		// Case #8: Format Date. Reverse sequence. Horizontal. Selected 4 cells. Negative case - 12/12/2000, 12/13/2000, 12/14/2000, 12/16/2000.
+		undoData = ['', '36876', '36874', '36873', '36872'];
+		range = ws.getRange4(0, 5);
+		range.fillData(testData);
+
+		getAutofillCase([5, 8, 0, 0], [4, 0, 0, 0], 1, 'Format Date. Reverse sequence. Horizontal. Selected 4 cells. Negative case - 12/12/2000, 12/13/2000, 12/14/2000, 12/16/2000.', ['36876', '36874', '36873', '36872', '36876']);
+		// Case #9: Format Date. Asc sequence. Vertical. Selected 1 cell. Non integer value in Date format.
+		ws.getRange2('A1:I1').cleanAll();
+		ws.getRange2('A1').setValue('12/12/2000');
+		ws._getCell(0, 0,function(cell) {
+			cell.setValueNumberInternal(36872.5);
+		});
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 0], [0, 0, 1, 4], 3, 'Format Date. Asc sequence. Vertical. Selected 1 cell. Non integer value in Date format.', [['36873'], ['36874'], ['36875'], ['36876']]);
+		// Case #10: Format Date. Reverse sequence. Horizontal. Selected 2 cells. Non integer value in Date format.
+		ws.getRange2('E1').setValue('12/12/2000');
+		ws.getRange2('F1').setValue('12/13/2000');
+		ws._getCell(0, 4, function (cell) {
+			cell.setValueNumberInternal(36872.5);
+		});
+		ws._getCell(0, 5, function (cell) {
+			cell.setValueNumberInternal(36873.6);
+		});
+		undoData = ['', '', '', '36872.5'];
+
+		getAutofillCase([4, 5, 0, 0], [3, 0, 0, 0], 1, 'Format Date. Reverse sequence. Horizontal. Selected 2 cells. Non integer value in Date format.', ['36871', '36870', '36869', '36868']);
+		// Case #11: Format Date. Asc sequence. Vertical. Selected 2 cells. Step 0.
+		ws.getRange2('A1:F9').cleanAll();
+		testData = [
+			['12/12/2000'],
+			['12/12/2000']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, 'Format Date. Asc sequence. Vertical. Selected 2 cells. Step 0.', [['36872'], ['36872'], ['36872'], ['36872']]);
+		// Case #12: Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Step - time.
+		ws.getRange2('A1:A6').cleanAll();
+		testData = [
+			['12/12/2000 12:00'],
+			['12/12/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, 'Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Step - time.', [['36872.583333333336'], ['36872.62500000001'], ['36872.66666666668'], ['36872.70833333335']]);
+		// Case #13: Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Step - time.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['36872.541666666664'], ['36872.5']];
+
+		getAutofillCase([0, 0, 4, 5], [0, 0, 3, 0], 1, 'Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Step - time.', [['36872.45833333334'], ['36872.416666666686'], ['36872.37500000003'], ['36872.33333333337']]);
+		// Case #14: Format Date & Time. Asc sequence. Horizontal. Selected 1 cell.
+		ws.getRange2('A1:A6').cleanAll();
+		testData = [
+			['12/12/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 0, 0, 0], [1, 4, 0, 0], 3, 'Format Date & Time. Asc sequence. Horizontal. Selected 1 cell.', ['36873.541666666664', '36874.541666666664', '36875.541666666664', '36876.541666666664']);
+		// Case #15: Format Date & Time. Reverse sequence. Horizontal. Selected 1 cell.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '', '', '36872.541666666664'];
+
+		getAutofillCase([4, 4, 0, 0], [3, 0, 0, 0], 1, 'Format Date & Time. Reverse sequence. Horizontal. Selected 1 cell.', ['36871.541666666664', '36870.541666666664', '36869.541666666664', '36868.541666666664']);
+		// Case #16: Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Diff days, same time.
+		ws.getRange2('A1:F1').cleanAll();
+		testData = [
+			['12/12/2000 14:00'],
+			['12/14/2000 14:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, 'Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Diff days, same time.', [['36876.583333333336'], ['36878.583333333336'], ['36880.583333333336'], ['36882.583333333336']]);
+		// Case #17: Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Diff days, same time.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['36874.583333333336'], ['36872.583333333336']];
+
+		getAutofillCase([0, 0, 4, 5], [0, 0, 3, 0], 1, 'Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Diff days, same time.', [['36870.583333333336'], ['36868.583333333336'], ['36866.583333333336'], ['36864.583333333336']]);
+		// Case #18: Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Step - time & day.
+		testData = [
+			['12/12/2000 12:00'],
+			['12/14/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['36872.583333333336'], ['36874.583333333336']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, 'Format Date & Time. Asc sequence. Vertical. Selected 2 cells. Step - time & day.', [['36876.583333333336'], ['36878.62500000001'], ['36880.66666666668'], ['36882.70833333335']]);
+		// Case #19: Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Step - time & day.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['36874.541666666664'], ['36872.5']];
+
+		getAutofillCase([0, 0, 4, 5], [0, 0, 3, 0], 1, 'Format Date & Time. Reverse sequence. Vertical. Selected 2 cells. Step - time & day.', [['36870.45833333334'], ['36868.416666666686'], ['36866.37500000003'], ['36864.33333333337']]);
+		// Case #20: Format Date & Time. Asc sequence. Horizontal. Negative case. Same day, time - 12:00, 13:00, 12:00.
+		ws.getRange2('A1:A6').cleanAll();
+		testData = [
+			['12/12/2000 12:00', '12/12/2000 13:00', '12/12/2000 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 2, 0, 0], [3, 6, 0, 0], 3, 'Format Date & Time. Asc sequence. Horizontal. Negative case: Same day, time - 12:00, 13:00, 12:00.', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #21: Format Date & Time. Reverse sequence. Horizontal. Negative case. Same day, time - 12:00, 13:00, 12:00.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '36872.5', '36872.541666666664', '36872.5'];
+
+		getAutofillCase([4, 6, 0, 0], [3, 0, 0, 0], 1, 'Format Date & Time. Reverse sequence. Horizontal. Negative case: Same day, time - 12:00, 13:00, 12:00.', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #22: Format Date & Time. Asc sequence. Horizontal. Negative case. Same day, time - 13:00, 14:00, 16:00.
+		testData = [
+			['12/12/2000 13:00', '12/12/2000 14:00', '12/12/2000 16:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '36872.5', '36872.541666666664', '36872.5'];
+
+		getAutofillCase([0, 2, 0, 0], [3, 6, 0, 0], 3, 'Format Date & Time. Asc sequence. Horizontal. Negative case: Same day, time - 13:00, 14:00, 16:00.', ['36872.541666666664', '36872.541666666664', '36872.541666666664', '36872.541666666664']);
+		// Case #23: Format Date & Time. Reverse sequence. Horizontal. Negative case. Same day, time - 13:00, 14:00, 16:00.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '36872.666666666664', '36872.583333333336', '36872.541666666664'];
+
+		getAutofillCase([4, 6, 0, 0], [3, 0, 0, 0], 1, 'Format Date & Time. Reverse sequence. Horizontal. Negative case: Same day, time - 13:00, 14:00, 16:00.', ['36872.541666666664', '36872.541666666664', '36872.541666666664', '36872.541666666664']);
+		// Case #24: Format Date & Time. Asc sequence. Vertical. Negative case. Diff days, same time.
+		ws.getRange2('A1:F1').cleanAll();
+		testData = [
+			['12/12/2000 12:00'],
+			['12/13/2000 12:00'],
+			['12/12/2000 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Format Date & Time. Asc sequence. Vertical. Negative case: Diff days, same time.', [['36872.5'], ['36873.5'], ['36872.5'], ['36872.5']]);
+		// Case #25: Format Date & Time. Reverse sequence. Vertical. Negative case. Diff days, same time.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36872.5'], ['36873.5'], ['36872.5']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Format Date & Time. Reverse sequence. Vertical. Negative case: Diff days, same time.', [['36872.5'], ['36873.5'], ['36872.5'], ['36872.5']]);
+		// Case #26: Format Date & Time. Asc sequence. Vertical. Negative case. Diff days & time.
+		testData = [
+			['12/12/2000 12:00'],
+			['12/13/2000 13:00'],
+			['12/15/2000 14:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36872.5'], ['36873.5'], ['36872.5']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Format Date & Time. Asc sequence. Vertical. Negative case: Diff days & time.', [['36872.5'], ['36873.541666666664'], ['36875.583333333336'], ['36872.5']]);
+		// Case #27: Format Date & Time. Reverse sequence. Vertical. Negative case. Diff days & time.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36875.583333333336'], ['36873.541666666664'], ['36872.5']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Format Date & Time. Reverse sequence. Vertical. Negative case: Diff days & time.', [['36875.583333333336'], ['36873.541666666664'], ['36872.5'], ['36875.583333333336']]);
+		// Case #28: Mixed format. Asc sequence. Horizontal. Same day, diff time.
+		ws.getRange2('A1:G7').cleanAll();
+		testData = [
+			['12/12/2000', '12/12/2000 12:00', '12/12/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 2, 0, 0], [3, 6, 0, 0], 3, 'Mixed format. Asc sequence. Horizontal. Same day, diff time.', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #29: Mixed format. Reverse sequence. Horizontal. Same day, diff time. First cell with Date format
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '36872.541666666664', '36872.5', '36872'];
+
+		getAutofillCase([4, 6, 0, 0], [3, 0, 0, 0], 1, 'Mixed format. Reverse sequence. Horizontal. Same day, diff time. First Date', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #30: Mixed format. Asc sequence. Horizontal. Same day, diff time. First cell with Date & Time format
+		testData = [
+			['12/12/2000 12:00', '12/12/2000', '12/12/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '36872', '36872.5', '36872.541666666664'];
+
+		getAutofillCase([0, 2, 0, 0], [3, 6, 0, 0], 3, 'Mixed format. Asc sequence. Horizontal. Same day, diff time. First Date & Time', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #31: Mixed format. Reverse sequence. Horizontal. Same day, diff time. First cell with Date & Time format
+		ws.getRange2('A1:F1').cleanAll();
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([4, 6, 0, 0], [3, 0, 0, 0], 1, 'Mixed format. Reverse sequence. Horizontal. Same day, diff time. First Date & Time', ['36872.5', '36872.5', '36872.5', '36872.5']);
+		// Case #32: Mixed format.  Asc sequence. Vertical. Diff day, same time. First  Date format.
+		ws.getRange2('A1:F1').cleanAll();
+		testData = [
+			['12/12/2000'],
+			['12/13/2000 12:00'],
+			['12/14/2000 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Mixed format. Asc sequence. Vertical. Diff day, same time. First Date', [['36875.5'], ['36876.5'], ['36877.5'], ['36878.5']]);
+		// Case #33: Mixed format. Reverse sequence. Vertical. Diff day, same time. First  Date format.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36874.5'], ['36873.5'], ['36872']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Mixed format. Reverse sequence. Vertical. Diff day, same time. First Date', [['36871.5'], ['36870.5'], ['36869.5'], ['36868.5']]);
+		// Case #34: Mixed format.  Asc sequence. Vertical. Diff day, same time. First  Date & Time format.
+		ws.getRange2('A1:A8').cleanAll();
+		testData = [
+			['12/12/2000 12:00'],
+			['12/14/2000 12:00'],
+			['12/16/2000']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Mixed format. Asc sequence. Vertical. Diff day, same time. First Date & Time', [['36878.5'], ['36880.5'], ['36882.5'], ['36884.5']]);
+		// Case #35: Mixed format. Reverse sequence. Vertical. Diff day, same time. First  Date & Time format.
+		ws.getRange2('A1:A8').cleanAll();
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Mixed format. Reverse sequence. Vertical. Diff day, same time. First Date & Time', [['36870.5'], ['36868.5'], ['36866.5'], ['36864.5']]);
+		// Case #36: Mixed format.  Asc sequence.  Vertical. Negative case: 12/12/2000, 12/13/2000, 12/12/2000 12:00. First Date format.
+		ws.getRange2('A1:A8').cleanAll();
+		testData = [
+			['12/12/2000'],
+			['12/13/2000 12:00'],
+			['12/12/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Mixed format. Asc sequence. Vertical. Negative case. First Date', [['36872'], ['36873.5'], ['36872.541666666664'], ['36872']]);
+		// Case #37: Mixed format. Reverse sequence.  Vertical. Negative case: 12/12/2000, 12/13/2000 12:00, 12/12/2000 13:00. First Date format.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36872.541666666664'], ['36873.5'], ['36872']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Mixed format. Reverse sequence. Vertical. Negative case. First Date', [['36872.541666666664'], ['36873.5'], ['36872'], ['36872.541666666664']]);
+		// Case #38: Mixed format.  Asc sequence.  Vertical. Negative case: 12/12/2000 12:00, 12/13/2000, 12/15/2000 13:00. First Date & Time format.
+		ws.getRange2('A1:A8').cleanAll();
+		testData = [
+			['12/12/2000 12:00'],
+			['12/13/2000'],
+			['12/15/2000 13:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 2], [0, 0, 3, 6], 3, 'Mixed format. Asc sequence. Vertical. Negative case. First Date & Time', [['36872.5'], ['36873'], ['36875.541666666664'], ['36872.5']]);
+		// Case #39: Mixed format. Reverse sequence.  Vertical. Negative case: 12/12/2000 12:00, 12/13/2000, 12/15/2000 13:00. First Date & Time format.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], ['36875.541666666664'], ['36873'], ['36872.5']];
+
+		getAutofillCase([0, 0, 4, 6], [0, 0, 3, 0], 1, 'Mixed format. Reverse sequence. Vertical. Negative case. First Date & Time', [['36875.541666666664'], ['36873'], ['36872.5'], ['36875.541666666664']]);
+		// Case #40: 1900 year. Asc sequence. Horizontal. One selected cell. Date format.
+		ws.getRange2('A1:A8').cleanAll();
+		testData = [
+			['01/01/1900']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 0, 0, 0], [1, 4, 0, 0], 3, '1900 year. Asc sequence. Horizontal. One selected cell. Date format', ['2', '3', '4', '5']);
+		// Case #41: 1900 year.  Reverse sequence. Horizontal. One selected cell. Date format.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '', '', '1'];
+
+		getAutofillCase([4, 4, 0, 0], [3, 0, 0, 0], 1, '1900 year. Reverse sequence. Horizontal. One selected cell. Date format', ['0', '1', '1', '1']);
+		// Case #42: 1900 year.  Asc sequence. Horizontal. Date format.
+		testData = [
+			['01/01/1900', '01/03/1900']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '1', ''];
+
+		getAutofillCase([0, 1, 0, 0], [2, 5, 0, 0], 3, '1900 year. Asc sequence. Horizontal. Date format', ['5', '7', '9', '11']);
+		// Case #43: 1900 year.  Reverse sequence. Horizontal. Date format.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '', '3', '1'];
+
+		getAutofillCase([4, 5, 0, 0], [3, 0, 0, 0], 1, '1900 year. Reverse sequence. Horizontal. Date format', ['3', '1', '3', '1']);
+		// Case #44: 1900 year.  Asc sequence. Vertical. One selected cell. Date & Time format.
+		ws.getRange2('A1:F1').cleanAll();
+		testData = [
+			['01/01/1900 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 0], [0, 0, 1, 4], 3, '1900 year. Asc sequence. Vertical. One selected cell. Date & Time format', [['2.5'], ['3.5'], ['4.5'], ['5.5']]);
+		// Case #45: 1900 year.  Reverse sequence. Vertical. One selected cell. Date & Time format.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['1.5']];
+
+		getAutofillCase([0, 0, 4, 4], [0, 0, 3, 0], 1, '1900 year. Reverse sequence. Vertical. One selected cell. Date & Time format', [['0.5'], ['1.5'], ['1.5'], ['1.5']]);
+		// Case #46: 1900 year.  Asc sequence. Vertical. Date & Time format.
+		testData = [
+			['01/01/1900 1:00'],
+			['01/01/1900 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['1.5'], ['']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 5], 3, '1900 year. Asc sequence. Vertical. Date & Time format', [['1.958333333333333'], ['2.416666666666666'], ['2.874999999999999'], ['3.333333333333332']]);
+		// Case #47: 1900 year.  Reverse sequence. Vertical. Date & Time format.
+		range = ws.getRange4(4, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], ['1.5'], ['1.0416666666666667']];
+
+		getAutofillCase([0, 0, 4, 5], [0, 0, 3, 0], 1, '1900 year. Reverse sequence. Vertical. Date & Time format', [['0.5833333333333333'], ['0.12499999999999978'], ['-0.3333333333333337'], ['-0.7916666666666672']]);
+		// Case #48: 1900 year.  Asc sequence. Horizontal. Mixed format.
+		ws.getRange2('A1:A8').cleanAll();
+		testData = [
+			['01/01/1900', '01/02/1900 12:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 1, 0, 0], [2, 5, 0, 0], 3, '1900 year. Asc sequence. Horizontal. Mixed format', ['3.5', '4.5', '5.5', '6.5']);
+		// Case #49: 1900 year.  Reverse sequence. Horizontal. Mixed format.
+		range = ws.getRange4(0, 4);
+		range.fillData(testData);
+		undoData = ['', '', '2.5', '1'];
+
+		getAutofillCase([4, 5, 0, 0], [3, 0, 0, 0], 1, '1900 year. Reverse sequence. Horizontal. Mixed format', ['0.5', '1', '2.5', '1']);
+		// Case #50: Time format. Asc sequence. Vertical. One selected cell.
+		ws.getRange2('A1:F1').cleanAll();
+		testData = [
+			['12:00:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 0], [0, 0, 1, 4], 3, 'Time format. Asc sequence. Vertical. One selected cell', [['0.5416666666666666'], ['0.5833333333333334'], ['0.625'], ['0.6666666666666666']]);
+		// Case #51: Time format.  Reverse sequence. Vertical. One selected cell.
+		testData = [['0:00:00']]
+		range = ws.getRange4(24, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''],
+			[''], [''], [''], [''], [''], [''], [''], [''], ['0.5']];
+		let expectedData = [['0.9583333333333334'], ['0.9166666666666666'], ['0.875'], ['0.8333333333333334'], ['0.7916666666666667'],
+			['0.75'], ['0.7083333333333334'], ['0.6666666666666667'], ['0.625'], ['0.5833333333333334'], ['0.5416666666666667'],
+			['0.5'], ['0.45833333333333337'], ['0.41666666666666674'], ['0.375'], ['0.33333333333333337'], ['0.29166666666666674'],
+			['0.25'], ['0.20833333333333337'], ['0.16666666666666674'], ['0.125'], ['0.08333333333333337'], ['0.04166666666666674'], ['0']];
+
+		getAutofillCase([0, 0, 24, 24], [0, 0, 23, 0], 1, 'Time format. Reverse sequence. Vertical. One selected cell', expectedData);
+		// Case #52: Time format. Asc sequence. Vertical. Multiple selected cells.
+		testData = [
+			['12:00:00'],
+			['14:00:00']
+		];
+		range = ws.getRange4(0, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], [''], [''], ['']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 7], 3, 'Time format. Asc sequence. Vertical. Multiple selected cells', [['0.6666666666666666'], ['0.7499999999999999'], ['0.8333333333333331'], ['0.9166666666666664'], ['0.9999999999999997'], ['1.083333333333333']]);
+		// Case #53: Time format.  Reverse sequence. Vertical. Multiple selected cells.
+		testData = [
+			['23:00:00'],
+			['0:00:00']
+		];
+		range = ws.getRange4(23, 0);
+		range.fillData(testData);
+		undoData = [[''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''],
+			[''], [''], [''], [''], ['0.5833333333333334'], ['0.5']];
+		expectedData = [
+			['1.9166666666666667'], ['2.875'], ['3.8333333333333335'], ['4.791666666666667'], ['5.75'],
+			['6.708333333333334'], ['7.666666666666667'], ['8.625'], ['9.583333333333334'], ['10.541666666666668'], ['11.5'],
+			['12.458333333333334'], ['13.416666666666668'], ['14.375'], ['15.333333333333334'], ['16.291666666666668'],
+			['17.25'], ['18.208333333333336'], ['19.166666666666668'], ['20.125'], ['21.083333333333336'], ['22.041666666666668'], ['23']
+		];
+
+		getAutofillCase([0, 0, 23, 24], [0, 0, 22, 0], 1, 'Time format. Reverse sequence. Vertical. Multiple selected cells', expectedData);
+		// Case #54: Time format.  Asc sequence. Horizontal. Multiple selected cells. Start from 1.
+		ws.getRange2('A1').setValue('0:00:00');
+		ws.getRange2('B1').setValue('1:00:00');
+		ws._getCell(0, 0, function (cell) {
+			cell.setValueNumberInternal(1);
+		});
+		ws._getCell(0, 1, function (cell) {
+			cell.setValueNumberInternal(1.04166666666667);
+		});
+		undoData = ['', '', '', ''];
+
+		getAutofillCase([0, 1, 0, 0], [2, 5, 0, 0], 3, 'Time format. Asc sequence. Horizontal. Multiple selected cells. Start from 1.', ['1.0833333333333401', '1.1250000000000102', '1.1666666666666803', '1.2083333333333504']);
+		// Case #55: Time format.  Reverse sequence. Horizontal. Multiple selected cells. Start from 1.
+		ws.getRange2('A1:Z30').cleanAll();
+		ws.getRange2('Y1').setValue('23:00:00');
+		ws.getRange2('Z1').setValue('00:00:00');
+		ws._getCell(0, 24, function (cell) {
+			cell.setValueNumberInternal(0.958333333333333);
+		});
+		ws._getCell(0, 25, function (cell) {
+			cell.setValueNumberInternal(1);
+		});
+		undoData = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+		expectedData = ['0.9166666666666661', '0.8749999999999991', '0.8333333333333321', '0.7916666666666652', '0.7499999999999982', '0.7083333333333313', '0.6666666666666643',
+			'0.6249999999999973', '0.5833333333333304', '0.5416666666666634', '0.49999999999999645', '0.4583333333333295', '0.4166666666666625', '0.37499999999999556', '0.3333333333333286',
+			'0.29166666666666163', '0.24999999999999467', '0.2083333333333277', '0.16666666666666075', '0.12499999999999378', '0.08333333333332682', '0.04166666666665986', '1', '0.958333333333333'];
+
+		getAutofillCase([24, 25, 0, 0], [23, 0, 0, 0], 1, 'Time format. Reverse sequence. Horizontal. Multiple selected cells. Start from 1.', expectedData);
+		// Case #56: Time format.  Asc sequence. Vertical. Multiple selected cells. Start from 36872.5.
+		ws.getRange2('A1:Z1').cleanAll();
+		ws.getRange2('A1').setValue('12:00:00');
+		ws.getRange2('A2').setValue('13:00:00');
+		ws._getCell(0, 0, function (cell) {
+			cell.setValueNumberInternal(36872.5);
+		});
+		ws._getCell(1, 0, function (cell) {
+			cell.setValueNumberInternal(36873.5416666667);
+		});
+		undoData = [[''], [''], [''], [''], [''], [''], [''], [''], [''], [''], ['']];
+		expectedData = [['36872.5833333334'], ['36872.6250000001'], ['36872.6666666668'], ['36872.7083333335'], ['36872.750000000204'], ['36872.791666666904'], ['36872.833333333605'],
+			['36872.875000000306'], ['36872.916666667006'], ['36872.95833333371'], ['36873.00000000041']];
+
+		getAutofillCase([0, 0, 0, 1], [0, 0, 2, 12], 3, 'Time format. Asc sequence. Vertical. Multiple selected cells. Start from 36872.5.', expectedData);
+		// Case #57: Time format.  Reverse sequence. Vertical. Multiple selected cells. Start from 36872.5.
+		ws.getRange2('A14').setValue('12:00:00');
+		ws.getRange2('A15').setValue('13:00:00');
+		ws._getCell(13, 0, function (cell) {
+			cell.setValueNumberInternal(36872.5);
+		});
+		ws._getCell(14, 0, function (cell) {
+			cell.setValueNumberInternal(36873.5416666667);
+		});
+		undoData = [[''], [''], [''], [''], [''], [''], [''], [''], [''], [''], [''], ['36873.5416666667'], ['36872.5']];
+		expectedData = [['36872.4583333333'], ['36872.4166666666'], ['36872.3749999999'], ['36872.3333333332'], ['36872.2916666665'],
+			['36872.249999999796'], ['36872.208333333096'], ['36872.166666666395'], ['36872.124999999694'], ['36872.083333332994'], ['36872.04166666629'],
+			['36871.99999999959'], ['36871.95833333289']];
+
+		getAutofillCase([0, 0, 13, 14], [0, 0, 12, 0], 1, 'Time format. Reverse sequence. Vertical. Multiple selected cells. Start from 36872.5.', expectedData);
+		ws.getRange2('A1:A20').cleanAll();
+	});
 
 	QUnit.module("Sheet structure");
 });

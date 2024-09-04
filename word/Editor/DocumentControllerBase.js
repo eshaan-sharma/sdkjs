@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -292,10 +292,10 @@ CDocumentControllerBase.prototype.AddNewParagraph = function(bRecalculate, bForc
  * @param {number} nW - ширина
  * @param {number} nH - высота
  * @param oImage - ссылка на объект изображения
- * @param oChart - ссылка на объект диаграммы
+ * @param oGraphicObject - ссылка на объект графический объект
  * @param {boolean} bFlow - инлайн объект или "плавающий"
  */
-CDocumentControllerBase.prototype.AddInlineImage = function(nW, nH, oImage, oChart, bFlow){};
+CDocumentControllerBase.prototype.AddInlineImage = function(nW, nH, oImage, oGraphicObject, bFlow){};
 /**
  * Добавляем несколько изображений
  * @param {Array} aImages - массив объектов типа CImage

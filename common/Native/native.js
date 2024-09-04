@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -61,6 +61,7 @@ var AscCommonSlide = {};
 var AscBuilder = {};
 var AscWord = {};
 var AscJsonConverter = {};
+var AscBidi = {};
 
 function Image()
 {
@@ -240,22 +241,27 @@ document.documentElement = _null_object;
 document.body = _null_object;
 
 // NATIVE OBJECT
-window.native = native;
 function GetNativeEngine() { return window.native; }
 
 var Api = null; // main builder object
 window.devicePixelRatio = 1;
-if (window.native && window.native.GetDevicePixelRatio)
-	window.devicePixelRatio = window.native.GetDevicePixelRatio();
+
+window.InitNativeObject = function()
+{
+	window.native = native;
+	window.devicePixelRatio = 1;
+	if (window.native && window.native.GetDevicePixelRatio)
+		window.devicePixelRatio = window.native.GetDevicePixelRatio();
+};
+
+if (undefined !== native)
+	window.InitNativeObject();
 
 // OPEN
-function NativeOpenFileData(data, version, xlsx_file_path, options)
+function NativeCreateApi(options)
 {
 	window.NATIVE_DOCUMENT_TYPE = window.native.GetEditorType();
-    Api = null;
-
-    if (options && options["printOptions"] && options["printOptions"]["retina"])
-        AscBrowser.isRetina = true;
+	Api = null;
 
 	var configApi = {};
 	if (options && undefined !== options["translate"])
@@ -263,19 +269,25 @@ function NativeOpenFileData(data, version, xlsx_file_path, options)
 
 	if (window.NATIVE_DOCUMENT_TYPE === "presentation" || window.NATIVE_DOCUMENT_TYPE === "document")
 	{
-        Api = new window["Asc"]["asc_docs_api"](configApi);
+		Api = new window["Asc"]["asc_docs_api"](configApi);
 		if (options && options["documentLayout"] && undefined !== options["documentLayout"]["openedAt"])
 			Api.setOpenedAt(options["documentLayout"]["openedAt"]);
 	}
 	else
 	{
-        Api = new window["Asc"]["spreadsheet_api"](configApi);
+		Api = new window["Asc"]["spreadsheet_api"](configApi);
 	}
 
 	if (options && undefined !== options["locale"])
 		Api.asc_setLocale(options["locale"]);
+}
 
-	if (window.NATIVE_DOCUMENT_TYPE === "presentation" || window.NATIVE_DOCUMENT_TYPE === "document")
+function NativeOpenFileData(data, version, xlsx_file_path, options)
+{
+    NativeCreateApi(options);
+
+	if (window.NATIVE_DOCUMENT_TYPE === "presentation" ||
+		window.NATIVE_DOCUMENT_TYPE === "document")
 	{
 		Api.asc_nativeOpenFile(data, version);
 	}
@@ -294,7 +306,8 @@ var console = {
 	log: function (param) { window.native.ConsoleLog(param); },
 	time: function (param) {},
 	timeEnd: function (param) {},
-	warn: function() {}
+	warn: function() {},
+	error: function() {}
 };
 
 var performance = window.performance = (function(){
@@ -303,43 +316,3 @@ var performance = window.performance = (function(){
 		now : function() { return Date.now() - basePerformanceOffset; }
 	};
 })();
-
-(function(window, undefined){
-	function ZLib()
-	{
-		/** @suppress {checkVars} */
-		this.engine = CreateEmbedObject("CZipEmbed");
-		this.files = {};
-	}
-	ZLib.prototype.isModuleInit = true;
-	ZLib.prototype.open = function(buf)
-	{
-		return this.engine.open((undefined !== buf.byteLength) ? new Uint8Array(buf) : buf);
-	};
-	ZLib.prototype.create = function()
-	{
-		return this.engine.create();
-	};
-	ZLib.prototype.save = function()
-	{
-		return this.engine.save();
-	};
-	ZLib.prototype.getFile = function(path)
-	{
-		return this.engine.getFile(path);
-	};
-	ZLib.prototype.addFile = function(path, data)
-	{
-		return this.engine.addFile(path, (undefined !== data.byteLength) ? new Uint8Array(data) : data);
-	};
-	ZLib.prototype.removeFile = function(path)
-	{
-		return this.engine.removeFile(path);
-	};
-	ZLib.prototype.close = function()
-	{
-		return this.engine.close();
-	};
-
-	window.nativeZlibEngine = new ZLib();
-})(window, undefined);

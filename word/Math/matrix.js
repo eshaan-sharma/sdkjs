@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -33,7 +33,6 @@
 "use strict";
 
 // Import
-var History = AscCommon.History;
 
 var MATH_MC_JC = MCJC_CENTER;
 
@@ -95,7 +94,13 @@ function CMathMatrixPr() {
 	this.mcs = [];
 	this.baseJc = BASEJC_CENTER;
 	this.plcHide = false;
+
+	this.ctrPr   = new CMathCtrlPr();
 }
+CMathMatrixPr.prototype.GetRPr = function ()
+{
+	return this.ctrPr.GetRPr();
+};
 
 CMathMatrixPr.prototype.Set_FromObject = function (Obj) {
 	if (undefined !== Obj.row && null !== Obj.row)
@@ -139,6 +144,8 @@ CMathMatrixPr.prototype.Set_FromObject = function (Obj) {
 			nColumnsCount = Obj.column;
 	}
 
+	this.ctrPr.SetRPr(Obj.ctrPrp);
+
 	return nColumnsCount;
 };
 CMathMatrixPr.prototype.initByContent = function (mrs) {
@@ -171,6 +178,7 @@ CMathMatrixPr.prototype.Copy = function () {
 	NewPr.rSpRule = this.rSpRule;
 	NewPr.baseJc = this.baseJc;
 	NewPr.plcHide = this.plcHide;
+	NewPr.ctrPr = this.ctrPr;
 
 	var nCount = this.mcs.length;
 	for (var nMcsIndex = 0; nMcsIndex < nCount; nMcsIndex++) {
@@ -275,6 +283,9 @@ CMathMatrixPr.prototype.Write_ToBinary = function (Writer) {
 	for (var nIndex = 0; nIndex < nMcsCount; nIndex++) {
 		this.mcs[nIndex].Write_ToBinary(Writer);
 	}
+
+	Writer.WriteBool(true);
+	this.ctrPr.Write_ToBinary(Writer);
 };
 CMathMatrixPr.prototype.Read_FromBinary = function (Reader) {
 	// Long  : row
@@ -300,6 +311,11 @@ CMathMatrixPr.prototype.Read_FromBinary = function (Reader) {
 	for (var nIndex = 0; nIndex < nMcsCount; nIndex++) {
 		this.mcs[nIndex] = new CMathMatrixColumnPr();
 		this.mcs[nIndex].Read_FromBinary(Reader);
+	}
+
+	if (Reader.GetBool())
+	{
+		this.ctrPr.Read_FromBinary(Reader);
 	}
 };
 
@@ -509,7 +525,7 @@ CMatrixBase.prototype.Add_Row = function (Pos) {
 		Items.push(NewContent);
 	}
 
-	History.Add(new CChangesMathMatrixAddRow(this, Pos, Items));
+	AscCommon.History.Add(new CChangesMathMatrixAddRow(this, Pos, Items));
 	this.raw_AddRow(Pos, Items);
 };
 CMatrixBase.prototype.raw_AddRow = function (Pos, Items) {
@@ -543,13 +559,13 @@ CMatrixBase.prototype.Remove_Row = function (RowPos) {
 		var NextPos = RowPos * ColumnCount;
 		var Items = this.Content.slice(NextPos, NextPos + ColumnCount);
 
-		History.Add(new CChangesMathMatrixRemoveRow(this, NextPos, Items));
+		AscCommon.History.Add(new CChangesMathMatrixRemoveRow(this, NextPos, Items));
 		this.raw_RemoveRow(NextPos, Items.length);
 	}
 };
 CMatrixBase.prototype.SetBaseJc = function (Value) {
 	if (this.Pr.baseJc !== Value) {
-		History.Add(new CChangesMathMatrixBaseJc(this, this.Pr.baseJc, Value));
+		AscCommon.History.Add(new CChangesMathMatrixBaseJc(this, this.Pr.baseJc, Value));
 		this.raw_SetBaseJc(Value);
 	}
 };
@@ -569,7 +585,7 @@ CMatrixBase.prototype.Modify_Interval = function (Item, NewRule, NewGap) {
 	}
 
 	if (NewRule !== OldRule || NewGap !== OldGap) {
-		History.Add(new CChangesMathMatrixInterval(this, Item.Type, OldRule, OldGap, NewRule, NewGap));
+		AscCommon.History.Add(new CChangesMathMatrixInterval(this, Item.Type, OldRule, OldGap, NewRule, NewGap));
 		this.raw_SetInterval(Item.Type, NewRule, NewGap);
 	}
 };
@@ -602,6 +618,10 @@ function CMathMatrix(props) {
 
 	if (props !== null && props !== undefined)
 		this.init(props);
+
+	// согласно формату CtrPrp должен находится в MatrixPr, пока оставляем this.CtrPrp, но приравняем к значению из Pr
+	if (this.Pr.ctrPr.rPr)
+		this.CtrPrp = this.Pr.ctrPr.rPr;
 
 	AscCommon.g_oTableId.Add(this, this.Id);
 }
@@ -761,7 +781,7 @@ CMathMatrix.prototype.Apply_MenuProps = function (Props) {
 			}
 
 			if (CurrentMcJc !== McJc) {
-				History.Add(new CChangesMathMatrixColumnJc(this, CurrentMcJc, McJc, ColumnPos));
+				AscCommon.History.Add(new CChangesMathMatrixColumnJc(this, CurrentMcJc, McJc, ColumnPos));
 				this.raw_SetColumnJc(McJc, ColumnPos);
 			}
 		}
@@ -876,7 +896,7 @@ CMathMatrix.prototype.Apply_MenuProps = function (Props) {
 
 		if (Props.bHidePlh !== undefined) {
 			if (Props.bHidePlh !== this.Pr.plcHide) {
-				History.Add(new CChangesMathMatrixPlh(this, this.Pr.plcHide, Props.bHidePlh));
+				AscCommon.History.Add(new CChangesMathMatrixPlh(this, this.Pr.plcHide, Props.bHidePlh));
 				this.raw_HidePlh(Props.bHidePlh);
 			}
 		}
@@ -895,7 +915,7 @@ CMathMatrix.prototype.Add_Column = function (ColumnPos) {
 		Items.push(NewContent);
 	}
 
-	History.Add(new CChangesMathMatrixAddColumn(this, ColumnPos, Items));
+	AscCommon.History.Add(new CChangesMathMatrixAddColumn(this, ColumnPos, Items));
 	this.raw_AddColumn(ColumnPos, Items);
 };
 CMathMatrix.prototype.raw_AddColumn = function (Pos, Items) {
@@ -923,7 +943,7 @@ CMathMatrix.prototype.Remove_Column = function (ColumnPos) {
 		Items.push(this.Content[CountColumn * CurPos + ColumnPos]);
 	}
 
-	History.Add(new CChangesMathMatrixRemoveColumn(this, ColumnPos, Items));
+	AscCommon.History.Add(new CChangesMathMatrixRemoveColumn(this, ColumnPos, Items));
 	this.raw_RemoveColumn(ColumnPos, Items.length);
 };
 CMathMatrix.prototype.raw_RemoveColumn = function (Pos, CountItems) {
@@ -976,58 +996,100 @@ CMathMatrix.prototype.Is_DeletedItem = function (Action) {
 CMathMatrix.prototype.Get_DeletedItemsThroughInterface = function () {
 	return [];
 };
-CMathMatrix.prototype.GetTextOfElement = function (isLaTeX, strBrackets)
+/**
+ *
+ * @param {MathTextAndStyles | boolean} oMathText
+ * @constructor
+ */
+CMathMatrix.prototype.GetTextOfElement = function (oMathText)
 {
-	var strMatrixSymbol;
-	if (isLaTeX) {
-		switch (strBrackets) {
-			case undefined:
-				strMatrixSymbol = "\\matrix";
-				break;
-			case "()":
-				strMatrixSymbol = "\\pmatrix";
-				break;
-			case "[]":
-				strMatrixSymbol = "\\bmatrix";
-				break;
-			case "{}":
-				strMatrixSymbol = "\\Bmatrix";
-				break;
-			case "||":
-				strMatrixSymbol = "\\vmatrix";
-				break;
-			case "||":
-				strMatrixSymbol = "\\vmatrix";
-				break;
-			case "‖‖":
-				strMatrixSymbol = "\\Vmatrix";
-				break;
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
+
+	let strMatrixSymbol,
+		oDelimiterParent;
+
+	if (this.Parent instanceof CDelimiter)
+		oDelimiterParent = this.Parent;
+	else if (this.Parent.Parent instanceof CDelimiter)
+		oDelimiterParent = this.Parent.Parent;
+
+	let strBrackets = oDelimiterParent
+		? String.fromCharCode(oDelimiterParent.Pr.begChr) + String.fromCharCode(oDelimiterParent.Pr.endChr)
+		: undefined;
+
+	if (oMathText.IsLaTeX())
+	{
+		// switch (strBrackets) {
+		// 	case undefined:
+		// 		strMatrixSymbol = "matrix";
+		// 		break;
+		// 	case "()":
+		// 		strMatrixSymbol = "pmatrix";
+		// 		break;
+		// 	case "[]":
+		// 		strMatrixSymbol = "bmatrix";
+		// 		break;
+		// 	case "{}":
+		// 		strMatrixSymbol = "Bmatrix";
+		// 		break;
+		// 	case "||":
+		// 		strMatrixSymbol = "vmatrix";
+		// 		break;
+		// 	case "||":
+		// 		strMatrixSymbol = "vmatrix";
+		// 		break;
+		// 	case "‖‖":
+		// 		strMatrixSymbol = "Vmatrix";
+		// 		break;
+		// }
+		strMatrixSymbol = "matrix"; // = strBrackets === "()" ? "pmatrix" : "matrix";
+		oMathText.AddText(new AscMath.MathText("\\begin{" + strMatrixSymbol + "}", this))
+	}
+	else
+	{
+		oMathText.AddText(new AscMath.MathText("■(", this));
+	}
+
+	// 	Word поддерживает несколько типов ввода для матриц LaTeX:
+	// 		1. Команды матриц с заданными скобками (matrix, pmatrix, bmatrix, Bmatrix, vmatrix, Vmatrix). В Word поддерживается только matrix и pmatrix.
+	// 			- При получении линейного вида для матрицы pmatrix в Word мы будем получать так же pmatrix, однако если
+	// 			переоткрыть документ для pmatrix. То при получении линейного вида матрица будет в формате matrix обёрнутая
+	// 			в скобки. Можно ввести отдельное свойство матриц для отслеживания таких данных (без записи этих данных),
+	// 			тогда поведение будет аналогичным Word.
+
+	// 		2. Можно обернуть команду matrix (матрица без скобок) в скобку:
+	// 			\left\langle \begin{matrix}  1 & 2 & 3 \end{matrix}  \right)
+	//
+	// 	На данный момент делаем получение линейного формата всегда в режиме pmatrix, если это возможно (используем обычные скобки)
+
+	let oLastPos;
+
+	for (let nRow = 0; nRow < this.nRow; nRow++)
+	{
+		for (let nCol = 0; nCol < this.nCol; nCol++)
+		{
+			let oPos = this.getContentElement(nRow, nCol)
+			oLastPos = oMathText.Add(oPos, true, 0);
+
+			if (nCol < this.nCol - 1)
+			{
+				let oText = new AscMath.MathText("&", this);
+				oLastPos = oMathText.AddAfter(oLastPos, oText);
+			}
+			else if (nRow < this.nRow - 1)
+			{
+				let oText = new AscMath.MathText(oMathText.IsLaTeX() ? "\\\\" : '@', this);
+				oLastPos = oMathText.AddAfter(oLastPos, oText);
+			}
 		}
 	}
-	else {
-		strMatrixSymbol = "■";
-	}
 
-	var strStartBracet = this.GetStartBracetForGetTextContent(isLaTeX);
-	var strCloseBracet = this.GetEndBracetForGetTextContent(isLaTeX);
+	if (oMathText.IsLaTeX())
+		oMathText.AddText(new AscMath.MathText("\\\\\\end{" + strMatrixSymbol + "}", this));
+	else
+		oMathText.AddAfter(oLastPos,new AscMath.MathText(")", this));
 
-	var strTemp = strMatrixSymbol + strStartBracet;
-
-	for (var nRow = 0; nRow < this.nRow; nRow++) {
-		for (var nCol = 0; nCol < this.nCol; nCol++) {
-
-			strTemp += this.getContentElement(nRow, nCol).GetTextOfElement(isLaTeX);
-			if (nCol < this.nCol - 1) {
-				strTemp += '&'
-			}
-			else if (nRow < this.nRow - 1) {
-				strTemp += isLaTeX ? "\\\\" : '@'
-			}
-		}
-	}
-	strTemp += strCloseBracet;
-
-	return strTemp;
+	return oMathText;
 };
 
 /**
@@ -1202,8 +1264,13 @@ function CMathEqArrPr() {
 	this.baseJc = BASEJC_CENTER;
 
 	this.row = 1;
-}
 
+	this.ctrPr   = new CMathCtrlPr();
+}
+CMathEqArrPr.prototype.GetRPr = function ()
+{
+	return this.ctrPr.GetRPr();
+}
 CMathEqArrPr.prototype.initByContent = function (content) {
 	if (!content) {
 		return;
@@ -1227,6 +1294,7 @@ CMathEqArrPr.prototype.Set_FromObject = function (Obj) {
 		this.baseJc = Obj.baseJc;
 
 	this.row = Obj.row;
+	this.ctrPr.SetRPr(Obj.ctrPrp);
 };
 CMathEqArrPr.prototype.Copy = function () {
 	var NewPr = new CMathEqArrPr();
@@ -1237,6 +1305,7 @@ CMathEqArrPr.prototype.Copy = function () {
 	NewPr.rSpRule = this.rSpRule;
 	NewPr.baseJc = this.baseJc;
 	NewPr.row = this.row;
+	NewPr.ctrPr = this.ctrPr;
 
 	return NewPr;
 };
@@ -1260,6 +1329,9 @@ CMathEqArrPr.prototype.Write_ToBinary = function (Writer) {
 	Writer.WriteLong(this.rSpRule);
 	Writer.WriteLong(this.baseJc);
 	Writer.WriteLong(this.row);
+
+	Writer.WriteBool(true);
+	this.ctrPr.Write_ToBinary(Writer);
 };
 CMathEqArrPr.prototype.Read_FromBinary = function (Reader) {
 	// Long : maxDist
@@ -1275,8 +1347,12 @@ CMathEqArrPr.prototype.Read_FromBinary = function (Reader) {
 	this.rSpRule = Reader.GetLong();
 	this.baseJc = Reader.GetLong();
 	this.row = Reader.GetLong();
-};
 
+	if (Reader.GetBool())
+	{
+		this.ctrPr.Read_FromBinary(Reader);
+	}
+};
 
 /**
  *
@@ -1298,6 +1374,10 @@ function CEqArray(props) {
 
 	if (props !== null && props !== undefined)
 		this.init(props);
+
+	// согласно формату CtrPrp должен находится в EqArrPr, пока оставляем this.CtrPrp, но приравняем к значению из Pr
+	if (this.Pr.ctrPr.rPr)
+		this.CtrPrp = this.Pr.ctrPr.rPr;
 
 	AscCommon.g_oTableId.Add(this, this.Id);
 }
@@ -1573,21 +1653,40 @@ CEqArray.prototype.Get_DeletedItemsThroughInterface = function () {
 CEqArray.prototype.IsEqArray = function () {
 	return true;
 };
-CEqArray.prototype.GetTextOfElement = function (isLaTeX) {
-	let strStart = isLaTeX ? "\\substack" : "█";
-	var strStartBracet = this.GetStartBracetForGetTextContent(isLaTeX);
-	var strCloseBracet = this.GetEndBracetForGetTextContent(isLaTeX);
+/**
+ *
+ * @param {MathTextAndStyles | boolean} oMathText
+ * @constructor
+ */
+CEqArray.prototype.GetTextOfElement = function (oMathText)
+{
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
 
-	var strTemp = strStart+ strStartBracet;
+	if (oMathText.IsLaTeX())
+	{
+		oMathText.AddText(new AscMath.MathText("\\substack{", this.Content[0]), true);
+	}
+	else
+	{
+		let oMatrix = new AscMath.MathText("■(", this.Content[0]);
+		oMathText.AddText(oMatrix, true);
+	}
 
-	for (var i = 0; i < this.Pr.row; i++) {
-		strTemp += this.getElement(i).GetTextOfElement(isLaTeX);
-		if (i !== this.Pr.row - 1 ) {
-			strTemp += isLaTeX ? "\\\\" : '@';
+	for (let i = 0; i < this.Pr.row; i++)
+	{
+		let oItem = this.getElement(i)
+		oMathText.Add(oItem, true, 0);
+
+		if (i !== this.Pr.row - 1)
+		{
+			let oSep = new AscMath.MathText(oMathText.IsLaTeX() ? "\\\\" : "@", this.Content[0]);
+			oMathText.AddText(oSep, true);
 		}
 	}
-	strTemp += strCloseBracet;
-	return strTemp;
+
+	oMathText.AddText(new AscMath.MathText(oMathText.IsLaTeX() ? "}" : ")", this.Content[0]), true);
+
+	return oMathText;
 };
 
 /**

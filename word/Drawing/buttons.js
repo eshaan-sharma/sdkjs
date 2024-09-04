@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -348,7 +348,7 @@
 		};
 	}
 
-	AscCommon.CreateDrawingPlaceholder = function(id, buttons, page, rect, transform)
+	AscCommon.CreateDrawingPlaceholder = function(id, buttons, page, rect, transform, isDisabled)
 	{
 		var placeholder = new Placeholder();
 		placeholder.id = id;
@@ -356,7 +356,7 @@
 		placeholder.anchor.page = page;
 		placeholder.anchor.rect = rect;
 		placeholder.anchor.transform = transform;
-
+		placeholder.isDisabled = isDisabled;
 		for (var i = 0; i < placeholder.buttons.length; i++)
 			placeholder.states[i] = AscCommon.PlaceholderButtonState.None;
 
@@ -388,6 +388,8 @@
 			rect : { x : 0, y : 0, w : 0, h : 0 },
 			transform : null
 		};
+
+		this.isDisabled = false;
 	}
 
 	Placeholder.prototype.getCenterInPixels = function(pixelsRect, pageWidthMM, pageHeightMM)
@@ -513,8 +515,9 @@
 
 	Placeholder.prototype.onPointerDown = function(x, y, pixelsRect, pageWidthMM, pageHeightMM)
 	{
-		var pointMenu = { x : 0, y : 0 };
-		var indexButton = this.isInside(x, y, pixelsRect, pageWidthMM, pageHeightMM, pointMenu);
+		if(this.isDisabled) return false;
+		let pointMenu = { x : 0, y : 0 };
+		let indexButton = this.isInside(x, y, pixelsRect, pageWidthMM, pageHeightMM, pointMenu);
 
 		if (-1 == indexButton)
 			return false;
@@ -569,6 +572,7 @@
 
 	Placeholder.prototype.onPointerMove = function(x, y, pixelsRect, pageWidthMM, pageHeightMM, checker)
 	{
+		if(this.isDisabled) return false;
 		var indexButton = this.isInside(x, y, pixelsRect, pageWidthMM, pageHeightMM);
 
 		// может в кнопку-то и не попали, но состояние могло смениться => нужно перерисовать интерфейс
@@ -1993,7 +1997,9 @@
 
 									ctx.fillStyle = (_object.ActiveButtonIndex == -1) ? AscCommon.GlobalSkin.ContentControlsTextActive : AscCommon.GlobalSkin.ContentControlsText;
 									ctx.font = Math.round(11 * rPR) + "px Helvetica, Arial, sans-serif";
-									_object.fillText(ctx, _object.Name, xText + Math.round(3 * rPR), _y + Math.round(20 * rPR) - Math.round(6 * rPR), _object.CalculateNameRectNatural() * rPR);
+									
+									let _textShift = ctx.direction === "rtl" ? _object.CalculateNameRectNatural() * rPR : 0;
+									_object.fillText(ctx, _object.Name, xText + Math.round(3 * rPR) + _textShift, _y + Math.round(20 * rPR) - Math.round(6 * rPR), _object.CalculateNameRectNatural() * rPR);
 
 									if (_object.IsNameAdvanced() && !_object.IsNoUseButtons())
 									{
@@ -2207,7 +2213,8 @@
 
 									ctx.fillStyle = (_object.ActiveButtonIndex == -1) ? AscCommon.GlobalSkin.ContentControlsTextActive : AscCommon.GlobalSkin.ContentControlsText;
 									ctx.font = this.getFont(_koefY);
-									_object.fillText(ctx, _object.Name, xText + 3 / _koefX, _y + (20 - 6) / _koefY, _object.CalculateNameRectNatural() / _koefX);
+									let _textShift = ctx.direction === "rtl" ? _object.CalculateNameRectNatural() / _koefX : 0;
+									_object.fillText(ctx, _object.Name, xText + 3 / _koefX + _textShift, _y + (20 - 6) / _koefY, _object.CalculateNameRectNatural() / _koefX);
 
 									if (_object.IsNameAdvanced() && !_object.IsNoUseButtons())
 									{

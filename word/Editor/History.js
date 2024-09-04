@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -33,8 +33,13 @@
 "use strict";
 
 (function (window, undefined) {
-
-function CHistory(Document)
+	
+	/**
+	 * Класс локальной истории изменений
+	 * @param {AscWord.CDocument} Document
+	 * @constructor
+	 */
+	function CHistory(Document)
 {
     this.Index      = -1;
     this.SavedIndex = null;        // Номер точки отката, на которой произошло последнее сохранение
@@ -67,6 +72,7 @@ function CHistory(Document)
 		NotesEnd     : false,
 		NotesEndPage : 0,
 		LineNumbers  : false,
+		ResetCache   : false,
 		Update       : true
 	};
 
@@ -74,7 +80,8 @@ function CHistory(Document)
 	this.RegisterClasses = 0;
     this.MinorChanges    = false; // Данный параметр нужен, чтобы определить влияют ли добавленные изменения на пересчет
 
-    this.BinaryWriter = new AscCommon.CMemory();
+    this.BinaryWriter = new AscCommon.CMemory(true);
+	this.BinaryWriter.Init(1024*1024*1);
 
     this.FileCheckSum = 0;
     this.FileSize     = 0;
@@ -238,10 +245,11 @@ CHistory.prototype =
 		this.UndoRedoInProgress = true;
 
         // Запоминаем самое последнее состояние документа для Redo
-        if ( this.Index === this.Points.length - 1 )
+        if ( this.Index === this.Points.length - 1 && this.Document)
             this.LastState = this.Document.GetSelectionState();
         
-        this.Document.RemoveSelection(true);
+        if (this.Document)
+			this.Document.RemoveSelection(true);
 
         var Point = null;
         if (undefined !== Options && null !== Options && true === Options.All)
@@ -258,7 +266,7 @@ CHistory.prototype =
             this.private_UndoPoint(Point, arrChanges);
         }
 
-        if (null != Point)
+        if (null != Point && this.Document)
             this.Document.SetSelectionState( Point.State );
 
 		if(!window['AscCommon'].g_specialPasteHelper.specialPasteStart)
@@ -279,19 +287,23 @@ CHistory.prototype =
 
 		this.UndoRedoInProgress = true;
 
-        this.Document.RemoveSelection(true);
+		if (this.Document)
+        	this.Document.RemoveSelection(true);
         
         var Point = this.Points[++this.Index];
 		this.private_RedoPoint(Point, arrChanges);
 
         // Восстанавливаем состояние на следующую точку
         var State = null;
-        if ( this.Index === this.Points.length - 1 )
-            State = this.LastState;
-        else
-            State = this.Points[this.Index + 1].State;
+		if (this.Document)
+		{
+			if ( this.Index === this.Points.length - 1)
+				State = this.LastState;
+			else
+				State = this.Points[this.Index + 1].State;
 
-        this.Document.SetSelectionState( State );
+			this.Document.SetSelectionState( State );
+		}
 		
 		if(!window['AscCommon'].g_specialPasteHelper.pasteStart)
 		{
@@ -312,7 +324,9 @@ CHistory.prototype =
     {
 		if ( 0 !== this.TurnOffHistory )
 			return false;
-
+		
+		this.RemoveLastTemporaryPoint();
+		
 		if (this.Document && this.Document.ClearListsCache)
 			this.Document.ClearListsCache();
 
@@ -326,7 +340,7 @@ CHistory.prototype =
 
         this.CheckUnionLastPoints();
         
-        var State = oSelectionState ? oSelectionState : this.Document.GetSelectionState();
+        var State = oSelectionState ? oSelectionState : this.Document ? this.Document.GetSelectionState() : undefined;
         var Items = [];
         var Time  = new Date().getTime();
 
@@ -337,6 +351,7 @@ CHistory.prototype =
             Items      : Items, // Массив изменений, начиная с текущего момента
             Time       : Time,  // Текущее время
             Additional : {},    // Дополнительная информация
+			Temporary  : false,
             Description: nDescription
         };
 
@@ -564,15 +579,7 @@ CHistory.prototype =
                             oDrawings.ThemeInfo =
                             {
                                 Theme: true,
-                                ArrInd: Data.ArrInd
-                            }
-                        }
-                        else if(Data.ColorScheme)
-                        {
-                            oDrawings.ThemeInfo =
-                            {
-                                ColorScheme: true,
-                                ArrInd: Data.ArrInd
+								ThemeObj: Data.ThemeObj
                             }
                         }
                         else if(AscFormat.isRealNumber(Data.SlideMinIdx))
@@ -600,6 +607,20 @@ CHistory.prototype =
 				this.RecalculateData.NotesEnd     = true;
 				this.RecalculateData.NotesEndPage = Data.PageNum;
 				break;
+			}
+			case AscDFH.historyitem_recalctype_FromStart:
+			{
+				this.RecalculateData.Inline.Pos     = 0;
+				this.RecalculateData.Inline.PageNum = 0;
+				this.RecalculateData.Flow           = [];
+				this.RecalculateData.HdrFtr         = [];
+				this.RecalculateData.Drawings.All   = true;
+				this.RecalculateData.Drawings.Map   = {};
+				this.RecalculateData.Tables         = [];
+				this.RecalculateData.NumPr          = [];
+				this.RecalculateData.NotesEnd       = false;
+				this.RecalculateData.NotesEndPage   = 0;
+				this.RecalculateData.ResetCache     = true;
 			}
         }
     },
@@ -674,7 +695,7 @@ CHistory.prototype =
         this.RecalculateData.Update = false;
         for (var NumId in this.RecalculateData.NumPr)
         {
-            var NumPr = new CNumPr();
+            var NumPr = new AscWord.NumPr();
             NumPr.NumId = NumId;
             for (var Lvl = 0; Lvl < 9; ++Lvl)
             {
@@ -696,7 +717,7 @@ CHistory.prototype =
     {
         // Не объединяем точки в истории, когда отключается пересчет.
         // TODO: Неправильно изменяется RecalcIndex
-        if (true !== this.Document.Is_OnRecalculate())
+        if (this.Document && (!this.Document.Is_OnRecalculate() || this.Document.IsActionStarted()))
             return false;
 
         // Не объединяем точки во время Undo/Redo
@@ -1089,10 +1110,32 @@ CHistory.prototype =
 		let additional = this.Index >= 0 ? this.Points[this.Index].Additional : null;
 		return (additional && additional.FormFilling ? additional.FormFilling : null);
 	};
+	
 	CHistory.prototype.ClearFormFillingInfo = function()
 	{
 		if (this.Points[this.Index] && this.Points[this.Index].Additional.FormFilling)
 			delete this.Points[this.Index].Additional.FormFilling;
+	};
+	CHistory.prototype.SetLastPointTemporary = function()
+	{
+		if (this.Index < 0)
+			return;
+		
+		this.Points[this.Index].Temporary = true;
+	};
+	CHistory.prototype.RemoveLastTemporaryPoint = function()
+	{
+		if (!this.Document || this.Index < 0
+			|| !this.Document.IsDocumentEditor()
+			|| !this.Points[this.Index].Temporary)
+			return;
+		
+		let needOn = this.Document.TurnOff_InterfaceEvents();
+		let changes = this.Undo();
+		this.Document.UpdateAfterUndoRedo(changes);
+		
+		if (needOn)
+			this.Document.TurnOn_InterfaceEvents();
 	};
 CHistory.prototype.ClearAdditional = function()
 {
@@ -1101,7 +1144,7 @@ CHistory.prototype.ClearAdditional = function()
 		// TODO: На создании новой точки не удаляем информацию о заполнении формы
 		//       надо переназвать функции по-нормальному
 
-		let form = this.GetLastPointFormFilling();
+		let form				= this.GetLastPointFormFilling();
 		this.Points[this.Index].Additional = {};
 
 		if (form)
@@ -1142,7 +1185,8 @@ CHistory.prototype.private_UpdateContentChangesOnRedo = function(Item)
 
 		var ContentChanges = new AscCommon.CContentChangesElement(( bAdd == true ? AscCommon.contentchanges_Add : AscCommon.contentchanges_Remove ), Item.Data.Pos, Count, Item);
 		Item.Class.Add_ContentChanges(ContentChanges);
-		this.CollaborativeEditing.Add_NewDC(Item.Class);
+		if (this.CollaborativeEditing)
+			this.CollaborativeEditing.Add_NewDC(Item.Class);
 	}
 };
 CHistory.prototype.private_IsContentChange = function(Class, Data)
@@ -1295,9 +1339,49 @@ CHistory.prototype.private_ClearRecalcData = function()
 		ChangedStyles     : {},
 		ChangedNums       : {},
 		LineNumbers       : false,
+		ResetCache        : false,
 		AllParagraphs     : null
 	};
 };
+	CHistory.prototype.getRecalcDataByElements = function(elements)
+	{
+		let storedRecalcData = this.RecalculateData;
+		
+		this.RecalculateData = {
+			Inline   : {
+				Pos     : -1,
+				PageNum : 0
+			},
+			Flow     : [],
+			HdrFtr   : [],
+			Drawings : {
+				All         : false,
+				Map         : {},
+				ThemeInfo   : null,
+				SlideMinIdx : null
+			},
+			
+			Tables            : [],
+			NumPr             : [],
+			NotesEnd          : false,
+			NotesEndPage      : 0,
+			Update            : true,
+			ChangedStyles     : {},
+			ChangedNums       : {},
+			LineNumbers       : false,
+			ResetCache        : false,
+			AllParagraphs     : null
+		};
+		
+		for (let i = 0, count = elements.length; i < count; ++i)
+		{
+			elements[i].Refresh_RecalcData2();
+		}
+		
+		let result = this.RecalculateData;
+		this.RecalculateData = storedRecalcData;
+		return result;
+	};
 /**
  * Обработка изменений после Undo/Redo всех изменений
  */
@@ -1349,6 +1433,25 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		}
 
 		this.SavedIndex = null;
+	};
+	/**
+	 * Удаляем все точки
+	 */
+	CHistory.prototype.RemoveAllPoints = function()
+	{
+		this.Index         = -1;
+		this.SavedIndex    = null;
+		this.ForceSave     = false;
+		this.RecIndex      = -1;
+		this.Points.length = 0;
+	};
+	/**
+	 * Пустая ли история
+	 * @returns {boolean}
+	 */
+	CHistory.prototype.isEmpty = function()
+	{
+		return !this.Points.length;
 	};
 	/**
 	 * Получаем массив изменений, которые еще не были пересчитаны
@@ -1426,15 +1529,47 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		if ((AscDFH.historydescription_Document_AddLetter === oPoint.Description
 			|| AscDFH.historydescription_Document_AddLetterUnion === oPoint.Description
 			|| AscDFH.historydescription_Document_SpaceButton === oPoint.Description
-			|| AscDFH.historydescription_Presentation_ParagraphAdd === oPoint.Description)
+			|| AscDFH.historydescription_Presentation_ParagraphAdd === oPoint.Description
+			|| AscDFH.historydescription_Document_PasteHotKey === oPoint.Description)
 			&& nItemsCount > 0)
 		{
-			var oChange = oPoint.Items[nItemsCount - 1].Data;
-			if (!oChange || !oChange.IsContentChange())
-				return false;
-
-			var nChangeItemsCount = oChange.GetItemsCount();
-			return (nChangeItemsCount > 0 && AscDFH.historyitem_ParaRun_AddItem === oChange.GetType() && oChange.GetItem(nChangeItemsCount - 1) === oLastElement);
+			if (AscDFH.historydescription_Document_PasteHotKey === oPoint.Description)
+			{
+				// Последний добавленный элемент во время вставки был до AscDFH.historyitem_ParaRun_OnStartSplit
+				let splitCounter = 0;
+				for (let changeIndex = oPoint.Items.length - 1; changeIndex >= 0; --changeIndex)
+				{
+					let change = oPoint.Items[changeIndex].Data;
+					if (!change)
+						continue;
+					
+					if (AscDFH.historyitem_ParaRun_OnEndSplit === change.GetType())
+					{
+						++splitCounter;
+						continue;
+					}
+					else if (AscDFH.historyitem_ParaRun_OnStartSplit === change.GetType())
+					{
+						--splitCounter;
+						continue;
+					}
+					
+					if (splitCounter > 0 || !change.IsContentChange() || AscDFH.historyitem_ParaRun_AddItem !== change.GetType())
+						continue;
+					
+					let nChangeItemsCount = change.GetItemsCount();
+					return (nChangeItemsCount > 0 && change.GetItem(nChangeItemsCount - 1) === oLastElement);
+				}
+			}
+			else
+			{
+				var oChange = oPoint.Items[nItemsCount - 1].Data;
+				if (!oChange || !oChange.IsContentChange())
+					return false;
+				
+				let nChangeItemsCount = oChange.GetItemsCount();
+				return (nChangeItemsCount > 0 && AscDFH.historyitem_ParaRun_AddItem === oChange.GetType() && oChange.GetItem(nChangeItemsCount - 1) === oLastElement);
+			}
 		}
 
 		return false;
@@ -1454,7 +1589,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	/**
 	 * Специальная функция для отмены последнего ввода через композитный ввод
 	 */
-	CHistory.prototype.UndoCompositeInput = function()
+	CHistory.prototype.UndoCompositeInput = function(documentState)
 	{
 		if (this.UndoRedoInProgress)
 			return [];
@@ -1485,6 +1620,10 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		}
 
 		this.UndoRedoInProgress = false;
+		
+		if (documentState)
+			this.Document.SetSelectionState(documentState);
+		
 		return changes;
 	};
 	/**
@@ -1494,7 +1633,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	 * @param codePoint {?number}
 	 * @returns {boolean}
 	 */
-	CHistory.prototype.CheckAsYouTypeEnterText = function(run, inRunPos, codePoint)
+	CHistory.prototype.checkAsYouTypeEnterText = function(run, inRunPos, codePoint)
 	{
 		this.CheckUnionLastPoints();
 
@@ -1520,6 +1659,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		return (AscDFH.historyitem_ParaRun_AddItem === lastChange.Type
 			&& lastChange.Class === run
 			&& lastChange.Pos === inRunPos - 1
+			&& lastChange.Items.length
 			&& (undefined === codePoint || lastChange.Items[0].GetCodePoint() === codePoint));
 	};
 	/**
@@ -1613,6 +1753,87 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 				point.Items.push(items[index]);
 			}
 		}
+	};
+	/**
+	 * Проверяем лок для последних нескольких точек
+	 * @param pointCount
+	 */
+	CHistory.prototype.checkLock = function(pointCount)
+	{
+		if (!pointCount || pointCount - 1 > this.Index)
+			return;
+		
+		let checkFormLockCounter = 1;
+		
+		let lockData = {
+			document : this.Document,
+			locked   : false,
+			
+			
+			isFillingForm : function()
+			{
+				return this.document.IsFillingFormMode();
+			},
+			
+			lock : function()
+			{
+				AscCommon.CollaborativeEditing.Add_CheckLock(true);
+				this.locked = true;
+			},
+			
+			isLocked : function()
+			{
+				return this.locked;
+			},
+			
+			isSkipFormCheck : function()
+			{
+				return checkFormLockCounter <= 0;
+			}
+		};
+		
+		for (let pointIndex = 0; pointIndex < pointCount; ++pointIndex)
+		{
+			let point = this.Points[this.Index - pointIndex];
+			let checkFormLockArray = point.Additional && point.Additional.FormFillingLockCheck ? point.Additional.FormFillingLockCheck : [];
+			let checkFormLockPos   = 0;
+			
+			checkFormLockCounter = 1;
+			
+			for (let changeIndex = 0; changeIndex < point.Items.length; ++changeIndex)
+			{
+				while (checkFormLockPos < checkFormLockArray.length && checkFormLockArray[checkFormLockPos][0] <= changeIndex)
+				{
+					checkFormLockCounter += checkFormLockArray[checkFormLockPos][1];
+					++checkFormLockPos;
+				}
+				
+				point.Items[changeIndex].Data.CheckLock(lockData);
+				if (lockData.isLocked())
+					return;
+			}
+		}
+	};
+	/**
+	 * Помечаем изменения, в которых не нужно проверять возможность заполнения форм в проверке на лок
+	 * @param isSkip
+	 */
+	CHistory.prototype.skipFormFillingLockCheck = function(isSkip)
+	{
+		if (this.Index < 0)
+			return;
+		
+		let point = this.Points[this.Index];
+		if (!point.Additional)
+			point.Additional = {};
+		
+		if (!point.Additional.FormFillingLockCheck)
+			point.Additional.FormFillingLockCheck = [];
+		
+		if (isSkip)
+			point.Additional.FormFillingLockCheck.push([point.Items.length, -1]);
+		else
+			point.Additional.FormFillingLockCheck.push([point.Items.length, 1]);
 	};
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Private area

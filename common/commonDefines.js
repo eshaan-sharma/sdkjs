@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -455,6 +455,9 @@ window.AscCommon.g_cIsBeta = "false";
 	var c_dMaxParaRunContentLength = 256;
 	var c_nMaxHyperlinkLength = 2083;
 	var c_sNativeViewerFormats = '.pdf.xps.oxps.djvu';
+	var c_sShardKeyName = 'shardkey';
+	var c_sWopiSrcName = 'WOPISrc';
+	var c_sUserSessionIdName = 'usid';
 
 	//files type for Saving & DownloadAs
 	var c_oAscFileType = {
@@ -517,6 +520,7 @@ window.AscCommon.g_cIsBeta = "false";
 		FODP : 0x0089,
 		OTP  : 0x008a,
 		PPTX_PACKAGE  : 0x008b,
+		PPTY : 0x1003,
 
 		//image
 		IMG  : 0x0400,
@@ -690,7 +694,8 @@ window.AscCommon.g_cIsBeta = "false";
 		MailMerge      : 10,
 		ContentControl : 11,
 		Animation      : 12,
-		Text           : 13 // viewer
+		Text           : 13, // viewer
+		Annot          : 14
 	};
 
 	var c_oAscLineDrawingRule = {
@@ -1677,7 +1682,7 @@ window.AscCommon.g_cIsBeta = "false";
 	};
 	/**
 	 * lock types
-	 * @const
+	 * @enum {number}
 	 */
 	var c_oAscLockTypes       = {
 		kLockTypeNone   : 1, // никто не залочил данный объект
@@ -1826,7 +1831,8 @@ window.AscCommon.g_cIsBeta = "false";
 		Form         : 4,
 		Review       : 5,
 		Eyedropper   : 6,
-		Placeholder  : 7
+		Placeholder  : 7,
+		EffectInfo   : 8,
 	};
 
 	// selection type
@@ -1907,7 +1913,8 @@ window.AscCommon.g_cIsBeta = "false";
 		ChangeDefName: 5,
 		ChangeSheet: 6,
 		DelColumnTable: 7,
-		Prepare: 8
+		Prepare: 8,
+		ChangeExternalLink: 9
 	};
 
 	var c_oNotifyParentType = {
@@ -2132,12 +2139,6 @@ window.AscCommon.g_cIsBeta = "false";
 	var c_oAscMaxFilterListLength    = 10000;
 	var c_oAscMaxFormulaReferenceLength = 2048;
 	var c_oAscMaxTableColumnTextLength  = 256;
-
-	var locktype_None   = 1; // никто не залочил данный объект
-	var locktype_Mine   = 2; // данный объект залочен текущим пользователем
-	var locktype_Other  = 3; // данный объект залочен другим(не текущим) пользователем
-	var locktype_Other2 = 4; // данный объект залочен другим(не текущим) пользователем (обновления уже пришли)
-	var locktype_Other3 = 5; // данный объект был залочен (обновления пришли) и снова стал залочен
 
 	var changestype_None                      = 0; // Ничего не происходит с выделенным элементом (проверка идет через дополнительный параметр)
 	var changestype_Paragraph_Content         = 1; // Добавление/удаление элементов в параграф
@@ -2429,7 +2430,8 @@ window.AscCommon.g_cIsBeta = "false";
 
 	var offlineMode = '_offline_';
 	var chartMode = '_chart_';
-	
+	var dataMode = '_data_';
+
 	var c_oSpecialPasteProps = {
 		paste: 0,
 		pasteOnlyFormula: 1,
@@ -2987,28 +2989,40 @@ window.AscCommon.g_cIsBeta = "false";
 		CustomGreece                 : 0x4000,
 		CustomDecimalFourZero        : 0x4001,
 		CustomDecimalThreeZero       : 0x4002,
-		CustomDecimalTwoZero         : 0x4003
+		CustomDecimalTwoZero         : 0x4003,
+		CustomUpperTurkish           : 0x4004,
+		CustomLowerTurkish           : 0x4005
 	};
 
 	var c_oAscCustomNumberingFormatAssociation = {
 		'α, β, γ, ...': c_oAscNumberingFormat.CustomGreece,
 		'00001, 00002, 00003, ...': c_oAscNumberingFormat.CustomDecimalFourZero,
 		'0001, 0002, 0003, ...': c_oAscNumberingFormat.CustomDecimalThreeZero,
-		'001, 002, 003, ...': c_oAscNumberingFormat.CustomDecimalTwoZero
+		'001, 002, 003, ...': c_oAscNumberingFormat.CustomDecimalTwoZero,
+		'A, Ç, Ĝ, ...': c_oAscNumberingFormat.CustomUpperTurkish,
+		'a, ç, ĝ, ...': c_oAscNumberingFormat.CustomLowerTurkish
 	};
 
-	var c_oAscAllNumberingTypes = [c_oAscNumberingFormat.Aiueo, c_oAscNumberingFormat.AiueoFullWidth, c_oAscNumberingFormat.ArabicAbjad, c_oAscNumberingFormat.ArabicAlpha, c_oAscNumberingFormat.BahtText, c_oAscNumberingFormat.CardinalText, c_oAscNumberingFormat.Chicago, c_oAscNumberingFormat.ChineseCounting, c_oAscNumberingFormat.ChineseCountingThousand, c_oAscNumberingFormat.ChineseLegalSimplified, c_oAscNumberingFormat.Chosung, c_oAscNumberingFormat.Decimal, c_oAscNumberingFormat.DecimalEnclosedCircle, c_oAscNumberingFormat.DecimalEnclosedCircleChinese, c_oAscNumberingFormat.DecimalEnclosedFullstop, c_oAscNumberingFormat.DecimalEnclosedParen, c_oAscNumberingFormat.DecimalFullWidth, c_oAscNumberingFormat.DecimalFullWidth2, c_oAscNumberingFormat.DecimalHalfWidth, c_oAscNumberingFormat.DecimalZero, c_oAscNumberingFormat.Ganada, c_oAscNumberingFormat.Hebrew1, c_oAscNumberingFormat.Hebrew2, c_oAscNumberingFormat.Hex, c_oAscNumberingFormat.HindiConsonants, c_oAscNumberingFormat.HindiCounting, c_oAscNumberingFormat.HindiNumbers, c_oAscNumberingFormat.HindiVowels, c_oAscNumberingFormat.IdeographDigital, c_oAscNumberingFormat.IdeographEnclosedCircle, c_oAscNumberingFormat.IdeographLegalTraditional, c_oAscNumberingFormat.IdeographTraditional, c_oAscNumberingFormat.IdeographZodiac, c_oAscNumberingFormat.IdeographZodiacTraditional, c_oAscNumberingFormat.Iroha, c_oAscNumberingFormat.IrohaFullWidth, c_oAscNumberingFormat.JapaneseCounting, c_oAscNumberingFormat.JapaneseDigitalTenThousand, c_oAscNumberingFormat.JapaneseLegal, c_oAscNumberingFormat.KoreanCounting, c_oAscNumberingFormat.KoreanDigital, c_oAscNumberingFormat.KoreanDigital2, c_oAscNumberingFormat.KoreanLegal, c_oAscNumberingFormat.LowerLetter, c_oAscNumberingFormat.LowerRoman, c_oAscNumberingFormat.NumberInDash, c_oAscNumberingFormat.Ordinal, c_oAscNumberingFormat.OrdinalText, c_oAscNumberingFormat.RussianLower, c_oAscNumberingFormat.RussianUpper, c_oAscNumberingFormat.TaiwaneseCounting, c_oAscNumberingFormat.TaiwaneseCountingThousand, c_oAscNumberingFormat.TaiwaneseDigital, c_oAscNumberingFormat.ThaiCounting, c_oAscNumberingFormat.ThaiLetters, c_oAscNumberingFormat.ThaiNumbers, c_oAscNumberingFormat.UpperLetter, c_oAscNumberingFormat.UpperRoman, c_oAscNumberingFormat.VietnameseCounting, c_oAscNumberingFormat.CustomGreece, c_oAscNumberingFormat.CustomDecimalFourZero, c_oAscNumberingFormat.CustomDecimalThreeZero, c_oAscNumberingFormat.CustomDecimalTwoZero,];
+	var c_oAscAllNumberingTypes = [c_oAscNumberingFormat.Aiueo, c_oAscNumberingFormat.AiueoFullWidth, c_oAscNumberingFormat.ArabicAbjad, c_oAscNumberingFormat.ArabicAlpha, c_oAscNumberingFormat.BahtText, c_oAscNumberingFormat.CardinalText, c_oAscNumberingFormat.Chicago, c_oAscNumberingFormat.ChineseCounting, c_oAscNumberingFormat.ChineseCountingThousand, c_oAscNumberingFormat.ChineseLegalSimplified, c_oAscNumberingFormat.Chosung, c_oAscNumberingFormat.Decimal, c_oAscNumberingFormat.DecimalEnclosedCircle, c_oAscNumberingFormat.DecimalEnclosedCircleChinese, c_oAscNumberingFormat.DecimalEnclosedFullstop, c_oAscNumberingFormat.DecimalEnclosedParen, c_oAscNumberingFormat.DecimalFullWidth, c_oAscNumberingFormat.DecimalFullWidth2, c_oAscNumberingFormat.DecimalHalfWidth, c_oAscNumberingFormat.DecimalZero, c_oAscNumberingFormat.Ganada, c_oAscNumberingFormat.Hebrew1, c_oAscNumberingFormat.Hebrew2, c_oAscNumberingFormat.Hex, c_oAscNumberingFormat.HindiConsonants, c_oAscNumberingFormat.HindiCounting, c_oAscNumberingFormat.HindiNumbers, c_oAscNumberingFormat.HindiVowels, c_oAscNumberingFormat.IdeographDigital, c_oAscNumberingFormat.IdeographEnclosedCircle, c_oAscNumberingFormat.IdeographLegalTraditional, c_oAscNumberingFormat.IdeographTraditional, c_oAscNumberingFormat.IdeographZodiac, c_oAscNumberingFormat.IdeographZodiacTraditional, c_oAscNumberingFormat.Iroha, c_oAscNumberingFormat.IrohaFullWidth, c_oAscNumberingFormat.JapaneseCounting, c_oAscNumberingFormat.JapaneseDigitalTenThousand, c_oAscNumberingFormat.JapaneseLegal, c_oAscNumberingFormat.KoreanCounting, c_oAscNumberingFormat.KoreanDigital, c_oAscNumberingFormat.KoreanDigital2, c_oAscNumberingFormat.KoreanLegal, c_oAscNumberingFormat.LowerLetter, c_oAscNumberingFormat.LowerRoman, c_oAscNumberingFormat.NumberInDash, c_oAscNumberingFormat.Ordinal, c_oAscNumberingFormat.OrdinalText, c_oAscNumberingFormat.RussianLower, c_oAscNumberingFormat.RussianUpper, c_oAscNumberingFormat.TaiwaneseCounting, c_oAscNumberingFormat.TaiwaneseCountingThousand, c_oAscNumberingFormat.TaiwaneseDigital, c_oAscNumberingFormat.ThaiCounting, c_oAscNumberingFormat.ThaiLetters, c_oAscNumberingFormat.ThaiNumbers, c_oAscNumberingFormat.UpperLetter, c_oAscNumberingFormat.UpperRoman, c_oAscNumberingFormat.VietnameseCounting, c_oAscNumberingFormat.CustomGreece, c_oAscNumberingFormat.CustomDecimalFourZero, c_oAscNumberingFormat.CustomDecimalThreeZero, c_oAscNumberingFormat.CustomDecimalTwoZero, c_oAscNumberingFormat.CustomUpperTurkish, c_oAscNumberingFormat.CustomLowerTurkish];
 
 	/** enum {number} */
 	var c_oAscNumberingSuff = {
-		Tab   : 0x01,
-		Space : 0x02,
-		None  : 0x03
+		None  : 0x00,
+		Space : 0x01,
+		Tab   : 0x02
 	};
 
 	var c_oAscNumberingLvlTextType = {
 		Text : 0x00,
 		Num  : 0x01
+	};
+	
+	var c_oAscChapterSep = {
+		Colon : 0,
+		EmDash : 1,
+		EnDash : 2,
+		Hyphen : 3,
+		Period : 4
 	};
 
 	var c_oAscSdtAppearance = {
@@ -3145,7 +3159,56 @@ window.AscCommon.g_cIsBeta = "false";
 		DateTime     : 5,
 
 		TOC          : 10,
-		Complex      : 11
+		Complex      : 11,
+		
+		toString : function(type)
+		{
+			switch (type)
+			{
+				case c_oAscContentControlSpecificType.None:
+					return "text";
+				case c_oAscContentControlSpecificType.CheckBox:
+					return "checkBox";
+				case c_oAscContentControlSpecificType.Picture:
+					return "picture";
+				case c_oAscContentControlSpecificType.ComboBox:
+					return "comboBox";
+				case c_oAscContentControlSpecificType.DropDownList:
+					return "dropDownList";
+				case c_oAscContentControlSpecificType.DateTime:
+					return "dateTime";
+				case c_oAscContentControlSpecificType.TOC:
+					return "toc";
+				case c_oAscContentControlSpecificType.Complex:
+					return "complex";
+			}
+			
+			return "unknown";
+		},
+		
+		fromString : function(value)
+		{
+			switch (value)
+			{
+				case "checkBox":
+				case "radio":
+					return c_oAscContentControlSpecificType.CheckBox;
+				case "picture":
+					return c_oAscContentControlSpecificType.Picture;
+				case "comboBox":
+					return c_oAscContentControlSpecificType.ComboBox;
+				case "dropDownList":
+					return c_oAscContentControlSpecificType.DropDownList;
+				case "dateTime":
+					return c_oAscContentControlSpecificType.DateTime;
+				case "toc":
+					return c_oAscContentControlSpecificType.TOC;
+				case "complex":
+					return c_oAscContentControlSpecificType.Complex;
+			}
+			
+			return c_oAscContentControlSpecificType.None;
+		}
 	};
 
 	var c_oAscDefNameType = {
@@ -3696,7 +3759,8 @@ window.AscCommon.g_cIsBeta = "false";
 		ConfirmReplaceFormulaInTable: 2,
 		ConfirmChangeProtectRange: 3,
 		ConfirmMaxChangesSize: 4,
-		ConfirmAddCellWatches: 5
+		ConfirmAddCellWatches: 5,
+		ConfirmReplaceHeaderFooterPicture: 6
 	};
 
 
@@ -3711,578 +3775,692 @@ window.AscCommon.g_cIsBeta = "false";
 
 
 	var c_oAscDateTimeFormat = {};
+	c_oAscDateTimeFormat[lcid_arSA] = [
+		"dd/MM/yyyy",
+		"dddd, dd MMMM, yyyy",
+		"dd MMMM, yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd.MM.yyyy",
+		"dd MMM, yy",
+		"d MMMM yyyy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd/MM/yyyy hh:mm am/pm",
+		"dd/MM/yyyy hh:mm:ss am/pm",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
+	];
 	c_oAscDateTimeFormat[lcid_azLatnAZ] = [
-		"dd.mm.yyyy",
-		"d Mmmm yyyy, dddd",
-		"d Mmmm yyyy",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"d mmm. yy",
-		"dd/mm/yy",
-		"Mmmm yy",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"d MMMM yyyy, dddd",
+		"d MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"d MMM. yy",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy HH:mm",
+		"dd.MM.yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_bgBG]     = [
-		"d.m.yyyy",
-		"dddd, dd mmmm yyyy г.",
-		"dd mmmm yyyy г.",
-		"d.m.yy г.",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/m/yyyy",
-		"dd mmm. yy г.",
-		"d/m/yy",
-		"mmmm yy г",
-		"mmm-yy",
-		"d.m.yyyy г. hh:mm",
-		"d.m.yyyy г. hh:mm:ss",
-		"hh:mm",
-		"hh:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"d.M.yyyy 'г.'",
+		"dddd, dd MMMM yyyy 'г.'",
+		"dd MMMM yyyy 'г.'",
+		"d.M.yy 'г.'",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"dd MMM. yy 'г.'",
+		"d/M/yy",
+		"MMMM yy 'г'",
+		"MMM-yy",
+		"d.M.yyyy 'г.' H:mm",
+		"d.M.yyyy 'г.' H:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_csCZ]     = [
-		"dd.mm.yyyy",
-		"dddd d. mmmm yyyy",
-		"d. mmmm yyyy",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"d. mmm. yy",
-		"dd/mm/yy",
-		"mmmm ’yy",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd d. MMMM yyyy",
+		"d. MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"d. MMM. yy",
+		"dd/MM/yy",
+		"MMMM ’yy",
+		"MMM-yy",
+		"dd.MM.yyyy H:mm",
+		"dd.MM.yyyy H:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_daDK]     = [
+		"dd-MM-yyyy",
+		"d. MMMM yyyy",
+		"yy-MM-dd",
+		"yyyy.MM.dd",
+		"yyyy-MM-dd",
+		"MMMM yyyy",
+		"d.M.yy",
+		"d/M yyyy",
+		"dd.MM.yyyy",
+		"d.M.yyyy",
+		"dd/MM yyyy",
+		"dd-MM-yyyy HH:mm",
+		"dd-MM-yyyy HH:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_deAT]     = c_oAscDateTimeFormat[lcid_deDE] = [
-		"dd.mm.yyyyy",
-		"Dddd, d. Mmmm yyyy",
-		"d. Mmmm yyyy",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"yy-mm-dd",
-		"dd/mm/yyyy",
-		"dd. Mmm yyyy",
-		"dd/mm/yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, d. MMMM yyyy",
+		"d. MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"yy-MM-dd",
+		"dd/MM/yyyy",
+		"dd. MMM. yyyy",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy HH:mm",
+		"dd.MM.yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_deCH]     = [
-		"dd.mm.yyyyy",
-		"Dddd, d. Mmmm yyyy",
-		"d. Mmmm yyyy",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"yy-mm-dd",
-		"dd/mm/yyyy",
-		"dd. Mmm yyyy",
-		"dd/mm/yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, d. MMMM yyyy",
+		"d. MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"yy-MM-dd",
+		"dd/MM/yyyy",
+		"dd. MMM. yyyy",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy HH:mm",
+		"dd.MM.yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_elGR]     = [
-		"d/m/yyyy",
-		"Dddd, d Mmmm yyyy",
-		"d Mmmm yyyy",
-		"d/m/yy",
-		"yyyy-mm-dd",
-		"d-Mmm-yy",
-		"d.m.yyyy",
-		"d Mmm. yy",
-		"d.m.yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"d/m/yyyy H:mm am/pm",
-		"d/m/yyyy H:mm:ss am/pm",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"d/M/yyyy",
+		"dddd, d MMMM yyyy",
+		"d MMMM yyyy",
+		"d/M/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d.M.yyyy",
+		"d MMM. yy",
+		"d.M.yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d/M/yyyy h:mm am/pm",
+		"d/M/yyyy h:mm:ss am/pm",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_enAU]     = [
-		"d/mm/yyyy",
-		"Dddd, d Mmmm yyyy",
-		"d Mmmm yyyy",
-		"d/mm/yy",
-		"yyyy-mm-dd",
-		"d-Mmm-yyyy",
-		"d.mm.yyyy",
-		"d Mmm. yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"d/mm/yyyy H:mm am/pm",
-		"d/mm/yyyy H:mm:ss am/pm",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"d/MM/yyyy",
+		"dddd, d MMMM yyyy",
+		"d MMMM yyyy",
+		"d/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yyyy",
+		"d.MM.yyyy",
+		"d MMM. yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d/MM/yyyy h:mm AM/PM",
+		"d/MM/yyyy h:mm:ss AM/PM",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_enGB]     = [
-		"dd/mm/yyyy",
-		"Dddd, dd Mmmm yyyy",
-		"dd Mmmm yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-Mmm-yy",
-		"dd.mm.yyyy",
-		"dd Mmm. yy",
-		"d Mmmm yyyy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, dd MMMM yyyy",
+		"dd MMMM yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd.MM.yyyy",
+		"dd MMM. yy",
+		"d MMMM yyyy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_esES]     = [
-		"dd/mm/yyyy",
-		"dddd, d 'de' mmmm 'de' yyyy",
-		"d 'de' mmmm 'de' yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd.mm.yyyy",
-		"d mmm yy",
-		"dd.mm.yy",
-		"mmmm 'de' yy",
-		"mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, d 'de' MMMM 'de' yyyy",
+		"d 'de' MMMM 'de' yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"dd.MM.yy",
+		"MMMM 'de' yyyy",
+		"MMM.-yy",
+		"dd/MM/yyyy H:mm",
+		"dd/MM/yyyy H:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_esMX]     = [
-		"dd/mm/yyyy",
-		"dddd, d 'de' mmmm 'de' yyyy",
-		"d 'de' mmmm 'de' yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd.mm.yyyy",
-		"d mmm yy",
-		"dd.mm.yy",
-		"mmmm 'de' yyyy",
-		"mmm-yy",
-		"dd/mm/yyyy HH:mm am/pm",
-		"dd/mm/yyyy HH:mm:ss am/pm",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, d 'de' MMMM 'de' yyyy",
+		"d 'de' MMMM 'de' yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"dd.MM.yy",
+		"MMMM 'de' yyyy",
+		"MMM.-yy",
+		"dd/MM/yyyy hh:mm am/pm",
+		"dd/MM/yyyy hh:mm:ss am/pm",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_fiFI]     = [
-		"d.m.yyyy",
-		"dddd d. mmmm yyyy",
-		"d. mmmm yyyy",
-		"d.m.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/m/yyyy",
-		"d. mmm yy",
-		"d/m/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"d.m.yyyy hh.mm",
-		"d.m.yyyy hh.mm.ss",
-		"H.mm am/pm",
-		"H.mm.ss am/pm",
-		"hh.mm",
-		"hh.mm.ss"
+		"d.M.yyyy",
+		"dddd d. MMMM yyyy",
+		"d. MMMM yyyy",
+		"d.M.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"d. MMM. yy",
+		"d/M/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d.M.yyyy H.mm",
+		"d.M.yyyy H.mm.ss",
+		"h.mm am/pm",
+		"h.mm.ss am/pm",
+		"HH.mm",
+		"HH.mm.ss"
 	];
 	c_oAscDateTimeFormat[lcid_frCH]     = [
-		"mm/dd/yyyy",
-		"dddd, mmmm d, yyyy",
-		"mmmm d, yyyy",
-		"mm/dd/yy",
-		"yyyy-mm-dd",
-		"dd-mmm-yy",
-		"mm.dd.yyyy",
-		"mmm dd, yy",
-		"dd mmmm yyyy",
-		"mmmm yy",
-		"mmm-yy",
-		"mm/dd/yyyy hh:mm am/pm",
-		"mm/dd/yyyy hh:mm:ss am/pm",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss",
+		"dd/MM/yyyy",
+		"dddd, d MMMM yyyy",
+		"d MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"dd/MM/yyyy",
+		"d MMM. yy",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM.-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_frFR]     = [
-		"dd/mm/yyyy",
-		"dddd d Mmmm yyyy",
-		"d mmmm yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd.mm.yyyy",
-		"d mmm yy",
-		"dd.mm.yy",
-		"mmmm yy",
-		"mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss",
+		"dd/MM/yyyy",
+		"dddd d MMMM yyyy",
+		"d MMMM yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"dd.MM.yy",
+		"MMMM yy",
+		"MMM.-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
-	c_oAscDateTimeFormat[lcid_itIT]     = [
-		"dd/mm/yyyy",
-		"dddd d mmmm yyyy",
-		"d mmmm yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mm-yy",
-		"dd.mm.yyyy",
-		"d mmm. yy",
-		"mmm. ’yy",
-		"mmmm ’yy",
-		"mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+	c_oAscDateTimeFormat[lcid_enID]     = c_oAscDateTimeFormat[lcid_idID] = [
+		"dd/MM/yyyy",
+		"dddd, dd MMMM yyyy",
+		"dd MMMM yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd.MM.yyyy",
+		"dd MMM. yy",
+		"dd.MM.yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_itIT]     = c_oAscDateTimeFormat[lcid_itCH] = [
+		"dd/MM/yyyy",
+		"dddd d MMMM yyyy",
+		"d MMMM yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MM.-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"MMM. ’yy",
+		"MMMM ’yy",
+		"MMM-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_jaJP]     = [
-		"yyyy/mm/dd",
-		"yyyy年m月d日",
-		"yyyy年m月d日(JDDD)",
-		"yyyy年m月",
+		"yyyy/MM/dd",
+		"yyyy年M月d日",
+		"yyyy年M月d日(JDDD)",
+		"yyyy年M月",
 		"JYYYY年JM月JD日(JDDD)",
-		"yyyy/m/d",
-		"yy/m/d h時m分",
-		"yy/m/d h時m分s秒",
-		"am/pmH時M分",
-		"am/pmH時M分s秒",
-		"h時M分",
-		"h時M分s秒",
-		"yyyy-mm-dd"
+		"yyyy/M/d",
+		"yy/M/d H時m分",
+		"yy/M/d H時m分s秒",
+		"AM/PMh時m分",
+		"AM/PMh時m分s秒",
+		"H時m分",
+		"H時m分s秒",
+		"yyyy-MM-dd"
 	];
 	c_oAscDateTimeFormat[lcid_koKR]     = [
-		"yyyy-mm-dd",
-		"yyyy년 m월 d일 dddd",
-		"yyyy년 m월 d일",
-		"yyyy/m/d",
-		"yymmdd",
-		"yyyy년 m월",
-		"yyyy년 m월 d일 am/pm h시 M분",
-		"y년 m월 d일 h시 M분 s초",
-		"am/pm h시 M분",
-		"am/pm h시 M분 s초",
-		"h시 M분",
-		"h시 M분 s초"
+		"yyyy-MM-dd",
+		"yyyy년 M월 d일 dddd",
+		"yyyy년 M월 d일",
+		"yyyy/M/d",
+		"yyMMdd",
+		"yyyy년 M월",
+		"yyyy년 M월 d일 AM/PM h시 m분",
+		"y년 m월 d일 H시 m분 s초",
+		"AM/PM h시 m분",
+		"AM/PM h시 m분 s초",
+		"H시 m분",
+		"H시 m분 s초"
 	];
 	c_oAscDateTimeFormat[lcid_lvLV]     = [
-		"dd.mm.yyyy",
-		"dddd, yyyy. 'gada' d. mmmm",
-		"yyyy. 'gada' d. mmmm",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"yy. 'gada' d. mmm",
-		"dd/mm/yy",
-		"yy mmmm",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, yyyy. 'gada' d. MMMM",
+		"yyyy. 'gada' d. MMMM",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"dd/MM/yyyy",
+		"yy. 'gada' d. MMM.",
+		"dd/MM/yy",
+		"yy MMMM",
+		"MMM.-yy",
+		"dd.MM.yyyy HH:mm",
+		"dd.MM.yyyy HH:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_huHU]     = [
-		"yyyy. mm. dd.",
-		"yyyy. mmmm d., dddd",
-		"yyyy. mmmm d.",
-		"yy. mm. dd.",
-		"yyyy-mm-dd",
-		"yy-mmm-d",
-		"yyyy/mm/dd",
-		"yy. mmm d.",
-		"’yy mmm",
-		"’yy mmmm",
-		"mmm-yy",
-		"yyyy. mm. dd. hh:mm",
-		"yyyy. mm. dd. hh:mm:ss",
-		"am/pm H:mm",
-		"am/pm H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"yyyy. MM. dd.",
+		"yyyy. MMMM d., dddd",
+		"yyyy. MMMM d.",
+		"yy. MM. dd.",
+		"yyyy-MM-dd",
+		"yy-MMM.-d",
+		"yyyy/MM/dd",
+		"yy. MMM. d.",
+		"’yy MMM.",
+		"’yy MMMM",
+		"MMM.-yy",
+		"yyyy. MM. dd. H:mm",
+		"yyyy. MM. dd. H:mm:ss",
+		"am/pm h:mm",
+		"am/pm h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_nlNL]     = [
-		"d-m-yyyy",
-		"dddd d mmmm yyyy",
-		"d mmmm yyyy",
-		"d-m-yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/m/yyyy",
-		"d mmm. yy",
-		"d/m/yy",
-		"mmmm ’yy",
-		"mmm-yy",
-		"d-m-yyyy hh:mm",
-		"d-m-yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"d-M-yyyy",
+		"dddd d MMMM yyyy",
+		"d MMMM yyyy",
+		"d-M-yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"d MMM. yy",
+		"d/M/yy",
+		"MMMM ’yy",
+		"MMM-yy",
+		"d-M-yyyy HH:mm",
+		"d-M-yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_plPL]     = [
-		"dd.mm.yyyy",
-		"dddd, d mmmm yyyy",
-		"d mmmm yyyy",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"dd mmm yy",
-		"dd/mm/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, d MMMM yyyy",
+		"d MMMM yyyy",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"dd MMM yy",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy HH:mm",
+		"dd.MM.yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_ptBR]     = [
-		"dd/mm/yyyy",
-		"dddd, d 'de' mmmm 'de' yyyy",
-		"d 'de' mmmm 'de' yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd.mm.yyyy",
-		"d mmm. yy",
-		"dd.mm.yy",
-		"d mmmm 'de' yy",
-		"mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, d 'de' MMMM 'de' yyyy",
+		"d 'de' MMMM 'de' yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"dd.MM.yy",
+		"MMMM 'de' yy",
+		"MMM-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_ptPT]     = [
-		"dd/mm/yyyy",
-		"dddd, d 'de' mmmm 'de' yyyy",
-		"d 'de' mmmm 'de' yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd.mm.yyyy",
-		"d mmm. yy",
-		"dd.mm.yy",
-		"mmmm 'de' yy",
-		"mmm-yy",
-		"dd/mm/yyyy hh:mm",
-		"dd/mm/yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, d 'de' MMMM 'de' yyyy",
+		"d 'de' MMMM 'de' yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd.MM.yyyy",
+		"d MMM. yy",
+		"dd.MM.yy",
+		"MMMM 'de' yy",
+		"MMM-yy",
+		"dd/MM/yyyy HH:mm",
+		"dd/MM/yyyy HH:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_ruRU]     = [
-		"dd.mm.yyyy",
-		"dddd, d mmmm yyyy г.",
-		"d mmmm yyyy г.",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"d mmm. yy г.",
-		"dd/mm/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, d MMMM yyyy 'г.'",
+		"d MMMM yyyy 'г.'",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"d MMM. yy 'г.'",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy H:mm",
+		"dd.MM.yyyy H:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_srCyrlRS]     = [
+		"dd.MM.yyyy.",
+		"dddd, d. MMMM yyyy.",
+		"d. MMMM yyyy.",
+		"dd.MM.yy.",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"d. MMM. yy.",
+		"dd/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd.MM.yyyy. H:mm",
+		"dd.MM.yyyy. H:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_srLatnRS]     = [
+		"d.M.yyyy.",
+		"dddd, dd. MMMM yyyy.",
+		"dd. MMMM yyyy.",
+		"d.M.yy.",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"dd. MMM. yy.",
+		"d/M/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d.M.yyyy. HH:mm",
+		"d.M.yyyy. HH:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_skSK]     = [
-		"d. m. yyyy",
-		"dddd d. mmmm yyyy",
-		"d. mmmm yyyy",
-		"d. m. yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/m/yyyy",
-		"d. mmm. yy",
-		"d/m/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"d. m. yyyy hh:mm",
-		"d. m. yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"d. M. yyyy",
+		"dddd d. MMMM yyyy",
+		"d. MMMM yyyy",
+		"d. M. yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"d. MMM. yy",
+		"d/M/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d. M. yyyy H:mm",
+		"d. M. yyyy H:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_slSI]     = [
-		"d. mm. yyyy",
-		"dddd, dd. mmmm yyyy",
-		"dd. mmmm yyyy",
-		"d. mm. yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/mm/yyyy",
-		"dd. mmm yy",
-		"d/mm/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"d. mm. yyyy hh:mm",
-		"d. mm. yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"d. MM. yyyy",
+		"dddd, dd. MMMM yyyy",
+		"dd. MMMM yyyy",
+		"d. MM. yy",
+		"yyyy-MM-dd",
+		"d-MMM.-yy",
+		"d/MM/yyyy",
+		"dd. MMM. yy",
+		"d/MM/yy",
+		"MMMM yy",
+		"MMM.-yy",
+		"d. MM. yyyy HH:mm",
+		"d. MM. yyyy HH:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_srLatnCS]     = [
+		"d.MM.yyyy.",
+		"dddd, dd. MMMM yyyy.",
+		"dd. MMMM yyyy.",
+		"d.MM.yyyy.",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/MM/yyyy",
+		"dd. MMM. yy.",
+		"d/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d.MM.yyyy. HH:mm",
+		"d.MM.yyyy. HH:mm:ss",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_svFI]     = [
-		"d. mm. yyyy",
-		"dddd, dd. mmmm yyyy",
-		"dd. mmmm yyyy",
-		"d. mm. yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"d/mm/yyyy",
-		"dd. mmm. yy",
-		"d/mm/yy",
-		"mmmm yy",
-		"mmm-yy",
-		"d. mm. yyyy hh:mm",
-		"d. mm. yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"yyyy-MM-dd",
+		"dddd 'den' d MMMM yyyy",
+		"d MMMM yyyy",
+		"yy-MM-dd",
+		"yyMMdd",
+		"d MMM. yy",
+		"d/M yyyy",
+		"d MMM. -yy",
+		"M/d/yy",
+		"MMMM yyyy",
+		"'den' d MMMM yyyy",
+		"yyyy-MM-dd HH:mm",
+		"yy-MM-dd hh:mm",
+		"h.mm am/pm",
+		"h.mm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_svSE]     = [
-		"yyyy-mm-dd",
-		"dddd 'den' d mmmm yyyy",
-		"d mmmm yyyy",
-		"dd-mm-yy",
-		"yy mm dd",
-		"d mmm yy",
-		"d/m yyyy",
-		"d mmm -yy",
-		"d/m/yy",
-		"mmmm yyyy",
-		"d mmmm yyyy",
-		"yyyy-mm-dd hh:mm",
-		"yy-mm-dd HH:mm",
-		"H.mm",
-		"H.mm",
-		"hh:mm",
-		"hh:mm:ss"
+		"yyyy-MM-dd",
+		"dddd 'den' d MMMM yyyy",
+		"d MMMM yyyy",
+		"yy-MM-dd",
+		"yyMMdd",
+		"d MMM yy",
+		"d/M yyyy",
+		"d MMM -yy",
+		"M/d/yy",
+		"MMMM yyyy",
+		"'den' d MMMM yyyy",
+		"yyyy-MM-dd HH:mm",
+		"yy-MM-dd hh:mm",
+		"h.mm am/pm",
+		"h.mm",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_trTR]     = [
-		"d.mm.yyyy",
-		"d Mmmm yyyy Dddd",
-		"d Mmmm yyyy",
-		"d.mm.yy",
-		"yyyy-mm-dd",
-		"d-Mmm-yy",
-		"d/mm/yyyy",
-		"d Mmm. yy",
-		"d/mm/yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"d.mm.yyyy hh:mm",
-		"d.mm.yyyy hh:mm:ss",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"d.MM.yyyy",
+		"d MMMM yyyy dddd",
+		"d MMMM yyyy",
+		"d.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/MM/yyyy",
+		"d MMM. yy",
+		"d/MM/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d.MM.yyyy HH:mm",
+		"d.MM.yyyy HH:mm:ss",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_ukUA]     = [
-		"dd.mm.yyyy",
-		"dddd, d mmmm yyyy р.",
-		"d mmmm yyyy р.",
-		"dd.mm.yy",
-		"yyyy-mm-dd",
-		"d-mmm-yy",
-		"dd/mm/yyyy",
-		"d mmm. yy р.",
-		"dd/mm/yy",
-		"mmmm yy р.",
-		"mmm-yy",
-		"dd.mm.yyyy hh:mm",
-		"dd.mm.yyyy hh:mm:ss",
-		"H:mm",
-		"H:mm:ss",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd.MM.yyyy",
+		"dddd, d MMMM yyyy 'р.'",
+		"d MMMM yyyy 'р.'",
+		"dd.MM.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"dd/MM/yyyy",
+		"d MMM. yy 'р.'",
+		"dd/MM/yy",
+		"MMMM yy 'р'",
+		"MMM-yy",
+		"dd.MM.yyyy H:mm",
+		"dd.MM.yyyy H:mm:ss",
+		"h:mm",
+		"h:mm:ss",
+		"HH:mm",
+		"HH:mm:ss"
 	];
 	c_oAscDateTimeFormat[lcid_viVN]     = [
-		"dd/mm/yyyy",
-		"Dddd, dd Mmmm yyyy",
-		"dd Mmmm yyyy",
-		"dd/mm/yy",
-		"yyyy-mm-dd",
-		"d-Mmm-yy",
-		"d-Mmmm-yy",
-		"dd Mmm. yy",
-		"dd.mm.yy",
-		"Mmmm yy",
-		"Mmm-yy",
-		"dd/mm/yyyy H:mm am/pm",
-		"dd/mm/yyyy H:mm:ss am/pm",
-		"H:mm am/pm",
-		"H:mm:ss am/pm",
-		"hh:mm",
-		"hh:mm:ss"
+		"dd/MM/yyyy",
+		"dddd, dd MMMM yyyy",
+		"dd MMMM yyyy",
+		"dd/MM/yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d-MMMM-yy",
+		"dd MMM. yy",
+		"dd.MM.yy",
+		"MMMM yy",
+		"MMM-yy",
+		"dd/MM/yyyy h:mm AM/PM",
+		"dd/MM/yyyy h:mm:ss AM/PM",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
+		"HH:mm",
+		"HH:mm:ss"
 	];
-	c_oAscDateTimeFormat[lcid_zhCN]     = [
-		"yyyy/m/d",
-		"yyyy年m月d日",
-		"yyyy年m月d日dddd",
-		"yy.m.d",
-		"yyyy年m月",
-		"h时m分ss秒",
+	c_oAscDateTimeFormat[lcid_zhCN]     = c_oAscDateTimeFormat[lcid_zhTW] = [
+		"yyyy/M/d",
+		"yyyy'年'M'月'd'日'",
+		"yyyy年M月d日星期W",
+		"yy.M.d",
+		"yyyy年M月",
+		"h时m分s秒",
 		"h时m分",
-		"am/pmh时m分",
-		"JYYYY年mmmmd日",
-		"JYYYY年JM月JD日dddd",
-		"JYYYY年JM月JD"
+		"AM/PMh时m分",
+		"YYYY年M月d日",
+		"YYYY年M月d日星期W",
+		"YYYY年M月"
 	];
 	c_oAscDateTimeFormat[lcid_enUS]     = [
 		"M/d/yyyy",
@@ -4296,10 +4474,10 @@ window.AscCommon.g_cIsBeta = "false";
 		"d MMMM yyyy",
 		"MMMM yy",
 		"MMM-yy",
-		"M/d/yyyy h:mm am/pm",
-		"M/d/yyyy h:mm:ss am/pm",
-		"h:mm am/pm",
-		"h:mm:ss am/pm",
+		"M/d/yyyy h:mm AM/PM",
+		"M/d/yyyy h:mm:ss AM/PM",
+		"h:mm AM/PM",
+		"h:mm:ss AM/PM",
 		"HH:mm",
 		"HH:mm:ss"
 	];
@@ -4318,6 +4496,9 @@ window.AscCommon.g_cIsBeta = "false";
 	window['Asc']['c_dMaxParaRunContentLength'] = window['Asc'].c_dMaxParaRunContentLength = c_dMaxParaRunContentLength;
 	window['Asc']['c_nMaxHyperlinkLength'] = window['Asc'].c_nMaxHyperlinkLength = c_nMaxHyperlinkLength;
 	window['Asc']['c_sNativeViewerFormats'] = window['Asc'].c_sNativeViewerFormats = c_sNativeViewerFormats;
+	window['Asc']['c_sShardKeyName'] = window['Asc'].c_sShardKeyName = c_sShardKeyName;
+	window['Asc']['c_sWopiSrcName'] = window['Asc'].c_sWopiSrcName = c_sWopiSrcName;
+	window['Asc']['c_sUserSessionIdName'] = window['Asc'].c_sUserSessionIdName = c_sUserSessionIdName;
 	window['Asc']['c_oAscFileType'] = window['Asc'].c_oAscFileType = c_oAscFileType;
 	window['Asc'].g_oLcidNameToIdMap = g_oLcidNameToIdMap;
 	window['Asc'].availableIdeographLanguages = availableIdeographLanguages;
@@ -4471,6 +4652,7 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['ContentControl']            = prot.ContentControl;
 	prot['Animation']                 = prot.Animation;
 	prot['Text']                      = prot.Text;
+	prot['Annot']                     = prot.Annot;
 	window['Asc']['linerule_AtLeast'] = window['Asc'].linerule_AtLeast = linerule_AtLeast;
 	window['Asc']['linerule_Auto'] = window['Asc'].linerule_Auto = linerule_Auto;
 	window['Asc']['linerule_Exact'] = window['Asc'].linerule_Exact = linerule_Exact;
@@ -4823,6 +5005,7 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['Review']       = prot.Review;
 	prot['Eyedropper']   = prot.Eyedropper;
 	prot['Placeholder']   = prot.Placeholder;
+	prot['EffectInfo']   = prot.EffectInfo;
 
 	window['Asc']['c_oAscMaxTooltipLength'] = window['Asc'].c_oAscMaxTooltipLength = c_oAscMaxTooltipLength;
 	window['Asc']['c_oAscMaxCellOrCommentLength'] = window['Asc'].c_oAscMaxCellOrCommentLength = c_oAscMaxCellOrCommentLength;
@@ -5047,11 +5230,6 @@ window.AscCommon.g_cIsBeta = "false";
 	prot["Email"] = prot.Email;
 	prot["Unsafe"] = prot.Unsafe;
 
-	window["AscCommon"].locktype_None   = locktype_None;
-	window["AscCommon"].locktype_Mine   = locktype_Mine;
-	window["AscCommon"].locktype_Other  = locktype_Other;
-	window["AscCommon"].locktype_Other2 = locktype_Other2;
-	window["AscCommon"].locktype_Other3 = locktype_Other3;
 
 	window["AscCommon"].changestype_None                      = changestype_None;
 	window["AscCommon"].changestype_Paragraph_Content         = changestype_Paragraph_Content;
@@ -5112,6 +5290,7 @@ window.AscCommon.g_cIsBeta = "false";
 
 	window["AscCommon"].offlineMode = offlineMode;
 	window["AscCommon"].chartMode = chartMode;
+	window["AscCommon"].dataMode = dataMode;
 
 	window['AscCommon']['align_Right'] = window['AscCommon'].align_Right = align_Right;
 	window['AscCommon']['align_Left'] = window['AscCommon'].align_Left = align_Left;
@@ -5423,6 +5602,8 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['CustomDecimalFourZero']        = prot.CustomDecimalFourZero;
 	prot['CustomDecimalThreeZero']       = prot.CustomDecimalThreeZero;
 	prot['CustomDecimalTwoZero']         = prot.CustomDecimalTwoZero;
+	prot['CustomUpperTurkish']           = prot.CustomUpperTurkish;
+	prot['CustomLowerTurkish']           = prot.CustomLowerTurkish;
 
 	window['Asc']['c_oAscCustomNumberingFormatAssociation'] = window['Asc'].c_oAscCustomNumberingFormatAssociation = c_oAscCustomNumberingFormatAssociation;
 
@@ -5436,6 +5617,14 @@ window.AscCommon.g_cIsBeta = "false";
 	prot = c_oAscNumberingLvlTextType;
 	prot['Text'] = c_oAscNumberingLvlTextType.Text;
 	prot['Num']  = c_oAscNumberingLvlTextType.Num;
+	
+	window['Asc']['c_oAscChapterSep'] = window['Asc'].c_oAscChapterSep = c_oAscChapterSep;
+	prot = c_oAscChapterSep;
+	prot['Colon'] = c_oAscChapterSep.Colon;
+	prot['EmDash']  = c_oAscChapterSep.EmDash;
+	prot['EnDash']  = c_oAscChapterSep.EnDash;
+	prot['Hyphen']  = c_oAscChapterSep.Hyphen;
+	prot['Period']  = c_oAscChapterSep.Period;
 
 	prot = window['Asc']['c_oAscSdtAppearance'] = window['Asc'].c_oAscSdtAppearance = c_oAscSdtAppearance;
 	prot['Frame']  = c_oAscSdtAppearance.Frame;
@@ -5719,8 +5908,9 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['ConfirmChangeProtectRange'] = prot.ConfirmChangeProtectRange;
 	prot['ConfirmMaxChangesSize'] = prot.ConfirmMaxChangesSize;
 	prot['ConfirmAddCellWatches'] = prot.ConfirmAddCellWatches;
+	prot['ConfirmReplaceHeaderFooterPicture'] = prot.ConfirmReplaceHeaderFooterPicture;
 
-	window['Asc'].c_oAscSmartArtSections = c_oAscSmartArtSections;
+	window['Asc']['c_oAscSmartArtSections'] = window['Asc'].c_oAscSmartArtSections = c_oAscSmartArtSections;
 
 
 

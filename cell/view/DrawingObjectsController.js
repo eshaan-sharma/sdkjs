@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -192,6 +192,7 @@ DrawingObjectsController.prototype.recalculate = function(bAll, Point, bCheckPoi
 {
     if(bCheckPoint !== false)
     {
+        this.objectsForRecalculate = {};
         History.Get_RecalcData(Point);//Только для таблиц
     }
     this.recalculate2(bAll);
@@ -247,17 +248,6 @@ DrawingObjectsController.prototype.getDrawingObjects = function()
         ret.push(drawing_bases[i].graphicObject);
     }
     return ret;
-};
-DrawingObjectsController.prototype.checkSelectedObjectsForMove = function(group)
-{
-    var selected_object = group ? group.selectedObjects : this.selectedObjects;
-    for(var i = 0; i < selected_object.length; ++i)
-    {
-        if(selected_object[i].canMove())
-        {
-            this.arrPreTrackObjects.push(selected_object[i].createMoveTrack());
-        }
-    }
 };
 
 DrawingObjectsController.prototype.checkSelectedObjectsAndFireCallback = function(callback, args)
@@ -376,24 +366,14 @@ DrawingObjectsController.prototype.handleChartDoubleClick = function()
 
 DrawingObjectsController.prototype.handleOleObjectDoubleClick = function(drawing, oleObject, e, x, y, pageIndex)
 {
-    var drawingObjects = this.drawingObjects;
-    var oThis = this;
-    var oApi = oThis.getEditorApi();
+    let oThis = this;
     var fCallback = function(){
         if(oleObject.m_oMathObject) {
-            window["Asc"]["editor"].sendEvent("asc_onConvertEquationToMath", oleObject);
+            Asc.editor.sendEvent("asc_onConvertEquationToMath", oleObject);
         } else if (oleObject.canEditTableOleObject()) {
-            window["Asc"]["editor"].asc_doubleClickOnTableOleObject(oleObject);
+            Asc.editor.asc_doubleClickOnTableOleObject(oleObject);
         } else {
-            var pluginData = new Asc.CPluginData();
-            pluginData.setAttribute("data", oleObject.m_sData);
-            pluginData.setAttribute("guid", oleObject.m_sApplicationId);
-            pluginData.setAttribute("width", oleObject.extX);
-            pluginData.setAttribute("height", oleObject.extY);
-            pluginData.setAttribute("widthPix", oleObject.m_nPixWidth);
-            pluginData.setAttribute("heightPix", oleObject.m_nPixHeight);
-            pluginData.setAttribute("objectId", oleObject.Id);
-            window["Asc"]["editor"].asc_pluginRun(oleObject.m_sApplicationId, 0, pluginData);
+            oleObject.runPlugin();
         }
         oThis.clearTrackObjects();
         oThis.clearPreTrackObjects();
@@ -482,6 +462,7 @@ DrawingObjectsController.prototype.addChartDrawingObject = function(options)
         this.startRecalculate();
         this.drawingObjects.sendGraphicObjectProps();
     }
+	return chart;
 };
 
 DrawingObjectsController.prototype.isPointInDrawingObjects = function(x, y, e)
@@ -606,17 +587,21 @@ DrawingObjectsController.prototype.paragraphIncDecIndent = function(bIncrease)
 
 DrawingObjectsController.prototype.canIncreaseParagraphLevel = function(bIncrease)
 {
-    var content = this.getTargetDocContent();
-    if(content)
+    let oDocContent = this.getTargetDocContent();
+    if(oDocContent)
     {
-        var target_text_object = AscFormat.getTargetTextObject(this);
-        if(target_text_object && target_text_object.getObjectType() === AscDFH.historyitem_type_Shape)
+        let oTextObject = AscFormat.getTargetTextObject(this);
+        if(oTextObject && oTextObject.getObjectType() === AscDFH.historyitem_type_Shape)
         {
-            if(target_text_object.isPlaceholder() && (target_text_object.getPhType() === AscFormat.phType_title || target_text_object.getPhType() === AscFormat.phType_ctrTitle))
+            if(oTextObject.isPlaceholder())
             {
-                return false;
+                let nPhType = oTextObject.getPlaceholderType();
+                if(nPhType === AscFormat.phType_title || nPhType === AscFormat.phType_ctrTitle)
+                {
+                    return false;
+                }
             }
-            return content.Can_IncreaseParagraphLevel(bIncrease);
+            return oDocContent.Can_IncreaseParagraphLevel(bIncrease);
         }
     }
     return false;
@@ -707,7 +692,7 @@ DrawingObjectsController.prototype.onKeyPress = function(e)
                     {
                         oItem = new AscWord.CRunText(Code);
                     }
-                    this.paragraphAdd(oItem, false);
+                    this.paragraphAdd(oItem, true);
                 }
             }
             else
@@ -721,7 +706,7 @@ DrawingObjectsController.prototype.onKeyPress = function(e)
                 {
                     oItem = new AscWord.CRunText(Code);
                 }
-                this.paragraphAdd(oItem, false);
+                this.paragraphAdd(oItem, true);
             }
             this.checkMobileCursorPosition();
             this.recalculateCurPos(true, true);

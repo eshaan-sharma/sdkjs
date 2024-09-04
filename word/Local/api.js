@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -144,6 +144,13 @@ Asc['asc_docs_api'].prototype._saveLocalCheck = function()
 	return !this.isLongAction();
 };
 
+AscCommon.baseEditorsApi.prototype.asc_setCurrentPasswordBase = AscCommon.baseEditorsApi.prototype.asc_setCurrentPassword;
+AscCommon.baseEditorsApi.prototype.asc_setCurrentPassword = AscCommon.baseEditorsApi.prototype["asc_setCurrentPassword"] = function(password)
+{
+	this.currentPasswordOld = this.currentPassword;
+	return this.asc_setCurrentPasswordBase(password);
+};
+
 Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isResaveAttack, options)
 {
 	if (!isResaveAttack && !isSaveAs && !this.asc_isDocumentCanSave())
@@ -162,7 +169,7 @@ Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isRes
 		var _isNaturalSave = this.IsUserSave;
 		this.canSave = false;
 		
-		if (this.WordControl.m_oLogicDocument != null)
+		if (!this.isPdfEditor())
 		{
 			var t = this;
 			this.CoAuthoringApi.askSaveChanges(function(e) {
@@ -174,6 +181,13 @@ Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isRes
 		}
 		else
 		{
+			// TODO:
+			if (this.IsUserSave)
+			{
+				AscCommon.History.Reset_SavedIndex(this.IsUserSave);
+				this.IsUserSave = false;
+			}
+
 			this.canSave = true;
 		}
 		
@@ -222,7 +236,17 @@ window["DesktopOfflineAppDocumentStartSave"] = function(isSaveAs, password, isFo
  		}
 	}
 
-	window["AscDesktopEditor"]["LocalFileSave"](_param, (password === undefined) ? editor.currentPassword : password, docinfo, (options && options.fileType) ? options.fileType : 0, JSON.stringify(jsonOptions));
+	if (editor.isUseNativeViewer && editor.isDocumentRenderer())
+	{
+		let changes = editor.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Save();
+		if (changes)
+			window["AscDesktopEditor"]["AddChanges"](0, AscCommon.Base64.encode(changes, 0, changes.length));
+	}
+
+	window["AscDesktopEditor"]["LocalFileSave"](_param, (password === undefined) ? editor.currentPassword : password,
+		docinfo,
+		(options && options.fileType) ? options.fileType : 0,
+		JSON.stringify(jsonOptions), editor.currentPasswordOld ? editor.currentPasswordOld : "");
 };
 window["DesktopOfflineAppDocumentEndSave"] = function(error, hash, password)
 {
@@ -283,7 +307,8 @@ Asc['asc_docs_api'].prototype.AddImageUrl = function(urls, imgProp, token, obj)
 	});
 	this._addImageUrl(_urls, obj);
 };
-Asc['asc_docs_api'].prototype.AddImage = Asc['asc_docs_api'].prototype.asc_addImage = function(obj)
+Asc['asc_docs_api'].prototype.AddImage = Asc['asc_docs_api'].prototype.asc_addImage =
+Asc['PDFEditorApi'].prototype.AddImage = Asc['PDFEditorApi'].prototype.asc_addImage = function(obj)
 {
 	window["AscDesktopEditor"]["OpenFilenameDialog"]("images", false, function(_file) {
 		var file = _file;
@@ -302,10 +327,15 @@ Asc['asc_docs_api'].prototype.asc_isOffline = function()
 };
 
 
-
 Asc['asc_docs_api'].prototype["asc_addImage"] = Asc['asc_docs_api'].prototype.asc_addImage;
 Asc['asc_docs_api'].prototype["AddImageUrl"] = Asc['asc_docs_api'].prototype.AddImageUrl;
 Asc['asc_docs_api'].prototype["AddImage"] = Asc['asc_docs_api'].prototype.AddImage;
+
+Asc['PDFEditorApi'].prototype["asc_addImage"] = Asc['PDFEditorApi'].prototype.asc_addImage;
+Asc['PDFEditorApi'].prototype["AddImageUrl"] = Asc['PDFEditorApi'].prototype.AddImageUrl;
+Asc['PDFEditorApi'].prototype["AddImage"] = Asc['PDFEditorApi'].prototype.AddImage;
+
+
 Asc['asc_docs_api'].prototype["asc_Save"] = Asc['asc_docs_api'].prototype.asc_Save;
 Asc['asc_docs_api'].prototype["asc_DownloadAs"] = Asc['asc_docs_api'].prototype.asc_DownloadAs;
 Asc['asc_docs_api'].prototype["asc_isOffline"] = Asc['asc_docs_api'].prototype.asc_isOffline;
