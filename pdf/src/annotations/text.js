@@ -129,7 +129,7 @@
         let sModDate = this.GetModDate();
         if (sModDate)
             oAscCommData.asc_putOnlyOfficeTime(sModDate.toString());
-        oAscCommData.asc_putUserId(editor.documentUserId);
+        oAscCommData.asc_putUserId(null);
         oAscCommData.asc_putUserName(this.GetAuthor());
         
         let nState = this.GetState();
