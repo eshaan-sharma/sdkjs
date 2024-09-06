@@ -1368,13 +1368,23 @@ Paragraph.prototype.ConvertParaContentPosToRangePos = function(oContentPos)
 	for (var nPos = 0; nPos < nCurPos; ++nPos)
 	{
 		if (this.Content[nPos] instanceof CParagraphContentWithContentBase)
+		{
+			if (nPos != 0 && this.Content[nPos] instanceof ParaRun)
+				nRangePos++;
+			
 			nRangePos += this.Content[nPos].ConvertParaContentPosToRangePos(null);
+		}
 	}
 
 	if (this.Content[nCurPos])
 	{
-		if (this.Content[nPos] instanceof CParagraphContentWithContentBase)
+		if (this.Content[nCurPos] instanceof CParagraphContentWithContentBase)
+		{
+			if (nCurPos != 0 && this.Content[nCurPos] instanceof ParaRun)
+				nRangePos++;
+
 			nRangePos += this.Content[nCurPos].ConvertParaContentPosToRangePos(oContentPos, 1);
+		}
 	}
 		
 	return nRangePos;
