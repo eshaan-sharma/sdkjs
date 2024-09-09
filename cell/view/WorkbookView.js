@@ -2046,12 +2046,15 @@
     var selectionRange = ws.model.selectionRange && ws.model.selectionRange.clone();
 
     var activeWsModel = this.model.getActiveWs();
-    if (activeWsModel.inPivotTable(activeCellRange)) {
-		if (t.input.isFocused) {
-			t._blurCellEditor();
+	const pivot = activeWsModel.inPivotTable(activeCellRange);
+    if (pivot) {
+		if (!pivot.canEditCell(activeCellRange)) {
+			if (t.input.isFocused) {
+				t._blurCellEditor();
+			}
+			this.handlers.trigger("asc_onError", c_oAscError.ID.LockedCellPivot, c_oAscError.Level.NoCritical);
+			return;
 		}
-		this.handlers.trigger("asc_onError", c_oAscError.ID.LockedCellPivot, c_oAscError.Level.NoCritical);
-		return;
 	}
 
     var editFunction = function() {

@@ -17074,9 +17074,13 @@
 			History.Create_NewPoint();
 			History.StartTransaction();
 		}
-
+		const pivotTable = c.worksheet.getPivotTable(c.bbox.c1, c.bbox.r1);
 		// if there is a formula use setValue, otherwise setValue2
 		if (isFormula) {
+			if (pivotTable) {
+				this.workbook.Api.sendEvent('asc_onError', Asc.c_oAscError.ID.FormulaInPivotFieldName, Asc.c_oAscError.Level.NoCritical);
+				return;
+			}
 			// ToDo - при вводе формулы в заголовок автофильтра надо писать "0"
 			//***array-formula***
 			let ret = true;
@@ -17182,9 +17186,12 @@
 				}
 			}
 
-			// set the value to the selected range 
-			c.setValue2(val, true);
-
+			// set the value to the selected range
+			if (pivotTable) {
+				pivotTable.editCell(c.bbox, AscCommonExcel.getFragmentsText(val));
+			} else {
+				c.setValue2(val, true);
+			}
 			// recalculate all volatile arrays on page
 			t.model.recalculateVolatileArrays();
 
