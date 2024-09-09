@@ -1369,6 +1369,7 @@ function(window, undefined) {
 		const currentDay = oLabelParams.oStartingDate ? oStartingDate.getDate() : 0;
 		const currentMonth = oLabelParams.oStartingDate ? oStartingDate.getMonth() : 0;
 		const currentYear = oLabelParams.oStartingDate ? oStartingDate.getFullYear() : 0;
+		const isSingleLabel = oLabelParams.isSingleLabel;
 
 		const calcYearlyStep = function (yearsCounter) {
 			if (!AscFormat.isRealNumber(yearsCounter) && yearsCounter < 0) {
@@ -1417,6 +1418,11 @@ function(window, undefined) {
 			} else if (nLblTickSkip % 31 === 0) {
 				return calcMonthlyStep(nLblTickSkip / 31);;
 			}
+		}
+
+		// when single lable is true, it means that maximum two labels exist, thus make more than 1 jump
+		if (isSingleLabel) {
+			return 2;
 		}
 
 		return AscFormat.isRealNumber(nLblTickSkip) && nLblTickSkip > 0 ? nLblTickSkip : 1;
@@ -11639,6 +11645,8 @@ function(window, undefined) {
 		this.bCalculated = false;
 		this.fLabelHeight = null;
 		this.fLabelWidth = null;
+		// this variable is for exceptional case of single label
+		this.isSingleLabel = false;
 	}
 
 	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength, fRectHeight, nIndex) {
@@ -11728,14 +11736,9 @@ function(window, undefined) {
 			this.oStartingDate = date.getDateFromExcel(2);
 		}
 
-		// valAx recalcute the labels, rather than skipping a portion of them as other labels
-		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
-			this.recalculateLabels(oLabelsBox, fAxisLength);
-			this.nLblTickSkip = 1;
-		} else {
-			// find label skip
-			this.calculateNLblTickSkip(oLabelsBox, fAxisLength);
-		}
+		// find label skip
+		this.calculateNLblTickSkip(oLabelsBox, fAxisLength);
+
 		// if rotation is not set
 		this.calculateRotation(oLabelsBox, fAxisLength);
 	};
@@ -11820,7 +11823,7 @@ function(window, undefined) {
 		const getNewStep = function (multiplicator, nLblTickSkip) {
 			if (nLblTickSkip === -1) {
 				// -1 means only 1 label will shown
-				return -1;
+				return null;
 			}else if (nLblTickSkip <= multiplicator) {
 				return multiplicator;
 			} else if (nLblTickSkip <= 2 * multiplicator) {
@@ -11841,9 +11844,7 @@ function(window, undefined) {
 			let manualMin = oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.min !== null ? oLabelsBox.axis.scaling.min : null;
 			let manualMax = oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.max !== null ? oLabelsBox.axis.scaling.max : null;
 
-			if (newStep === -1) {
-				return [oLabelsBox.axis.scale[0]];
-			} else if (newStep === 0) {
+			if (!newStep) {
 				// find max that is higher than axis max 
 				const newMax = Math.ceil(oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1] / (multiplication * 10)) * 10 * multiplication;
 				return [oLabelsBox.axis.scale[0], newMax]
@@ -11854,35 +11855,46 @@ function(window, undefined) {
 
 		// find current step info
 		const oStepInfo = getStepAndMultiplicator(oLabelsBox.axis);
-		console.log(oStepInfo);
 
 		// find maximum numer of allowed labels 
-		const alpha = 4.5;
+		const alpha = 6;
 		const labelWidth = oLabelsBox.maxMinWidth + alpha;
-		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor(fAxisLength / labelWidth) : 1;
-		console.log(labelCount, fAxisLength, oLabelsBox.maxMinWidth)
+		const fFirstLabelContentWidth = oLabelsBox.aLabels && Array.isArray(oLabelsBox.aLabels) && oLabelsBox.aLabels.length > 0 && oLabelsBox.aLabels[0] ? oLabelsBox.aLabels[0].tx.rich.getContentOneStringSizes() : {w : 0};
+		const fLastLabelContentWidth = oLabelsBox.aLabels && Array.isArray(oLabelsBox.aLabels) && oLabelsBox.aLabels.length > 0 && oLabelsBox.aLabels[oLabelsBox.aLabels.length - 1] ? oLabelsBox.aLabels[oLabelsBox.aLabels.length - 1].tx.rich.getContentOneStringSizes() : {w : 0};
+		const getContentWidthError = 0.1;
+		const fNewAxisLength = (fAxisLength + alpha + ((fFirstLabelContentWidth.w - getContentWidthError) / 2) + ((fLastLabelContentWidth.w - getContentWidthError) / 2))
+		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
 
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
 		const firtNum = oLabelsBox.axis.scale[0];
 		const nLblTickSkip = labelCount > 1 ? Math.ceil((lastNum - firtNum) / (labelCount - 1)) : -1;
-		console.log(oLabelsBox.axis.max, oLabelsBox.axis.min, nLblTickSkip);
 
 		// find new step 
 		const newStep = getNewStep(oStepInfo.multiplicator, nLblTickSkip);
-		
-		if (newStep !== oStepInfo.step * oStepInfo.multiplicator) {
-			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, oStepInfo.multiplicator);
-			this.nLabelsCount = oLabelsBox.axis.scale.length;
+
+		// case when only one label is printed
+		if (newStep === null) {
+			this.isSingleLabel = true;
 		}
 
-		// create new labels from axis min to axis max with newStep
-
+		// create new scale for val ax
+		if (newStep !== oStepInfo.step * oStepInfo.multiplicator) {
+			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, oStepInfo.multiplicator);
+			this.nLabelsCount = this.isSingleLabel ? 1 : oLabelsBox.axis.scale.length;
+		}
 	}
 
 	CLabelsParameters.prototype.calculateNLblTickSkip = function (oLabelsBox, fAxisLength) {
 		//default nLblTickSkip should be 1!
 		if (!oLabelsBox || !Array.isArray(oLabelsBox.aLabels) || this.nLabelsCount === 0 || !fAxisLength) {
+			this.nLblTickSkip = 1;
+			return;
+		}
+
+		// valAx recalcute the labels, rather than skipping a portion of them as other labels
+		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
+			this.recalculateLabels(oLabelsBox, fAxisLength);
 			this.nLblTickSkip = 1;
 			return;
 		}
