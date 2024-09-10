@@ -11788,8 +11788,13 @@ function(window, undefined) {
 
 	CLabelsParameters.prototype.recalculateLabels = function (oLabelsBox, fAxisLength) {
 		if (!oLabelsBox && !oLabelsBox.axis || !oLabelsBox.axis.scale || !Array.isArray(oLabelsBox.axis.scale)) {
-			return
+			return;
 		};
+
+		if (oLabelsBox.axis.majorUnit !== null) {
+			this.isUserDefinedTickSkip = true;
+			return;
+		}
 		const getStepAndMultiplicator = function (axis) {
 			let prevVal = axis.scale.length > 0 ? axis.scale[0] : null; 
 			let curVal = axis.scale.length > 1 ? axis.scale[1] : null; 
