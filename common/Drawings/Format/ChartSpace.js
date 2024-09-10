@@ -11791,8 +11791,8 @@ function(window, undefined) {
 			return
 		};
 		const getStepAndMultiplicator = function (axis) {
-			let prevVal = axis.scale.length > 0 ? Math.abs(axis.scale[0]) : null; 
-			let curVal = axis.scale.length > 1 ? Math.abs(axis.scale[1]) : null; 
+			let prevVal = axis.scale.length > 0 ? axis.scale[0] : null; 
+			let curVal = axis.scale.length > 1 ? axis.scale[1] : null; 
 
 			// get general step. Examples: 2, 20, 200, 0.2 tc.
 			let generalStep = 0;
