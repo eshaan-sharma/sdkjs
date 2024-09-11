@@ -393,6 +393,7 @@ function MoveShapeImageTrack(originalObject)
                 this.originalObject.txXfrm.setOffX( currentXfrmX + (previousTxXfrmX - _x));
                 this.originalObject.txXfrm.setOffY( currentXfrmY + (previousTxXfrmY - _y));
             }
+						this.originalObject.regenerateSmartArtConnectors();
         }
 
         if(this.originalObject.getObjectType() === AscDFH.historyitem_type_Cnx){

@@ -10002,9 +10002,21 @@ Because of this, the display is sometimes not correct.
 			this.textConstraintRelations = [];
 			this.adaptFontSizeShapesInfo = null;
 	    this.secondaryFontSizeScale = null;
+			this.connectorAlgorithm = null;
     }
+		ShapeSmartArtInfo.prototype.reconnectShapes = function () {
+			if (this.connectorAlgorithm) {
+				for (let i = 0; i < this.connectorAlgorithm.length; i++) {
+					const connectorAlgorithm = this.connectorAlgorithm[i];
+					const shape = this.shape;
+					const smartArt = shape.group.group;
+					if (smartArt && smartArt.smartArtTree) {
+						connectorAlgorithm.reconnectShapes(smartArt.smartArtTree);
+					}
+				}
+			}
+		};
 	  ShapeSmartArtInfo.prototype.getContentFillingType = function (shapes) {
-
 			let res = 0x00;
 		  for (let i = 0; i < shapes.length; i += 1) {
 			  const shape = shapes[i];

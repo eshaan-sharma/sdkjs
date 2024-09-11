@@ -7143,6 +7143,12 @@
 			return  oCurCandidate;
 		};
 		CShape.prototype.checkDrawingPartWithHistory = function () {};
+		CShape.prototype.regenerateSmartArtConnectors = function () {
+			const shapeSmartArtInfo = this.getSmartArtInfo();
+			if (shapeSmartArtInfo) {
+				shapeSmartArtInfo.reconnectShapes();
+			}
+		};
 
 		function CreateBinaryReader(szSrc, offset, srcLen) {
 			var memoryData = AscCommon.Base64.decode(szSrc, true, srcLen, offset);

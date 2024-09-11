@@ -883,7 +883,7 @@
 	SmartArtAlgorithm.prototype.generateConnectors = function () {
 		while (this.connectorAlgorithmStack.length) {
 			const connectorAlgorithm = this.connectorAlgorithmStack.pop();
-			connectorAlgorithm.connectShapes(this);
+			connectorAlgorithm.connectShapes(this, true);
 		}
 	};
 	SmartArtAlgorithm.prototype.forEachPresFromBottom = function (callback) {
@@ -1496,6 +1496,7 @@
 		this.customGeom = [];
 		this.radialVector = null;
 		this.incAngle = null;
+		this.connectorAlgorithm = [];
 	}
 	AscFormat.InitClassWithoutType(ShadowShape, Position);
 	ShadowShape.prototype.setRadialInfo = function (radialVector, incAngle) {
@@ -1688,6 +1689,7 @@
 		const presNode = this.node;
 		shapeSmartArtInfo.setShapePoint(presNode.presPoint);
 		editorShape.setModelId(presNode.presPoint.getModelId());
+		shapeSmartArtInfo.connectorAlgorithm = this.connectorAlgorithm;
 		for (let i = presNode.contentNodes.length - 1; i >= 0; i -= 1) {
 			const contentNode =  presNode.contentNodes[i];
 			shapeSmartArtInfo.addToLstContentPoint(0, contentNode);
@@ -4888,6 +4890,14 @@ function HierarchyAlgorithm() {
 		}
 	}
 	AscFormat.InitClassWithoutType(ConnectorAlgorithm, BaseAlgorithm);
+	ConnectorAlgorithm.prototype.resetCalcValues = function () {
+		this.calcValues = {
+			edgePoints: null,
+			radiusCenterPoint: null,
+			connectionPoints: null,
+			pointPositions: null
+		}
+	};
 	ConnectorAlgorithm.prototype.isClockwise = function () {
 		if (this.constrClockwise !== null) {
 			return this.constrClockwise;
@@ -4913,7 +4923,59 @@ function HierarchyAlgorithm() {
 				this.params[AscFormat.Param_type_bendPt] = AscFormat.ParameterVal_bendPoint_end;
 			}
 		}
-	}
+	};
+	ConnectorAlgorithm.prototype.getStartEditorShape = function () {
+		return this.getStartShape().editorShape;
+	};
+	ConnectorAlgorithm.prototype.getEndEditorShape = function () {
+		return this.getEndShape().editorShape;
+	};
+	ConnectorAlgorithm.prototype.getConnectorEditorShape = function () {
+		return this.parentNode.getShape().editorShape;
+	};
+	ConnectorAlgorithm.prototype.reconnectShapes = function (smartartAlgorithm) {
+		const startEditorShape = this.getStartEditorShape();
+		const endEditorShape = this.getEndEditorShape();
+		const connectorShape = this.getConnectorEditorShape();
+		if (startEditorShape && endEditorShape && connectorShape) {
+			const startShape = this.getStartShape();
+			const endShape = this.getEndShape();
+			startShape.x = startEditorShape.spPr.xfrm.offX;
+			startShape.y = startEditorShape.spPr.xfrm.offY;
+			endShape.x = endEditorShape.spPr.xfrm.offX;
+			endShape.y = endEditorShape.spPr.xfrm.offY;
+			const node = this.parentNode;
+			const shape = node.getShape();
+			shape.connectorShape = null;
+			this.resetCalcValues();
+			this.connectShapes(smartartAlgorithm);
+			smartartAlgorithm.applySettingsForMove();
+			const presConnectorShape = shape.connectorShape;
+			if (presConnectorShape) {
+				const xfrm = connectorShape.spPr.xfrm;
+				if (presConnectorShape.customGeom) {
+					const customGeom = presConnectorShape.customGeom;
+					const newGeometry = new AscFormat.Geometry();
+					for (let i = 0; i < customGeom.length; i += 1) {
+						const custCommand = customGeom[i];
+						for (let j = 1; j < custCommand.length; j++) {
+							custCommand[j] = String(custCommand[j] >> 0);
+						}
+						newGeometry.AddPathCommand.apply(newGeometry, custCommand);
+					}
+					connectorShape.spPr.setGeometry(newGeometry);
+					xfrm.setExtX(presConnectorShape.width);
+					xfrm.setExtY(presConnectorShape.height);
+				} else {
+					xfrm.setOffX(presConnectorShape.x);
+					xfrm.setOffY(presConnectorShape.y);
+					xfrm.setExtX(presConnectorShape.width);
+					xfrm.setExtY(presConnectorShape.height);
+					xfrm.setRot(presConnectorShape.rot);
+				}
+			}
+		}
+	};
 
 	ConnectorAlgorithm.prototype.getConnectionDistCoefficient = function (isBegin) {
 		switch (this.params[AscFormat.Param_type_connRout]) {
@@ -5406,12 +5468,16 @@ function HierarchyAlgorithm() {
 	ConnectorAlgorithm.prototype.setLastConnectorNode = function (node) {
 		this.endNode = node;
 	};
-	ConnectorAlgorithm.prototype.connectShapes = function (smartartAlgorithm) {
+	ConnectorAlgorithm.prototype.connectShapes = function (smartartAlgorithm, isNeedAddAlgorithmToShapes) {
 		if (this.startNode && this.endNode) {
 			if (this.params[AscFormat.Param_type_dim] === AscFormat.ParameterVal_connectorDimension_2D) {
 				this.createShapeConnector(smartartAlgorithm);
 			} else if (this.params[AscFormat.Param_type_dim] === AscFormat.ParameterVal_connectorDimension_1D) {
 				this.createLineConnector();
+			}
+			if (isNeedAddAlgorithmToShapes) {
+				this.getStartShape().connectorAlgorithm.push(this);
+				this.getEndShape().connectorAlgorithm.push(this);
 			}
 		}
 	};
