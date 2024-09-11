@@ -11873,7 +11873,7 @@ function(window, undefined) {
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
 		const firtNum = oLabelsBox.axis.scale[0];
-		const nLblTickSkip = labelCount > 1 ? Math.ceil((lastNum - firtNum) / (labelCount - 1)) : -1;
+		const nLblTickSkip = labelCount > 1 ? (lastNum - firtNum) / (labelCount - 1) : -1;
 
 		// find new step 
 		const newStep = getNewStep(oStepInfo.multiplicator, nLblTickSkip);
@@ -11884,7 +11884,8 @@ function(window, undefined) {
 		}
 
 		// create new scale for val ax
-		if (newStep !== oStepInfo.step * oStepInfo.multiplicator) {
+		const fPrecision = 0.01;
+		if (!newStep || newStep > (oStepInfo.step + fPrecision) * oStepInfo.multiplicator) {
 			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, oStepInfo.multiplicator);
 			this.nLabelsCount = this.isSingleLabel ? 1 : oLabelsBox.axis.scale.length;
 		}
