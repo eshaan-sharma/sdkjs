@@ -4953,7 +4953,7 @@ function HierarchyAlgorithm() {
 			const presConnectorShape = shape.connectorShape;
 			if (presConnectorShape) {
 				const xfrm = connectorShape.spPr.xfrm;
-				if (presConnectorShape.customGeom) {
+				if (presConnectorShape.customGeom.length) {
 					const customGeom = presConnectorShape.customGeom;
 					const newGeometry = new AscFormat.Geometry();
 					for (let i = 0; i < customGeom.length; i += 1) {
@@ -4964,15 +4964,13 @@ function HierarchyAlgorithm() {
 						newGeometry.AddPathCommand.apply(newGeometry, custCommand);
 					}
 					connectorShape.spPr.setGeometry(newGeometry);
-					xfrm.setExtX(presConnectorShape.width);
-					xfrm.setExtY(presConnectorShape.height);
-				} else {
-					xfrm.setOffX(presConnectorShape.x);
-					xfrm.setOffY(presConnectorShape.y);
-					xfrm.setExtX(presConnectorShape.width);
-					xfrm.setExtY(presConnectorShape.height);
-					xfrm.setRot(presConnectorShape.rot);
 				}
+				presConnectorShape.applyAdjLst(connectorShape.spPr.geometry);
+				xfrm.setOffX(presConnectorShape.x);
+				xfrm.setOffY(presConnectorShape.y);
+				xfrm.setExtX(presConnectorShape.width);
+				xfrm.setExtY(presConnectorShape.height);
+				xfrm.setRot(presConnectorShape.rot);
 			}
 		}
 	};
