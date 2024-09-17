@@ -57,6 +57,21 @@ $(function ()
 		sectPr.SetPageMargins(50, 50, 50, 50);
 	}
 	
+	function addImageToParagraph(p, x, y, w, h)
+	{
+		let d = AscTest.CreateImage(w, h);
+		let run = new AscWord.CRun();
+		p.AddToContent(0, run);
+		run.AddToContent(0, d);
+		
+		d.Set_DrawingType(drawing_Anchor);
+		d.Set_Distance(10, 10, 10, 10);
+		d.Set_WrappingType(WRAPPING_TYPE_SQUARE);
+		d.Set_PositionH(Asc.c_oAscRelativeFromH.Page, false, x);
+		d.Set_PositionV(Asc.c_oAscRelativeFromV.Page, false, y);
+		
+		return d;
+	}
 	
 	
 	QUnit.module("Test various situations with table header", {
@@ -89,10 +104,18 @@ $(function ()
 		
 		let tableTop = 50 + AscTest.FontHeight;
 		
-		assert.strictEqual(table.GetPagesCount(), 1, "Test a normal table divided into two pages");
+		assert.strictEqual(table.GetPagesCount(), 1, "Check table page count");
 		checkBounds(table.getRowBounds(0, 0), new AscWord.CDocumentBounds(lField, tableTop, rField, tableTop + 20), "Check first row bounds");
 		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 20,  rField, tableTop + 40), "Check second row bounds");
 		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 40,  rField, tableTop + 60), "Check third row bounds");
+		
+		addImageToParagraph(paragraph, lField, tableTop, 50, 50);
+		
+		AscTest.Recalculate();
+		assert.strictEqual(table.GetPagesCount(), 1, "Check table page count");
+		checkBounds(table.getRowBounds(0, 0), new AscWord.CDocumentBounds(lField, tableTop + 60, rField, tableTop + 80), "Check first row bounds");
+		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 80,  rField, tableTop + 100), "Check second row bounds");
+		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 100,  rField, tableTop + 120), "Check third row bounds");
 		
 	});
 	
