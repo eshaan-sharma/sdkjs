@@ -97,6 +97,7 @@ $(function () {
 			}
 		}
 	});
+	AscCommonExcel.WorksheetView.prototype.getScrollCorrect = function(){return 0;};
 
 	AscCommonExcel.CCellCommentator.prototype.isLockedComment = function (oComment, callbackFunc) {
 		callbackFunc(true);
