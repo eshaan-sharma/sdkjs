@@ -82,14 +82,11 @@ $(function ()
 		}
 	});
 	
-	QUnit.test("Test simple situation with table wrap", function (assert)
+	QUnit.test("Single flow-image on the left side", function(assert)
 	{
 		let paragraph = AscTest.CreateParagraph();
 		logicDocument.PushToContent(paragraph);
-		paragraph.SetParagraphSpacing({Before: 0, After : 0});
-		
-		AscTest.Recalculate();
-		assert.deepEqual(paragraph.GetPageBounds(0), new AscWord.CDocumentBounds(lField, 50, rField, 50 + AscTest.FontHeight), "Check page bounds of the first paragraph");
+		paragraph.SetParagraphSpacing({Before : 0, After : 0});
 		
 		let table = AscTest.CreateTable(3, 3, [100, 100, 100]);
 		logicDocument.PushToContent(table);
@@ -99,24 +96,33 @@ $(function ()
 		table.GetRow(1).SetHeight(20, Asc.linerule_AtLeast);
 		table.GetRow(2).SetHeight(20, Asc.linerule_AtLeast);
 		
+		let tableTop = 50 + AscTest.FontHeight;
+		AscTest.SetCompatibilityMode(AscCommon.document_compatibility_mode_Word15);
+		
 		// Test a normal situation
 		AscTest.Recalculate();
-		
-		let tableTop = 50 + AscTest.FontHeight;
-		
 		assert.strictEqual(table.GetPagesCount(), 1, "Check table page count");
 		checkBounds(table.getRowBounds(0, 0), new AscWord.CDocumentBounds(lField, tableTop, rField, tableTop + 20), "Check first row bounds");
-		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 20,  rField, tableTop + 40), "Check second row bounds");
-		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 40,  rField, tableTop + 60), "Check third row bounds");
+		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 20, rField, tableTop + 40), "Check second row bounds");
+		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 40, rField, tableTop + 60), "Check third row bounds");
 		
 		addImageToParagraph(paragraph, lField, tableTop, 50, 50);
 		
+		AscTest.SetCompatibilityMode(AscCommon.document_compatibility_mode_Word15);
+
 		AscTest.Recalculate();
 		assert.strictEqual(table.GetPagesCount(), 1, "Check table page count");
 		checkBounds(table.getRowBounds(0, 0), new AscWord.CDocumentBounds(lField, tableTop + 60, rField, tableTop + 80), "Check first row bounds");
-		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 80,  rField, tableTop + 100), "Check second row bounds");
-		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 100,  rField, tableTop + 120), "Check third row bounds");
+		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField, tableTop + 80, rField, tableTop + 100), "Check second row bounds");
+		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField, tableTop + 100, rField, tableTop + 120), "Check third row bounds");
 		
+		AscTest.SetCompatibilityMode(AscCommon.document_compatibility_mode_Word14);
+		
+		AscTest.Recalculate();
+		assert.strictEqual(table.GetPagesCount(), 1, "Check table page count");
+		checkBounds(table.getRowBounds(0, 0), new AscWord.CDocumentBounds(lField + 60, tableTop, rField, tableTop + 20), "Check first row bounds");
+		checkBounds(table.getRowBounds(1, 0), new AscWord.CDocumentBounds(lField + 60, tableTop + 20, rField, tableTop + 40), "Check second row bounds");
+		checkBounds(table.getRowBounds(2, 0), new AscWord.CDocumentBounds(lField + 60, tableTop + 40, rField, tableTop + 60), "Check third row bounds");
 	});
 	
 });

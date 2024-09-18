@@ -2255,7 +2255,7 @@ CTable.prototype.GetPageBounds = function(nCurPage)
 {
 	return this.Get_PageBounds(nCurPage);
 };
-CTable.prototype.getRowBounds = function(iRow, relPage)
+CTable.prototype.getRowBounds = function(iRow, relPage, offsetCorrection)
 {
 	let page = this.Pages[relPage];
 	let rowInfo = this.RowsInfo[iRow];
@@ -2265,10 +2265,23 @@ CTable.prototype.getRowBounds = function(iRow, relPage)
 		|| undefined === rowInfo.Y[relPage])
 		return new CDocumentBounds(0, 0, 0, 0);
 	
+	let lCorrection = this.GetTableOffsetCorrection();
+	let rCorrection = this.GetRightTableOffsetCorrection();
+	
+	if (offsetCorrection)
+	{
+		return new CDocumentBounds(
+			rowInfo.X0 + page.X_origin + lCorrection,
+			rowInfo.Y[relPage],
+			rowInfo.X1 + page.X_origin,
+			rowInfo.Y[relPage] + rowInfo.H[relPage]
+		);
+	}
+	
 	return new CDocumentBounds(
 		rowInfo.X0 + page.X_origin,
 		rowInfo.Y[relPage],
-		rowInfo.X1 + page.X_origin,
+		rowInfo.X1 + page.X_origin + lCorrection - rCorrection,
 		rowInfo.Y[relPage] + rowInfo.H[relPage]
 	);
 };
