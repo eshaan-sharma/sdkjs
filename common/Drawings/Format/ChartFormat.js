@@ -2437,6 +2437,12 @@
 	CDLbl.prototype.notAllowedWithoutId = function() {
 		return false;
 	};
+    CDLbl.prototype.getMaxContentWidth = function() {
+        if (!this.tx || !this.tx.rich || !this.getMaxContentWidth) {
+            return 0;
+        }
+        return this.tx.rich.getMaxContentWidth();
+    };
     CDLbl.prototype.Check_AutoFit = function() {
         return true;
     };
