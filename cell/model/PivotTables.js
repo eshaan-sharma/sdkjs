@@ -8591,7 +8591,7 @@ PivotRangeMapper.prototype.getEditPageFieldsLabelFunction = function(bbox) {
 				}
 				const findIndex = pivot.getFieldIndexByValue(text)
 				if (findIndex !== -1 && findIndex !== pivotIndex) {
-					pivot.asc_moveToPageField(pivot.worksheet.workbook.oApi, findIndex, undefined, index);
+					pivot.asc_moveToPageField(pivot.worksheet.workbook.oApi, findIndex, undefined, i);
 				} else {
 					const pivotFields =  pivot.asc_getPivotFields();
 					const pivotField = pivotFields[pivotIndex];

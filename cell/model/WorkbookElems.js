@@ -14585,16 +14585,21 @@ function RangeDataManagerElem(bbox, data)
 		var trueZoom = kF * AscCommon.AscBrowser.retinaPixelRatio;
 		var _height = Math.floor(height * kF);
 		var _width = Math.floor(width * kF);
+		var borderWidth = 1;
 		if (trueZoom !== this.pageZoom) {
 			this.pageZoom = trueZoom;
-			this.ctx.canvas.style.height = _height + 2 + "px";
-			this.ctx.canvas.style.width = _width + 2 + "px";
+			this.ctx.canvas.style.height = _height + "px";
+			this.ctx.canvas.style.width = _width + borderWidth * 2 + "px";
 			this.ctx.canvas.height = AscCommon.AscBrowser.convertToRetinaValue(_height, true);
 			this.ctx.canvas.width = AscCommon.AscBrowser.convertToRetinaValue(_width, true);
 			isChangeForZoom = true;
 		}
-		this.ctx.canvas.style.marginLeft = canvasWidth/2 - _width / 2 + "px";
-		this.ctx.canvas.style.marginTop = canvasHeight/2 - _height / 2 + canvasTopPadding * kF + "px";
+		this.ctx.canvas.style.marginLeft = Math.floor(canvasWidth/2 - _width / 2) + "px";
+		let topMargin = Math.floor(canvasHeight/2 - _height / 2 + canvasTopPadding * kF);
+		if (topMargin + _height > canvasHeight) {
+			topMargin = canvasHeight - _height;
+		}
+		this.ctx.canvas.style.marginTop = topMargin + "px";
 
 
 		kF = trueZoom;

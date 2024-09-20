@@ -952,7 +952,7 @@ ParaMath.prototype.Remove = function(Direction, bOnAddText)
                 this.Root.Remove_FromContent(0, 1);
                 return true;
             }
-            else if ((true === oElement.IsPlaceholder() && !bOnAddText) || (false === oElement.Remove(Direction) && true !== this.bSelectionUse))
+            else if ((true === oElement.IsPlaceholder() && !bOnAddText) || (false === oElement.IsPlaceholder() && false === oElement.Remove(Direction) && true !== this.bSelectionUse))
             {
                 if ((Direction > 0 && oContent.Content.length - 1 === nStartPos) || (Direction < 0 && 0 === nStartPos))
                 {
@@ -1141,6 +1141,13 @@ ParaMath.prototype.Remove = function(Direction, bOnAddText)
         }
         oContent.Correct_Content();
         oContent.Correct_ContentPos(Direction);
+
+		// если в контенте остался только плейсхолдер, то нам нужно выделить его
+		if (oContent.IsPlaceholder())
+		{
+			oContent.SelectThisElement(1);
+			oContent.SelectAll(1);
+		}
     }
 };
 
@@ -1305,9 +1312,9 @@ ParaMath.prototype.GetText = function(isLaTeX)
     return oMathText.GetText();
 };
 
-ParaMath.prototype.GetTextOfElement = function (isLaTeX)
+ParaMath.prototype.GetTextOfElement = function (isLaTeX, isDefaultText)
 {
-    return this.Root.GetTextOfElement(isLaTeX);
+    return this.Root.GetTextOfElement(isLaTeX, isDefaultText);
 };
 
 ParaMath.prototype.GetSelectDirection = function()
@@ -3180,34 +3187,34 @@ ParaMath.prototype.CalculateTextToTable = function(oEngine)
 };
 ParaMath.prototype.ConvertFromLaTeX = function()
 {
-	var oLaTeX = this.GetTextOfElement(true);
-    this.Root.Remove_Content(0, this.Root.Content.length);
-    this.Root.CurPos = 0;
-    AscMath.ConvertLaTeXToTokensList(oLaTeX, this.Root);
-    // this.Root.CorrectAllMathWords(true);
-    // this.Root.ConvertAllSpecialWords(true);
+	let oLaTeX = this.GetTextOfElement(true, true);
+	this.Root.Remove_Content(0, this.Root.Content.length);
+	this.Root.CurPos = 0;
+	AscMath.ConvertLaTeXToTokensList(oLaTeX, this.Root);
 	this.Root.Correct_Content(true);
     this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToLaTeX = function()
 {
 	let oLaTeXContent = this.GetTextOfElement(true);
-    oLaTeXContent.Flat(this.Root);
+	this.Root.Remove_Content(0,this.Root.Content.length);
+	this.Root.AddDataFromFlatMathTextAndStyles(oLaTeXContent.Flat());
 };
 ParaMath.prototype.ConvertFromUnicodeMath = function()
 {
 	let oUnicode = this.GetTextOfElement(false);
-	this.Root.Remove_Content(0,this.Root.Content.length);
-    this.Root.CurPos = 0;
+	this.Root.Remove_Content(0, this.Root.Content.length);
+	this.Root.CurPos = 0;
 	AscMath.CUnicodeConverter(oUnicode, this.Root);
 	this.Root.Correct_Content(true);
-    this.Root.CurPos++;
+	this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToUnicodeMath = function()
 {
 	let oUnicodeContent = this.GetTextOfElement(false);
-    oUnicodeContent.Flat(this.Root);
-    this.Paragraph.updateTrackRevisions();
+	this.Root.Remove_Content(0,this.Root.Content.length);
+	this.Root.AddDataFromFlatMathTextAndStyles(oUnicodeContent.Flat());
+	this.Paragraph.updateTrackRevisions();
 };
 ParaMath.prototype.ConvertView = function(isToLinear, nInputType)
 {
@@ -3266,12 +3273,6 @@ ParaMath.prototype._convertViewBySelection = function(isToLinear, nInputType)
         isToLinear
     );
 };
-ParaMath.prototype.SplitSelectedContent = function()
-{
-    var oSelection = this.GetSelectContent();
-    var oContent = oSelection.Content;
-    oContent.SplitSelectedContent();
-};
 ParaMath.prototype.CheckSpelling = function(oCollector, nDepth)
 {
 	if (oCollector.IsExceedLimit())
@@ -3311,7 +3312,10 @@ ParaMath.prototype.IsContentControlEquation = function()
 		&& parent.IsContentControlEquation()
 		&& parent.IsPlaceHolder());
 };
-
+ParaMath.prototype.ProcessingOldEquationConvert = function()
+{
+	this.Root.ProcessingOldEquationConvert();
+};
 
 function MatGetKoeffArgSize(FontSize, ArgSize)
 {

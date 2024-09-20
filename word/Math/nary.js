@@ -859,7 +859,7 @@ CNary.prototype.GetTextOfElement = function(oMathText)
 		{
 			oMathText.SetGlobalStyle(oLower);
 			let oLowerPos	= oMathText.Add(oLower, true,  2);
-			oMathText.AddBefore(oLowerPos, new AscMath.MathText(strStartCode, oMathText.GetStyleFromFirst()));
+			oMathText.AddBefore(oLowerPos, new AscMath.MathText(strStartCode, oBase));
 			oLowerPos		= oMathText.AddBefore(oLowerPos, new AscMath.MathText("_", oLower));
 		}
 
@@ -2429,7 +2429,7 @@ CClosedPathIntegral.prototype.drawGlyph = function(parameters)
 
     this.Parent.Make_ShdColor(PDSE, this.Parent.Get_CompiledCtrPrp());
 
-    if(pGraphics.Start_Command)
+    if(pGraphics.isSupportTextOutline())
     {
         for(var i = 0; i < CircleLng; i++)
         {

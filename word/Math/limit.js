@@ -343,9 +343,9 @@ CLimit.prototype.GetTextOfElement = function(oMathText)
 {
 	oMathText = new AscMath.MathTextAndStyles(oMathText);
 
-	let strLimitSymbol  = "";
-	let oFuncName       = this.getFName();
-	let oArgument       = this.getIterator();
+	let strLimitSymbol	= "";
+	let oFuncName		= this.getFName();
+	let oArgument		= this.getIterator();
 
 	if (oMathText.IsLaTeX())
 	{
@@ -353,7 +353,8 @@ CLimit.prototype.GetTextOfElement = function(oMathText)
 		oMathText.Add(oFuncName, false);
 		oMathText.AddText(new AscMath.MathText((this.Pr.type == 1) ? "\\above" : "\\below", oMathText.GetStyleFromFirst()));
 		oMathText.SetNotGetStyleFromFirst();
-		oMathText.Add(oArgument, true, 1);
+		// check when word fix bug, for now always wrap
+		oMathText.Add(oArgument, true, 2);
 	}
 	else
 	{
@@ -512,16 +513,21 @@ CMathFunc.prototype.fillContent = function()
 };
 CMathFunc.prototype.GetTextOfElement = function(oMathText)
 {
-	oMathText = new AscMath.MathTextAndStyles(oMathText);
-	let oFuncName = this.getFName();
-	let oArgument = this.getArgument();
+	oMathText		= new AscMath.MathTextAndStyles(oMathText);
+	let oFuncName	= this.getFName();
+	let oArgument	= this.getArgument();
 	oMathText.SetGlobalStyle(this);
 
 	if (oMathText.IsLaTeX())
 	{
-		let oArgPos = oMathText.Add(oArgument, true, 2);
-		let oNamePos = oMathText.AddBefore(oArgPos, oFuncName.GetTextOfElement(true));
-		oMathText.AddBefore(oNamePos, new AscMath.MathText("\\", oMathText.GetStyleFromFirst()));
+		let oArgPos					= oMathText.Add(oArgument, true, 2);
+
+		let oFuncNameContent		= oFuncName.GetTextOfElement(true);
+		let oSlashesTextForName		= new AscMath.MathText("\\", oMathText.GetStyleFromFirst());
+		let oFirstPosInNameContent	= oFuncNameContent.GetFirstPos();
+
+		oFuncNameContent.AddBefore(oFirstPosInNameContent, oSlashesTextForName);
+		oMathText.AddBefore(oArgPos, oFuncNameContent);
 	}
 	else
 	{

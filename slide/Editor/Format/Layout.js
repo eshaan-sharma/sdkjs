@@ -381,6 +381,8 @@ SlideLayout.prototype.getMaster = function(){
     SlideLayout.prototype.Reassign_ImageUrls = Slide.prototype.Reassign_ImageUrls;
     SlideLayout.prototype.checkDrawingUniNvPr = Slide.prototype.checkDrawingUniNvPr;
     SlideLayout.prototype.handleAllContents = Slide.prototype.handleAllContents;
+    SlideLayout.prototype.getAllRasterImagesForDraw = Slide.prototype.getAllRasterImagesForDraw;
+    SlideLayout.prototype.checkImageDraw = Slide.prototype.checkImageDraw;
 
     SlideLayout.prototype.recalculateBackground = function()
     {
@@ -451,13 +453,13 @@ SlideLayout.prototype.getMaster = function(){
         if(slide) {
             if(AscFormat.isRealNumber(slide.num) && slide.num !== this.lastRecalcSlideIndex) {
                 this.lastRecalcSlideIndex = slide.num;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
             }
         }
         else {
             if(-1 !== this.lastRecalcSlideIndex){
                 this.lastRecalcSlideIndex = -1;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
 
             }
         }
@@ -477,13 +479,13 @@ SlideLayout.prototype.getMaster = function(){
         if(slide) {
             if(AscFormat.isRealNumber(slide.num) && slide.num !== this.lastRecalcSlideIndex) {
                 this.lastRecalcSlideIndex = slide.num;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
             }
         }
         else {
             if(-1 !== this.lastRecalcSlideIndex){
                 this.lastRecalcSlideIndex = -1;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
 
             }
         }
@@ -499,14 +501,14 @@ SlideLayout.prototype.getMaster = function(){
         if(slide){
             if(AscFormat.isRealNumber(slide.num) && slide.num !== this.lastRecalcSlideIndex){
                 this.lastRecalcSlideIndex = slide.num;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
 
             }
         }
         else {
             if(-1 !== this.lastRecalcSlideIndex){
                 this.lastRecalcSlideIndex = -1;
-                this.cSld.refreshAllContentsFields();
+                this.cSld.refreshAllContentsFields(true);
 
             }
         }
@@ -832,7 +834,7 @@ SlideLayout.prototype.getMaster = function(){
         return AscCommonSlide.Slide.prototype.getPlaceholdersControls.call(this);
     };
     SlideLayout.prototype.getDrawingObjects = function() {
-        return AscCommonSlide.Slide.prototype.getPlaceholdersControls.call(this);
+        return AscCommonSlide.Slide.prototype.getDrawingObjects.call(this);
     };
     SlideLayout.prototype.showChartSettings = function () {
         return AscCommonSlide.Slide.prototype.showChartSettings.call(this);

@@ -4067,7 +4067,6 @@ CDelimiter.prototype.private_GetRightOperator = function(bHide)
 CDelimiter.prototype.GetTextOfElement = function(oMathText)
 {
 	oMathText = new AscMath.MathTextAndStyles(oMathText);
-	oMathText.IsBracket = true;
 
 	let strSeparatorSymbol	= oMathText.IsLaTeX() ? "\\mid" : "∣";
 	let strStartSymbol;
@@ -4117,6 +4116,23 @@ CDelimiter.prototype.GetTextOfElement = function(oMathText)
 
 		let oOpenText = new AscMath.MathText(strStartText, this);
 		oMathText.AddText(oOpenText);
+	}
+
+	// check for binom
+	if (oMathText.IsLaTeX()
+		&& strStartSymbol === "("
+		&& strEndSymbol === ")"
+		&& this.getColumnsCount() === 1
+		&& this.Content[0].Content.length === 3
+		&& this.Content[0].Content[0].Is_Empty()
+		&& this.Content[0].Content[2].Is_Empty()
+		&& this.Content[0].Content[1] instanceof CFraction
+		&& this.Content[0].Content[1].Pr.type === NO_BAR_FRACTION)
+	{
+		let oFirstPos = oMathText.GetFirstPos();
+		oMathText.RemoveByPos(oFirstPos);
+		oMathText.Add(this.Content[0], !oMathText.LaTeX);
+		return oMathText;
 	}
 
 	for (let intCount = 0; intCount < this.getColumnsCount(); intCount++)
@@ -4654,21 +4670,26 @@ CGroupCharacter.prototype.GetTextOfElement = function(oMathText)
 
 	if (oMathText.IsLaTeX())
 	{
-		if (nStartCode === 9182 || nStartCode === 9183)
+		if (AscMath.MathLiterals.hbrack.SearchU(strStart))
 		{
-			oPos = oMathText.Add(oBase, true, 1);
-
-			if (nStartCode === 9182)
-				strStart = '\\overbrace';
-			else if (nStartCode === 9183)
-				strStart = '\\underbrace';
-
+			strStart	= AscMath.SymbolsToLaTeX[strStart];
+			oPos		= oMathText.Add(oBase, true, 2);
 			oMathText.AddBefore(oPos, new AscMath.MathText(strStart, oMathText.GetStyleFromFirst()));
+		}
+		else if (AscMath.MathLiterals.horizontal.SearchU(strStart))
+		{
+			oMathText.AddText(new AscMath.MathText("{", oMathText.GetStyleFromFirst()));
+			strStart	= AscMath.MathLiterals.horizontal.Unicode[strStart]
+			strStart	+= this.Pr.pos === 1 ? "\\above" : "\\below";
+			oPos		= oMathText.Add(oBase, true, 1);
+			oMathText.AddBefore(oPos, new AscMath.MathText(strStart, oMathText.GetStyleFromFirst()));
+			oMathText.AddText(new AscMath.MathText("}", oMathText.GetStyleFromFirst()));
 		}
 		else
 		{
-			strStart += this.Pr.pos === 1 ? "\\above" : "\\below";
-			oPos = oMathText.Add(oBase, true, 1);
+			strStart	= AscMath.SymbolsToLaTeX[strStart];
+			strStart	+= this.Pr.pos === 1 ? "\\above" : "\\below";
+			oPos		= oMathText.Add(oBase, true, 1);
 			oMathText.AddBefore(oPos, new AscMath.MathText(strStart, oMathText.GetStyleFromFirst()));
 		}
 	}

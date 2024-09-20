@@ -1198,9 +1198,7 @@
 	{
 		this.Element		= oElement;
 		this.Controller		= null;
-		this.Start			= undefined;
-		this.End 		 	= undefined;
-		this.isEmpty 		= true;
+		this.isEmpty 		= false;
 		this.Paragraphs 	= [];
 		this.Text 			= undefined;
 		this.oDocument		= editor.GetDocument();
@@ -1208,19 +1206,22 @@
 		this.StartPos		= null;
 		this.TextPr 		= new CTextPr();
 
-		this.private_SetRangePos(Start, End);
-		this.private_CalcDocPos();
+		if (Array.isArray(Start) && Array.isArray(End))
+		{
+			this.StartPos = Start;
+			this.EndPos = End;
+		}
+		else
+			this.private_UpdateDocPos(Start, End);
 
 		if (this.StartPos === null || this.EndPos === null)
-			return false;
-		else 
-			this.isEmpty = false;
-
-		this.private_SetController();
+		{
+			this.isEmpty = true;
+			return;
+		}
 		
-		this.Text 		= this.GetText();
-		this.Paragraphs = this.GetAllParagraphs();
-
+		this.private_CheckController();
+		
 		private_RefreshRangesPosition();
 		arrApiRanges.push(this);
 		this.private_RemoveEqual();
@@ -1228,134 +1229,139 @@
 	}
 
 	ApiRange.prototype.constructor = ApiRange;
-	ApiRange.prototype.private_SetRangePos = function(Start, End)
+	
+	ApiRange.prototype.private_UpdateDocPos = function(nStartPos, nEndPos)
 	{
-		function calcSumChars(oRun)
-		{
-			var nRangePos = 0;
+		function correctPositions(oElement) {
+			let nPosCount = 0;
+			let isFirstRun = true;
 
-			var nCurPos = oRun.Content.length;
-			
-			for (var nPos = 0; nPos < nCurPos; ++nPos)
+			function calcSumPos(oRun)
 			{
-				if (para_Text === oRun.Content[nPos].Type || para_Space === oRun.Content[nPos].Type || para_Tab === oRun.Content[nPos].Type || para_NewLine === oRun.Content[nPos].Type || para_End === oRun.Content[nPos].Type)
+				let nRangePos = 0;
+
+				if (false == isFirstRun)
+					nPosCount++;
+				if (isFirstRun)
+					isFirstRun = false;
+
+				let nCurPos = oRun.Content.length;
+				
+				for (let nPos = 0; nPos < nCurPos; ++nPos)
 					nRangePos++;
+
+				if (nRangePos !== 0)
+					nPosCount += nRangePos;
 			}
 
-			if (nRangePos !== 0)
-				charsCount += nRangePos;
-		}
-
-		if (typeof(Start) == "number" && typeof(End) == "number" && Start > End)
-		{
-			var temp	= Start;
-			Start		= End;
-			End			= temp;
-		}
-		
-		if (Start === undefined)
-			this.Start = 0;
-		else if (typeof(Start) === "number")
-			this.Start = Start
-		else if (Array.isArray(Start) === true)
-			this.StartPos = Start;
-
-		if (End === undefined)
-		{
-			this.End 		= 0;
-			var charsCount 	= 0;
-
-			this.Element.CheckRunContent(calcSumChars);
+			if (typeof(nStartPos) == "number" && typeof(nEndPos) == "number" && nStartPos > nEndPos)
+			{
+				let temp	= nStartPos;
+				nStartPos	= nEndPos;
+				nEndPos			= temp;
+				return;
+			}
 			
-			this.End = charsCount;
-		}
-		else if (typeof(End) === "number")
-			this.End = End;
-		else if (Array.isArray(End) === true)
-			this.EndPos = End;
-	};
-	ApiRange.prototype.private_CalcDocPos = function()
-	{
-		if (this.StartPos || this.EndPos)
-			return;
+			if (nStartPos === undefined)
+				nStartPos = 0;
 
-		var isStartDocPosFinded = false;
-		var isEndDocPosFinded	= false;
-		var StartChar			= this.Start;
-		var EndChar				= this.End;
-		var StartPos			= null;
-		var EndPos				= null;
-		var charsCount 			= 0;
-		var DocPos, DocPosInRun;
+			if (nEndPos === undefined)
+			{
+				oElement.CheckRunContent(calcSumPos);
+				nEndPos = nPosCount;
+			}
+		}
+		correctPositions(this.Element);
+
+		let isStartDocPosFinded = false;
+		let isEndDocPosFinded	= false;
+		let aStartDocPos		= null;
+		let aEndDocPos			= null;
+		let isFirstRun			= true;
+		let offsetPos 			= 0;
+		let aDocPos, oDocPosInRun;
 
 		function callback(oRun)
 		{
-			var nCurPos = oRun.Content.length;
-			for (var nPos = 0; nPos < nCurPos; ++nPos)
-			{
-				if (para_Text === oRun.Content[nPos].Type || para_Space === oRun.Content[nPos].Type || para_Tab === oRun.Content[nPos].Type || para_NewLine === oRun.Content[nPos].Type || para_End === oRun.Content[nPos].Type)
-					charsCount++;
+			let nPosInRun = 0;
+			if (false == isFirstRun) {
+				offsetPos++;
+			}
+			if (isFirstRun) {
+				isFirstRun = false;
+			}
 
-				if (StartChar - (charsCount - 1) === 0 && !isStartDocPosFinded)
+			checkDone(nPosInRun);
+
+			function checkDone(nPosInRun) {
+				if (nStartPos === offsetPos && !isStartDocPosFinded)
 				{
-					DocPosInRun =
+					oDocPosInRun =
 					{
 						Class : oRun,
-						Position : nPos,
+						Position : nPosInRun
 					};
 		
-					DocPos = oRun.GetDocumentPositionFromObject();
+					aDocPos = oRun.GetDocumentPositionFromObject();
 		
-					DocPos.push(DocPosInRun);
+					aDocPos.push(oDocPosInRun);
 		
-					StartPos = DocPos;
+					aStartDocPos = aDocPos;
 
 					isStartDocPosFinded = true;
 				}
-				
-				if (EndChar - charsCount === 0 && !isEndDocPosFinded)
+					
+				if (nEndPos === offsetPos && !isEndDocPosFinded)
 				{
-					DocPosInRun =
+					oDocPosInRun =
 					{
 						Class : oRun,
-						Position : nPos + 1,
+						Position : nPosInRun
 					};
 		
-					DocPos = oRun.GetDocumentPositionFromObject();
+					aDocPos = oRun.GetDocumentPositionFromObject();
 		
-					DocPos.push(DocPosInRun);
+					aDocPos.push(oDocPosInRun);
 		
-					EndPos = DocPos;
+					aEndDocPos = aDocPos;
 
 					isEndDocPosFinded = true;
 				}
 			}
+
+			for (nPosInRun = 0; nPosInRun < oRun.Content.length; ++nPosInRun)
+			{
+				offsetPos++;
+				checkDone(nPosInRun + 1);
+			}
+
+			checkDone(nPosInRun);
 		}
 
 		if (this.Element instanceof CDocument || this.Element instanceof CDocumentContent || this.Element instanceof CTable || this.Element instanceof CBlockLevelSdt)
 		{
-			var allParagraphs	= this.Element.GetAllParagraphs({OnlyMainDocument : true, All : true});
+			let allParagraphs	= this.Element.GetAllParagraphs({OnlyMainDocument : true, All : true});
 
-			for (var paraItem = 0; paraItem < allParagraphs.length; paraItem++)
+			for (let paraItem = 0; paraItem < allParagraphs.length; paraItem++)
 			{
 				if (isStartDocPosFinded && isEndDocPosFinded)
 					break;
 				else 
 					allParagraphs[paraItem].CheckRunContent(callback);
 
-					this.StartPos	= StartPos;
-					this.EndPos		= EndPos;
+					this.StartPos	= aStartDocPos;
+					this.EndPos		= aEndDocPos;
 			}
 		}
 		else if (this.Element instanceof Paragraph || this.Element instanceof ParaHyperlink || this.Element instanceof CInlineLevelSdt || this.Element instanceof ParaRun)
 		{
 			this.Element.CheckRunContent(callback);
 			
-			this.StartPos	= StartPos;
-			this.EndPos		= EndPos;
+			this.StartPos	= aStartDocPos;
+			this.EndPos		= aEndDocPos;
 		}
 	};
-	ApiRange.prototype.private_SetController = function()
+	ApiRange.prototype.private_CheckController = function()
 	{
 		if (this.StartPos[0].Class.IsHdrFtr())
 		{
@@ -1963,9 +1969,7 @@
 		}
 
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Bold : isBold});
-
 		this.Controller.AddToParagraph(ParaTextPr);
-		this.TextPr.Merge(ParaTextPr.Value);
 
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
@@ -2009,7 +2013,6 @@
 
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Caps : isCaps});
 		Document.AddToParagraph(ParaTextPr);
-		this.TextPr.Merge(ParaTextPr.Value);
 
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
@@ -2082,8 +2085,6 @@
 			Document.AddToParagraph(ParaTextPr);
 		}
 
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2127,8 +2128,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({DStrikeout : isDoubleStrikeout});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2185,8 +2184,6 @@
 			TextPr = new ParaTextPr({HighLight : color});
 			Document.AddToParagraph(TextPr);
 		}
-
-		this.TextPr.Merge(TextPr.Value);
 
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
@@ -2279,8 +2276,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Italic : isItalic});
 		Document.AddToParagraph(ParaTextPr);
 
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2327,8 +2322,6 @@
 			});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2376,8 +2369,6 @@
 		});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2421,8 +2412,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Spacing : nSpacing});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2467,7 +2456,6 @@
 
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Underline : isUnderline});
 		Document.AddToParagraph(ParaTextPr);
-		this.TextPr.Merge(ParaTextPr.Value);
 
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
@@ -2526,8 +2514,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({VertAlign : value});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2576,8 +2562,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({Position : nPosition});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2621,8 +2605,6 @@
 		var ParaTextPr = new AscCommonWord.ParaTextPr({FontSize : FontSize});
 		Document.AddToParagraph(ParaTextPr);
 		
-		this.TextPr.Merge(ParaTextPr.Value);
-
 		Document.LoadDocumentState(oldSelectionInfo);
 		Document.UpdateSelection();
 
@@ -2685,8 +2667,6 @@
 			var ParaTextPr = new AscCommonWord.ParaTextPr({FontFamily : FontFamily});
 			Document.AddToParagraph(ParaTextPr);
 			
-			oThis.TextPr.Merge(ParaTextPr.Value);
-
 			Document.LoadDocumentState(oldSelectionInfo);
 			Document.UpdateSelection();
 		}
@@ -2902,17 +2882,38 @@
 		if (typeof(sAuthor) !== "string")
 			sAuthor = "";
 		
+		private_RefreshRangesPosition();
+		private_RemoveEmptyRanges();
+
 		let CommentData = private_CreateCommentData({
 			text: sText,
 			author: sAuthor,
 			userId: sUserId
 		});
 
-		var documentState = oDocument.SaveDocumentState();
-		this.Select();
+		let oldDocumentState = oDocument.SaveDocumentState();
+		
+		this.Select(false);
+		if (this.isEmpty || this.isEmpty === undefined)
+		{
+			oDocument.LoadDocumentState(oldDocumentState);
+			return null;
+		}
+
+		private_TrackRangesPositions();
+
+		let SelectedContent = oDocument.GetSelectedElementsInfo({CheckAllSelection : true});
+		if (!SelectedContent.CanEditBlockSdts() || !SelectedContent.CanDeleteInlineSdts())
+		{
+			oDocument.LoadDocumentState(oldDocumentState);
+			oDocument.UpdateSelection();
+
+			return null;
+		}
 
 		let comment = AddCommentToDocument(oDocument, CommentData);
-		oDocument.LoadDocumentState(documentState);
+
+		oDocument.LoadDocumentState(oldDocumentState);
 		oDocument.UpdateSelection();
 		return comment;
 	};
@@ -3001,11 +3002,11 @@
 						Position : nPos,
 					};
 		
-					let DocPos = oRun.GetDocumentPositionFromObject();
+					let aDocPos = oRun.GetDocumentPositionFromObject();
 		
-					DocPos.push(DocPosInRun);
+					aDocPos.push(DocPosInRun);
 		
-					newStartPos = DocPos;
+					newStartPos = aDocPos;
 
 					isStartDocPosFinded = true;
 					tempCharsCount = 1; // теперь считаем кол-во символов от стартового в Range. Конец Range будет через nCharsNewRange символов.
@@ -3019,10 +3020,10 @@
 						Position : nPos + 1,
 					};
 		
-					let DocPos = oRun.GetDocumentPositionFromObject();
-					DocPos.push(DocPosInRun);
+					let aDocPos = oRun.GetDocumentPositionFromObject();
+					aDocPos.push(DocPosInRun);
 		
-					newEndPos = DocPos;
+					newEndPos = aDocPos;
 					isEndDocPosFinded = true;
 				}
 			}
@@ -3088,6 +3089,142 @@
 		
 		return oPosXY.Page;
 	};
+
+	/**
+	 * Sets the start position of a current range object.
+	 * @memberof ApiRange
+	 * @param {Number} nPos - start position
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiRange.prototype.SetStartPos = function(nPos)
+	{
+		let nEndPos = this.GetEndPos();
+		this.private_UpdateDocPos(nPos, nEndPos);
+		return true;
+	};
+
+	/**
+	 * Sets the start position of a current range object.
+	 * @memberof ApiRange
+	 * @param {Number} nPos - end position
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiRange.prototype.SetEndPos = function(nPos)
+	{
+		let nStartPos = this.GetStartPos();
+		this.private_UpdateDocPos(nStartPos, nPos);
+		return true;
+	};
+
+	/**
+	 * Returns the start position of a current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CDE"]
+	 * @returns {number}
+	 */
+	ApiRange.prototype.GetStartPos = function() {
+		private_RefreshRangesPosition();
+		private_RemoveEmptyRanges();
+
+		let isFirstRun	= true;
+		let oRunEnd		= this.StartPos[this.StartPos.length - 1].Class;
+		let oRunEndPos	= this.StartPos[this.StartPos.length - 1].Position;
+
+		let isEndPosFounded = false;
+		let nEndCharPos = 0;
+
+		function calcEndPos(oRun)
+		{
+			if (isEndPosFounded)
+				return;
+
+			if (false == isFirstRun) {
+				nEndCharPos++;
+			}
+			if (isFirstRun) {
+				isFirstRun = false;
+			}
+
+			if (oRun == oRunEnd) {
+				isEndPosFounded = true;
+			}
+				
+			let nEndPos = oRun.Content.length;
+			if (oRun == oRunEnd)
+				nEndPos = oRunEndPos;
+
+			for (let nPos = 0; nPos < nEndPos; ++nPos)
+				nEndCharPos++;
+		}
+
+		this.Element.CheckRunContent(calcEndPos);
+		return nEndCharPos;
+	};
+
+	Object.defineProperty(ApiRange.prototype, "Start", {
+		get: function () {
+			return this.GetStartPos();
+		},
+		set: function(nPos) {
+			return this.SetStartPos(nPos);
+		}
+	});
+
+	/**
+	 * Returns the end position of a current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CDE"]
+	 * @returns {number}
+	 */
+	ApiRange.prototype.GetEndPos = function() {
+		private_RefreshRangesPosition();
+		private_RemoveEmptyRanges();
+		
+		let isFirstRun	= true;
+		let oRunEnd		= this.EndPos[this.EndPos.length - 1].Class;
+		let oRunEndPos	= this.EndPos[this.EndPos.length - 1].Position;
+
+		let isEndPosFounded = false;
+		let nEndCharPos = 0;
+
+		function calcEndPos(oRun)
+		{
+			if (isEndPosFounded)
+				return;
+
+			if (false == isFirstRun) {
+				nEndCharPos++;
+			}
+			if (isFirstRun) {
+				isFirstRun = false;
+			}
+
+			if (oRun == oRunEnd) {
+				isEndPosFounded = true;
+			}
+				
+			let nEndPos = oRun.Content.length;
+			if (oRun == oRunEnd)
+				nEndPos	= oRunEndPos;
+
+			for (let nPos = 0; nPos < nEndPos; ++nPos)
+				nEndCharPos++;
+		}
+
+		this.Element.CheckRunContent(calcEndPos);
+		return nEndCharPos;
+	};
+	
+	Object.defineProperty(ApiRange.prototype, "End", {
+		get: function () {
+			return this.GetEndPos();
+		},
+		set: function(nPos) {
+			return this.SetEndPos(nPos);
+		}
+	});
 
 	/**
 	 * Class representing a document.
@@ -5287,7 +5424,7 @@
 				oElement instanceof ApiBlockLvlSdt || oElement instanceof ApiInlineLvlSdt || oElement instanceof ApiTable ||
 				oElement instanceof ApiRun)
 				{
-					return oElement.AddComment(sText, sAuthor);
+					return oElement.AddComment(sText, sAuthor, sUserId);
 				}
 		}
 		// Проверка на массив с ранами
@@ -6900,6 +7037,17 @@
 		}
 	};
 	/**
+	 * Updates all fields in the document
+	 * @memberof ApiDocument
+	 * @typeofeditors ["CDE"]
+	 * @param {boolean} [bBySelection=false] - update all fields within selection
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/UpdateAllFields.js
+	 */
+	ApiDocument.prototype.UpdateAllFields = function(bBySelection)
+	{
+		this.Document.UpdateFields(bBySelection);
+	};
+	/**
 	 * Converts the ApiDocument object into the JSON object.
 	 * @memberof ApiDocument
 	 * @typeofeditors ["CDE"]
@@ -7158,7 +7306,7 @@
      * @returns {ApiShape[] | ApiImage[] | ApiChart[] | ApiDrawing[]}
      * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetSelectedDrawings.js
 	 */
-	ApiDocument.prototype.GetSelectedDrawings = function() 
+	ApiDocument.prototype.GetSelectedDrawings = function()
 	{
 		var aSelected = this.Document.DrawingObjects.selectedObjects;
 		var aResult = [];
@@ -9790,11 +9938,11 @@
 		if (this.GetParentContentControl() instanceof ApiInlineLvlSdt)
 			return null;
 
-		function find_parentParaDepth(DocPos)
+		function find_parentParaDepth(aDocPos)
 		{
-			for (var nPos = 0; nPos < DocPos.length; nPos++)
+			for (var nPos = 0; nPos < aDocPos.length; nPos++)
 			{
-				if (DocPos[nPos].Class instanceof Paragraph && DocPos[nPos].Class.Id === parentPara.Id)
+				if (aDocPos[nPos].Class instanceof Paragraph && aDocPos[nPos].Class.Id === parentPara.Id)
 				{
 					return nPos;
 				}
@@ -11151,22 +11299,22 @@
 	{
 		var Document = private_GetLogicDocument();
 		
-		var DocPos = this.Table.GetDocumentPositionFromObject();
+		var aDocPos = this.Table.GetDocumentPositionFromObject();
 		
-		if (DocPos[0].Position === - 1)
+		if (aDocPos[0].Position === - 1)
 			return false;
 
 		var controllerType;
 
-		if (DocPos[0].Class.IsHdrFtr())
+		if (aDocPos[0].Class.IsHdrFtr())
 		{
 			controllerType = docpostype_HdrFtr;
 		}
-		else if (DocPos[0].Class.IsFootnote())
+		else if (aDocPos[0].Class.IsFootnote())
 		{
 			controllerType = docpostype_Footnotes;
 		}
-		else if (DocPos[0].Class.Is_DrawingShape())
+		else if (aDocPos[0].Class.Is_DrawingShape())
 		{
 			controllerType = docpostype_DrawingObjects;
 		}
@@ -11174,7 +11322,7 @@
 		{
 			controllerType = docpostype_Content;
 		}
-		DocPos[0].Class.CurPos.ContentPos = DocPos[0].Position;
+		aDocPos[0].Class.CurPos.ContentPos = aDocPos[0].Position;
 		Document.SetDocPosType(controllerType);
 		Document.SelectTable(3);
 
@@ -21419,6 +21567,10 @@
 	ApiRange.prototype["GetRange"]                   = ApiRange.prototype.GetRange;
 	ApiRange.prototype["GetStartPage"]               = ApiRange.prototype.GetStartPage;
 	ApiRange.prototype["GetEndPage"]                 = ApiRange.prototype.GetEndPage;
+	ApiRange.prototype["SetStartPos"]                = ApiRange.prototype.SetStartPos;
+	ApiRange.prototype["SetEndPos"]                  = ApiRange.prototype.SetEndPos;
+	ApiRange.prototype["GetStartPos"]                = ApiRange.prototype.GetStartPos;
+	ApiRange.prototype["GetEndPos"]                  = ApiRange.prototype.GetEndPos;
 
 	ApiDocument.prototype["GetClassType"]                = ApiDocument.prototype.GetClassType;
 	ApiDocument.prototype["CreateNewHistoryPoint"]       = ApiDocument.prototype.CreateNewHistoryPoint;
@@ -21483,12 +21635,13 @@
 	ApiDocument.prototype["ReplaceDrawing"]              = ApiDocument.prototype.ReplaceDrawing;
 	ApiDocument.prototype["AcceptAllRevisionChanges"]    = ApiDocument.prototype.AcceptAllRevisionChanges;
 	ApiDocument.prototype["RejectAllRevisionChanges"]    = ApiDocument.prototype.RejectAllRevisionChanges;
-
+	
 	ApiDocument.prototype["ToJSON"]                  = ApiDocument.prototype.ToJSON;
-	ApiDocument.prototype["UpdateAllTOC"]		     = ApiDocument.prototype.UpdateAllTOC;
-	ApiDocument.prototype["UpdateAllTOF"]		     = ApiDocument.prototype.UpdateAllTOF;
-	ApiDocument.prototype["AddTableOfContents"]		 = ApiDocument.prototype.AddTableOfContents;
-	ApiDocument.prototype["AddTableOfFigures"]		 = ApiDocument.prototype.AddTableOfFigures;
+	ApiDocument.prototype["UpdateAllTOC"]            = ApiDocument.prototype.UpdateAllTOC;
+	ApiDocument.prototype["UpdateAllTOF"]            = ApiDocument.prototype.UpdateAllTOF;
+	ApiDocument.prototype["UpdateAllFields"]         = ApiDocument.prototype.UpdateAllFields;
+	ApiDocument.prototype["AddTableOfContents"]      = ApiDocument.prototype.AddTableOfContents;
+	ApiDocument.prototype["AddTableOfFigures"]       = ApiDocument.prototype.AddTableOfFigures;
 
 	ApiDocument.prototype["GetAllForms"]             = ApiDocument.prototype.GetAllForms;
 	ApiDocument.prototype["ClearAllFields"]          = ApiDocument.prototype.ClearAllFields;

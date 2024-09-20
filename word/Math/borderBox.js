@@ -591,7 +591,7 @@ CBorderBox.prototype.GetTextOfElement = function(oMathText)
 
 	if (oMathText.IsLaTeX())
 	{
-		let oPos = oMathText.Add(oBase, true);
+		let oPos = oMathText.Add(oBase, true, 1);
 		oMathText.AddBefore(oPos, new AscMath.MathText("\\rect", oMathText.GetStyleFromFirst()));
 	}
 	else
@@ -599,7 +599,7 @@ CBorderBox.prototype.GetTextOfElement = function(oMathText)
 		let oBoxStr = new AscMath.MathText("▭", this)
 		oMathText.AddText(oBoxStr);
 		oMathText.SetGlobalStyle(this, true);
-		oMathText.Add(oBase, true)
+		oMathText.Add(oBase, true, 2)
 	}
 
 	return oMathText;
@@ -1030,7 +1030,7 @@ CBox.prototype.GetTextOfElement = function(oMathText)
 	{
 		oMathText.AddText(new AscMath.MathText("□", this));
 		oMathText.SetGlobalStyle(this);
-		oMathText.Add(oBase, true);
+		oMathText.Add(oBase, true, 2);
 	}
 	return oMathText;
 };
@@ -1198,13 +1198,13 @@ CBar.prototype.raw_SetLinePos = function(Value)
  */
 CBar.prototype.GetTextOfElement = function(oMathText)
 {
-	oMathText = new AscMath.MathTextAndStyles(oMathText);
+	oMathText	= new AscMath.MathTextAndStyles(oMathText);
 
-	let oBase       = this.getBase();
+	let oBase	= this.getBase();
 
 	if (oMathText.IsLaTeX())
 	{
-		let oBasePos = oMathText.Add(oBase, true, 1);
+		let oBasePos = oMathText.Add(oBase, true, 2);
 		oMathText.AddBefore(oBasePos, new AscMath.MathText((this.Pr.pos) ? "\\underline" : "\\overline", oMathText.GetStyleFromFirst()));
 	}
 	else

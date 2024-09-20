@@ -1998,6 +1998,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
             oGraphic = drawingObject.graphicObject;
             oGraphic.setDrawingBase(drawingObject);
             oGraphic.setDrawingObjects(_this);
+						oGraphic.generateLocalDrawingPart();
             oGraphic.getAllRasterImages(aImagesSync);
         }
         aImagesSync = _this.checkImageBullets(currentSheet, aImagesSync);

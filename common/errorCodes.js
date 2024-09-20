@@ -168,6 +168,7 @@
 			PivotWithoutUnderlyingData	: -316,
 			PivotFieldNameExists        : -317,
 			FormulaInPivotFieldName     : -318,
+			PasteInPivot                : -319,
 
 			CircularReference			: -320,
 
@@ -361,6 +362,8 @@
 	prot['LockCreateDefName']                = prot.LockCreateDefName;
 	prot['LockedCellPivot']                  = prot.LockedCellPivot;
 	prot['PivotFieldNameExists']             = prot.PivotFieldNameExists;
+	prot['FormulaInPivotFieldName']          = prot.FormulaInPivotFieldName;
+	prot['PasteInPivot']                     = prot.PasteInPivot;
 	prot['PivotLabledColumns']               = prot.PivotLabledColumns;
 	prot['PivotOverlap']                     = prot.PivotOverlap;
 	prot['PivotGroup']                       = prot.PivotGroup;
@@ -421,6 +424,7 @@
 	prot['TraceDependentsNoFormulas']        = prot.TraceDependentsNoFormulas;
 	prot['TracePrecedentsNoValidReference']  = prot.TracePrecedentsNoValidReference;
 	prot['MustIntegerOrDecimalNumber']       = prot.MustIntegerOrDecimalNumber;
+	prot['DocumentAndChangeMismatch']        = prot.DocumentAndChangeMismatch;
 
 
 

@@ -80,7 +80,7 @@ var c_oChartBar3dFaces =
 
 var globalGapDepth = 150;
 var isTurnOn3DCharts = true;
-var standartMarginForCharts = 13;
+var standartMarginForCharts = 15;
 
 function arrReverse(arr) {
 	if(!arr || !arr.length)
@@ -214,16 +214,16 @@ CChartsDrawer.prototype =
 		this.charts = {};
 		switch (seria.layoutId) {
 			case AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN :
-				this.charts[null] = new drawHistogramChart(seria, this)
+				this.charts.chartEx= new drawHistogramChart(seria, this)
 				break
 			case AscFormat.SERIES_LAYOUT_WATERFALL :
-				this.charts[null] = new drawWaterfallChart(seria, this)
+				this.charts.chartEx = new drawWaterfallChart(seria, this)
 				break
 			case AscFormat.SERIES_LAYOUT_FUNNEL :
-				this.charts[null] = new drawFunnelChart(seria, this)
+				this.charts.chartEx = new drawFunnelChart(seria, this)
 				break
 			default :
-				this.charts[null] = null;
+				this.charts.chartEx = null;
 		}
 	},
 
@@ -683,8 +683,8 @@ CChartsDrawer.prototype =
 	{
 		let res = null;
 		if (obj.showChartExVal) {
-			if (this.charts && this.charts.null) {
-				res = this.charts.null._calculateDLbl(obj);
+			if (this.charts && this.charts.chartEx) {
+				res = this.charts.chartEx._calculateDLbl(obj);
 			}
 		} else {
 			var chartSpace = obj.chart;
@@ -1463,11 +1463,12 @@ CChartsDrawer.prototype =
 		//считаем маргины
 		this._calculateMarginsChart(chartSpace);
 
-		const isLayout = this.cChartSpace.isLayout();
-		// layour should not affect for circular charts
+		// check if diagmar size affected by layout
+		const isLayoutSizes = this.cChartSpace.isLayoutSizes();
 
+		// layour should not affect for circular charts
 		let isCircular = false;
-		if (isLayout && chartSpace && chartSpace.chart && chartSpace.chart.plotArea && Array.isArray(chartSpace.chart.plotArea.charts)) {
+		if (isLayoutSizes && chartSpace && chartSpace.chart && chartSpace.chart.plotArea && Array.isArray(chartSpace.chart.plotArea.charts)) {
 			const charts = chartSpace.chart.plotArea.charts;
 			for (let i = 0; i < charts.length; i++) {
 				const typeChart = charts[0].getObjectType();
@@ -1475,7 +1476,7 @@ CChartsDrawer.prototype =
 			}
 		}
 		
-		if (isLayout && !isCircular) {
+		if (isLayoutSizes && !isCircular) {
 			this.calcProp.trueWidth = this.cChartSpace.chart.plotArea.extX * this.calcProp.pxToMM;
 			this.calcProp.trueHeight = this.cChartSpace.chart.plotArea.extY * this.calcProp.pxToMM;
 			this.calcProp.chartGutter._top = this.cChartSpace.chart.plotArea.y * this.calcProp.pxToMM;
@@ -2230,7 +2231,7 @@ CChartsDrawer.prototype =
 		}
 		
 		if (isNaN(step) || step === 0) {
-			if (manualMax <= 0) {
+			if (AscFormat.isRealNumber(manualMax) && manualMax <= 0) {
 				arrayValues = [-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0];
 			} else {
 				arrayValues = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
@@ -2323,8 +2324,15 @@ CChartsDrawer.prototype =
 					var firstDegreeStep = this._getFirstDegree(newStep);
 					var tempStep = this._getNextStep(firstDegreeStep.val);
 					newStep = tempStep * firstDegreeStep.numPow;
-					res = this._getArrayDataValues(newStep, axisMin, axisMax, manualMin, manualMax);
+					const newRes = this._getArrayDataValues(newStep, axisMin, axisMax, manualMin, manualMax);
 
+					//new array cannot be generated from broken data, example: step is NaN
+					if (!newRes) {
+						break;
+					}
+
+					//after we checked that newRes is working array substitute res
+					res = newRes;
 					if (res.length <= 2) {
 						break;
 					}
@@ -2353,7 +2361,7 @@ CChartsDrawer.prototype =
 
 	_getArrayDataValues: function (step, axisMin, axisMax, manualMin, manualMax, isRadarChart) {
 		if (!AscFormat.isRealNumber(axisMin) || !AscFormat.isRealNumber(axisMax) || !AscFormat.isRealNumber(step)) {
-			return [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+			return null;
 		}
 
 		var arrayValues;
@@ -3097,12 +3105,15 @@ CChartsDrawer.prototype =
 			this._calculateMarginsChart(chartSpace);
 		}
 
+		if (!this.calcProp.chartGutter.left && !this.calcProp.chartGutter.right && !this.calcProp.chartGutter._bottom && !this.calcProp.chartGutter.top) {
+			this._calculateMarginsChart(chartSpace);
+		}
+
 		var widthCanvas = chartSpace.extX;
 		var heightCanvas = chartSpace.extY;
 		
 		var w = widthCanvas - (this.calcProp.chartGutter._left + this.calcProp.chartGutter._right) / this.calcProp.pxToMM;
 		var h = heightCanvas - (this.calcProp.chartGutter._top + this.calcProp.chartGutter._bottom) / this.calcProp.pxToMM;
-		
 
         return {w: w , h: h , startX: this.calcProp.chartGutter._left / this.calcProp.pxToMM, startY: this.calcProp.chartGutter._top / this.calcProp.pxToMM};
 	},
@@ -16584,9 +16595,9 @@ plotAreaChart.prototype =
 		var px = 1/this.chartProp.pxToMM;
 		var plotAreaPoints = this.cChartDrawer.getPlotAreaPoints();
 		var left = plotAreaPoints.left - px;
-		var right = plotAreaPoints.right - px;
+		var right = plotAreaPoints.right;
 		var top = plotAreaPoints.top - px;
-		var bottom = plotAreaPoints.bottom - px;
+		var bottom = plotAreaPoints.bottom;
 		
 		path.moveTo(left * pathW, bottom * pathH);
 		path.lnTo(right * pathW, bottom * pathH);

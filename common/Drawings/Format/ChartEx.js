@@ -282,6 +282,9 @@ function (window, undefined) {
 	CAxis.prototype.isValuesAxis = function () {
 		return (this.scaling instanceof CValueAxisScaling);
 	};
+	CAxisBase.prototype.isChartExCat = function() {
+		return (this.scaling instanceof CCategoryAxisScaling);
+	};
 
 	// AxisUnits
 	drawingsChangesMap[AscDFH.historyitem_AxisUnits_SetUnitsLabel] = function (oClass, value) {

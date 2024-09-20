@@ -1583,8 +1583,19 @@
 				this._broadcastRanges(notifyData);
 			}
 			this._broadcastCellsEnd();
-
-			this._calculateDirty();
+			do {
+				this._calculateDirty();
+				if (g_cCalcRecursion.getIsEnabledRecursion()) {
+					g_cCalcRecursion.incIterStep();
+				}
+			} while (g_cCalcRecursion.needRecursiveCall());
+			g_cCalcRecursion.resetIterStep();
+			g_cCalcRecursion.setStartCellIndex(null);
+			g_cCalcRecursion.setGroupChangedCells(null);
+			g_cCalcRecursion.clearPrevIterResult();
+			g_cCalcRecursion.clearDiffBetweenIter();
+			this.changedCell = null;
+			this.changedRange = null;
 			this.updateSharedFormulas();
 			//copy cleanCellCache to prevent recursion in trigger("cleanCellCache")
 			var tmpCellCache = this.cleanCellCache;
@@ -2012,20 +2023,6 @@
 					}
 				}
 			});
-			if (g_cCalcRecursion.needRecursiveCall()) {
-				g_cCalcRecursion.incIterStep();
-				this._calculateDirty();
-			} else {
-				g_cCalcRecursion.resetIterStep();
-				g_cCalcRecursion.setStartCellIndex(null);
-				g_cCalcRecursion.setGroupChangedCells(null);
-				g_cCalcRecursion.clearPrevIterResult();
-				g_cCalcRecursion.clearDiffBetweenIter();
-			}
-			if (this.changedCell || this.changedRange) {
-				this.changedCell = null;
-				this.changedRange = null;
-			}
 
 			if (AscCommonExcel.importRangeLinksState.importRangeLinks) {
 				//need update
@@ -2511,7 +2508,7 @@
 		this.nActive = 0;
 		this.App = null;
 		this.Core = null;
-		this.CustomProperties = null;
+		this.CustomProperties = new AscCommon.CCustomProperties();
 		this.theme = null;
 		this.clrSchemeMap = null;
 
@@ -2680,6 +2677,7 @@
 			AscCommon.pptx_content_loader.Reader.ImageMapChecker = AscCommon.pptx_content_loader.ImageMapChecker;
 			var context = xmlParserContext;
 			context.loadDataLinks();
+			context.ClearSmartArts();
 		}
 	};
 	Workbook.prototype.preparePivotForSerialization=function(pivotCaches, isCopyPaste){
@@ -7681,6 +7679,9 @@
 					var oUndoRedoData_CellData = new AscCommonExcel.UndoRedoData_CellData(cell.getValueData(), null);
 					if (null != cell.xfs)
 						oUndoRedoData_CellData.style = cell.xfs.clone();
+					if (cell.formulaParsed) {
+						cell.checkRemoveExternalReferences(null, cell.formulaParsed);
+					}
 					cell.setFormulaInternal(null);
 					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_RemoveCell, sheetId, new Asc.Range(nCol, nRow, nCol, nRow), new UndoRedoData_CellSimpleData(nRow, nCol, oUndoRedoData_CellData, null));
 				}
@@ -14621,6 +14622,48 @@
 	Cell.prototype.getQuotePrefix = function () {
 		return this.xfs && this.xfs.getQuotePrefix();
 	};
+
+	/**
+	 * Checks "areaMap" belongs formula that ignores recursion rules
+	 * @param {[]} aOutStack
+	 * @param {object} oAreaMap
+	 * @returns {boolean}
+	 * @private
+	 */
+	function _isExcludeFormula(aOutStack, oAreaMap) {
+		const aExcludeFormulas = AscCommonExcel.aExcludeRecursiveFomulas;
+		for (let i = 0, length = aOutStack.length; i < length; i++) {
+			const oElem = aOutStack[i];
+			if (oElem.type === cElementType.func && aExcludeFormulas.includes(oElem.name)) {
+				let nIndexOfArgCount = i - 1;
+				let nArgCount = aOutStack[nIndexOfArgCount];
+				let nStartArgIndex = nIndexOfArgCount - nArgCount;
+				let bBelongToFormula = false;
+				for (let j = nStartArgIndex; j < nIndexOfArgCount; j++) {
+					let oArgElem = aOutStack[j];
+					let oBbox = null;
+					let aRef = [cElementType.cell, cElementType.cell3D, cElementType.cellsRange, cElementType.cellsRange3D];
+					if (!aRef.includes(oArgElem.type)) {
+						continue;
+					}
+					if (oArgElem.type === cElementType.name || oArgElem.type === cElementType.name3D) {
+						const oElemValue = oArgElem.getValue();
+						if (!aRef.includes(oElemValue.type)) {
+							continue;
+						}
+						oBbox = oElemValue.getBBox0();
+					}  else {
+						oBbox = oArgElem.getBBox0();
+					}
+					bBelongToFormula = oBbox.containsRange(oAreaMap.bbox);
+					if (bBelongToFormula) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 	/**
 	 * Method returns listeners of cell
 	 * @returns {object}
@@ -14635,6 +14678,9 @@
 
 		const nCellIndex = getCellIndex(this.nRow, this.nCol);
 		const oFormulaParsed = this.getFormulaParsed();
+		if (oFormulaParsed && !oFormulaParsed.ca) {
+			return null;
+		}
 		const aOutStack = oFormulaParsed && oFormulaParsed.outStack;
 		const oBaseFunction = aOutStack && aOutStack.find(function (oElem) {
 			return oElem.type === cElementType.func;
@@ -14672,7 +14718,8 @@
 			return oSheetListeners.cellMap[nCellIndex];
 		} else {
 			for (let nIndex in oSheetListeners.areaMap) {
-				if (oSheetListeners.areaMap[nIndex].bbox.contains(this.nCol, this.nRow)) {
+				if (oSheetListeners.areaMap[nIndex].bbox.contains(this.nCol, this.nRow)
+					&& !_isExcludeFormula(aOutStack, oSheetListeners.areaMap[nIndex])) {
 					return oSheetListeners.areaMap[nIndex];
 				}
 			}
@@ -14718,7 +14765,7 @@
 			} else {
 				nListenerCellIndex = getCellIndex(oListenerCell.nRow, oListenerCell.nCol);
 			}
-			if (nListenerCellIndex == null) {
+			if (nListenerCellIndex == null || isNaN(nListenerCellIndex)) {
 				continue;
 			}
 			if (oListenerCell instanceof Asc.CT_WorksheetSource) {
@@ -15184,7 +15231,7 @@
 				case cElementType.empty:
 					//=A1:A3
 					this.setTypeInternal(CellValueType.Number);
-					this.setValueNumberInternal(res.getValue());
+					this.setValueNumberInternal(res.tocNumber().getValue());
 					break;
 				default:
 					this.setTypeInternal(CellValueType.String);

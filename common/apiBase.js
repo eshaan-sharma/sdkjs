@@ -167,7 +167,6 @@
         this.forceSaveButtonContinue = false;
         this.forceSaveTimeoutTimeout = null;
 		this.forceSaveForm = null;
-		this.disconnectOnSave = null;
 		this.disconnectRestrictions = null;//to restore restrictions after disconnect
 		this.forceSaveUndoRequest = false; // Флаг нужен, чтобы мы знали, что данное сохранение пришло по запросу Undo в совместке
 
@@ -488,7 +487,7 @@
 
 			if (this.DocInfo.get_Wopi())
 			{
-				this.documentShardKey = this.DocInfo.get_Wopi()["WOPISrc"];
+				this.documentWopiSrc = this.DocInfo.get_Wopi()["WOPISrc"];
 				this.documentUserSessionId = this.DocInfo.get_Wopi()["UserSessionId"];
 				this.documentIsWopi = true;
 			}
@@ -508,7 +507,7 @@
 			}
 			if (!this.documentWopiSrc) {
 				//todo add tenant in origin?
-				this.documentShardKey = this.documentId;
+				this.documentShardKey = this.DocInfo.get_Shardkey() || this.documentId;
 			}
 		}
 
@@ -1184,7 +1183,7 @@
 	{
 		// здесь прокинуть евент о заморозке меню
 	};
-	baseEditorsApi.prototype.asyncImagesDocumentStartLoaded      = function()
+	baseEditorsApi.prototype.asyncImagesDocumentStartLoaded      = function(aImages)
 	{
 		// евент о заморозке не нужен... оно и так заморожено
 		// просто нужно вывести информацию в статус бар (что началась загрузка картинок)
@@ -1678,25 +1677,19 @@
 			var reason = data["reason"];
 			var interval = data["interval"];
 			var extendSession = true;
-			if (c_oCloseCode.sessionIdle == code) {
+			if (c_oCloseCode.sessionIdle === code) {
 				var idleTime = t.isIdle();
 				if (idleTime > interval) {
 					extendSession = false;
 				} else {
 					t.CoAuthoringApi.extendSession(idleTime);
 				}
-			} else if (c_oCloseCode.sessionAbsolute == code) {
+			} else if (c_oCloseCode.sessionAbsolute === code) {
 				extendSession = false;
 			}
 			if (!extendSession) {
-				if (t.asc_Save(false, true)) {
-					//enter view mode because save async
-					t.setViewModeDisconnect(AscCommon.getEnableDownloadByCloseCode(code));
-					t.disconnectOnSave = {code: code, reason: reason};
-				} else {
-					t.CoAuthoringApi.sendClientLog('debug', 'disconnect code:' + code + ';reason:' + reason);
-					t.CoAuthoringApi.disconnect(code, reason);
-				}
+				t.CoAuthoringApi.sendClientLog('debug', 'disconnect code:' + code + ';reason:' + reason);
+				t.CoAuthoringApi.disconnect(code, reason);
 			}
 		};
         this.CoAuthoringApi.onForceSave = function(data) {
@@ -1800,7 +1793,8 @@
 			{
 				t.asyncServerIdEndLoaded();
 			}
-			if (null != opt_closeCode) {
+			let isSessionIdleDisconnect = AscCommon.c_oCloseCode.sessionIdle === opt_closeCode;
+			if (null != opt_closeCode && !isSessionIdleDisconnect) {
 				if (null !== t.disconnectRestrictions) {
 					t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
 					t.asc_setRestriction(t.disconnectRestrictions);
@@ -1818,6 +1812,11 @@
 				t.disconnectRestrictions = t.restrictions;
 				t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
 				t.asc_setRestriction(Asc.c_oAscRestrictionType.View);
+				if (isSessionIdleDisconnect) {
+					t.waitNotIdle(undefined, function () {
+						t.CoAuthoringApi.connect();
+					});
+				}
 			}
 		};
 		this.CoAuthoringApi.onDocumentOpen = function (inputWrap) {
@@ -2822,7 +2821,8 @@
 	};
 	baseEditorsApi.prototype._onEndLoadSdk = function()
 	{
-		AscCommon.g_oTableId.init();
+		AscCommon.g_oTableId.init(this);
+		this.initCollaborativeEditing();
 
 		// init drag&drop
 		var t = this;
@@ -2856,6 +2856,9 @@
 		this._loadSdkImages();
 
 		this.checkDocumentTitleFonts();
+	};
+	baseEditorsApi.prototype.initCollaborativeEditing = function()
+	{
 	};
 	baseEditorsApi.prototype.checkDocumentTitleFonts = function() {
 		if (!AscFonts.FontPickerByCharacter || !this.documentTitle)
@@ -3772,6 +3775,23 @@
 
 		return new Date().getTime() - this.lastWorkTime;
 	};
+	baseEditorsApi.prototype.waitNotIdle = function (lastWorkTime, callback)
+	{
+		let t = this;
+		//todo remove first timeout
+		//start with timeout to aviod lastWorkTime update on:
+		//onDisconnect -> asc_setRestriction -> checkLastWork and CheckTargetUpdate -> checkLastWork
+		setTimeout(function () {
+			if (undefined === lastWorkTime) {
+				lastWorkTime = t.getLastWork();
+			}
+			if (lastWorkTime < t.getLastWork()) {
+				callback();
+			} else {
+				t.waitNotIdle(lastWorkTime, callback);
+			}
+		}, 100);
+	}
 
 	baseEditorsApi.prototype.checkInterfaceElementBlur = function()
 	{
@@ -3787,6 +3807,11 @@
 		document.activeElement.dispatchEvent(e);
 	};
 
+
+	baseEditorsApi.prototype.getLastWork = function()
+	{
+		return this.lastWorkTime;
+	};
 	baseEditorsApi.prototype.checkLastWork = function()
 	{
 		this.lastWorkTime = new Date().getTime();
@@ -5089,6 +5114,39 @@
 			window.g_asc_plugins.onUpdateOptions();
 	};
 
+	baseEditorsApi.prototype.getCustomProperties = function() {
+		return null;
+	};
+
+	baseEditorsApi.prototype.asc_getAllCustomProperties = function() {
+		let oCustomProperties = this.getCustomProperties();
+		if(!oCustomProperties) return [];
+		return oCustomProperties.getAllProperties();
+	};
+	
+	baseEditorsApi.prototype.asc_addCustomProperty = function(name, type, value) {
+		this.addCustomProperty(name, type, value);
+	};
+
+	baseEditorsApi.prototype.asc_modifyCustomProperty = function(idx, name, type, value) {
+		this.modifyCustomProperty(idx, name, type, value);
+	};
+
+	
+	baseEditorsApi.prototype.asc_removeCustomProperty = function(idx) {
+		this.removeCustomProperty(idx);
+	};
+	
+	baseEditorsApi.prototype.addCustomProperty = function(name, type, value) {
+	};
+
+	baseEditorsApi.prototype.modifyCustomProperty = function(idx, name, type, value) {
+	};
+
+	baseEditorsApi.prototype.removeCustomProperty = function(idx) {
+	};
+	
+
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
 	window['AscCommon'].baseEditorsApi = baseEditorsApi;
@@ -5169,5 +5227,26 @@
 	// passwords
 	prot["asc_setCurrentPassword"] = prot.asc_setCurrentPassword;
 	prot["asc_resetPassword"] = prot.asc_resetPassword;
+
+	// NATIVE INITIALIZER (need be in min version)
+	window["InitNativeEditors"] = function()
+	{
+		AscFonts.checkAllFonts();
+
+		let loader = AscCommon.g_font_loader;
+		loader.fontFiles = AscFonts.g_font_files;
+		loader.fontInfos = AscFonts.g_font_infos;
+		loader.map_font_index = AscFonts.g_map_font_index;
+
+		window["InitNativeObject"]();
+		window["InitNativeTextMeasurer"]();
+		window["InitNativeZLib"]();
+	};
+
+	//custom properties
+	prot["asc_getAllCustomProperties"] = prot.asc_getAllCustomProperties;
+	prot["asc_addCustomProperty"] = prot.asc_addCustomProperty;
+	prot["asc_modifyCustomProperty"] = prot.asc_modifyCustomProperty;
+	prot["asc_removeCustomProperty"] = prot.asc_removeCustomProperty;
 
 })(window);

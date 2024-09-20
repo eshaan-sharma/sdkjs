@@ -3390,10 +3390,12 @@
 			if (external) {
 				externalLength = external.fullname.length;
 				subSTR = formula.substring(start_pos + externalLength);
-				if (-1 !== subSTR.indexOf("'")) {
-					externalLength += 1;
+				const posQuote =  subSTR.indexOf("'");
+				if (-1 !== posQuote) {
+					externalLength -= 1;
+					subSTR = "'" + subSTR;
 				}
-				subSTR = subSTR.replace("'", "");
+
 				external = external.path + external.name;
 			}
 		}
@@ -4251,10 +4253,15 @@
 
 		this.m_nOFormLoadCounter = 0;
 		this.m_nOFormEditCounter = 0;
+		
+		this.m_nTurnOffCounter = 0;
 	}
 
 	CIdCounter.prototype.Get_NewId = function ()
 	{
+		if (!AscCommon.g_oTableId.IsOn())
+			return ("off_" + (++this.m_nTurnOffCounter));
+		
 		if (true === this.m_bLoad || null === this.m_sUserId)
 		{
 			this.m_nIdCounterLoad++;
@@ -4350,6 +4357,11 @@
 				oLogicDocument.TrackRevisionsManager.ClearSelectedChanges();
 				oLogicDocument.Document_UpdateInterfaceState(false);
 			}
+		}
+		let oCustomProperties = oApi.getCustomProperties();
+		if(oCustomProperties && oCustomProperties.Lock === this)
+		{
+			oApi.sendEvent("asc_onCustomPropertiesLocked", this.Is_Locked());
 		}
 	};
 	CLock.prototype.Check = function (Id)
@@ -10615,6 +10627,23 @@
 		return result;
 	}
 	
+	function ExecuteEditorAction(actionPr, f, logicDocument, t, args)
+	{
+		if (!logicDocument
+			|| !logicDocument.IsDocumentEditor
+			|| !logicDocument.IsDocumentEditor())
+			return f.apply(t, args);
+		
+		let description = actionPr && actionPr.description ? actionPr.description : AscDFH.historydescription_Unknown;
+		let flags       = actionPr && actionPr.flags ? actionPr.flags : AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE;
+		
+		logicDocument.StartAction(description, null, flags);
+		let result = f.apply(t, args);
+		logicDocument.FinalizeAction();
+		
+		return result;
+	}
+	
 	function AddAndExecuteChange(change)
 	{
 		AscCommon.History.Add(change);
@@ -14084,7 +14113,7 @@
 		
 		var rect;
 		if (!AscBrowser.isIE)
-			rect = element.getBoundingClientRect();
+			rect = AscCommon.UI.getBoundingClientRect(element);
 		else {
 			function getCanvasBoundingClientRect(canvas) {
 				const offsetLeft	= canvas.offsetLeft;
@@ -14680,6 +14709,7 @@
 	window["AscCommon"].IsAscFontSupport = IsAscFontSupport;
 	window["AscCommon"].ExecuteNoHistory = ExecuteNoHistory;
 	window["AscCommon"].executeNoRevisions = executeNoRevisions;
+	window["AscCommon"].ExecuteEditorAction = ExecuteEditorAction;
 	window["AscCommon"].AddAndExecuteChange = AddAndExecuteChange;
 	window["AscCommon"].CompareStrings = CompareStrings;
 	window["AscCommon"].IsSupportAscFeature = IsSupportAscFeature;
@@ -14818,7 +14848,7 @@
 	window["AscCommon"].getArrayRandomElement = getArrayRandomElement;
 })(window);
 
-window["asc_initAdvancedOptions"] = function(_code, _file_hash, _docInfo)
+window["asc_initAdvancedOptions"] = function(_code, _file_hash, _docInfo, csv_data)
 {
     if (window.isNativeOpenPassword)
 	{
@@ -14848,7 +14878,14 @@ window["asc_initAdvancedOptions"] = function(_code, _file_hash, _docInfo)
     }
 
     window.checkPasswordFromPlugin = false;
-    _editor._onNeedParams(undefined, (_code == 90 || _code == 91) ? true : undefined);
+	let data = undefined;
+	if (csv_data && window["AscDesktopEditor"])
+	{
+		var bufferArray = window["AscDesktopEditor"]["GetOpenedFile"](csv_data);
+		if (bufferArray)
+			data = new Uint8Array(bufferArray);
+	}
+    _editor._onNeedParams(data, (_code == 90 || _code == 91) ? true : undefined);
 };
 
 window["asc_IsNeedBuildCryptedFile"] = function()
