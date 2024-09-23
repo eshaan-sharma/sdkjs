@@ -11809,7 +11809,7 @@ function(window, undefined) {
 		// get height of label
 		this.bCalculated = !!nIndex;
 
-		if (this.valid && this.isIncorrectlyCalculated(oLabelsBox, fAxisLength)) {
+		if (this.valid && this.isIncorrectlyCalculated(oLabelsBox, fAxisLength, nIndex)) {
 
 			// get labelHeight
 			this.fLabelHeight = AscFormat.isRealNumber(this.fLabelHeight) ? this.fLabelHeight : this.getSingleLineHeight(oLabelsBox.aLabels);
@@ -11831,7 +11831,7 @@ function(window, undefined) {
 	};
 
 	// function to check whether new Label axis will handle old parameters
-	CLabelsParameters.prototype.isIncorrectlyCalculated = function (oLabelsBox, fAxisLength) {
+	CLabelsParameters.prototype.isIncorrectlyCalculated = function (oLabelsBox, fAxisLength, nIndex) {
 		if (!this.bCalculated) {
 			return true;
 		}
@@ -11842,10 +11842,17 @@ function(window, undefined) {
 		}
 
 		// sometimes it is possible that new fAxisLength is enough for current nLabelsCount
-		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
-			return true;
-		} else if (this.bCalculated && this.nLblTickSkip !== null && this.nLabelsCount !== 0 && this.nLblTickSkip !== 0) {
-			return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
+		if (this.nLblTickSkip && this.nLabelsCount !== 0) {
+			// valAx should be checked on the second turn for new crossAx, when nIndex == 1,
+			const valAxCheck = 1;
+			console.log(fAxisLength);
+			if (this.nAxisType === AscDFH.historyitem_type_ValAx && nIndex === valAxCheck) {
+				const crossAxisWidth = oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.crossAx && oLabelsBox.axis.crossAx.labels ? oLabelsBox.axis.crossAx.labels.extX : 0;
+				console.log((fAxisLength + this.alpha) - crossAxisWidth, this.nLabelsCount, this.nLblTickSkip, this.fLabelWidth);
+				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.alpha) >= (fAxisLength + this.alpha) - crossAxisWidth;
+			} else {
+				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
+			}
 		}
 		return false;
 	};
@@ -12004,11 +12011,13 @@ function(window, undefined) {
 
 		// adjust labelWidth and fAxisLength by alpha
 		const labelWidth = oLabelsBox.maxMinWidth + this.alpha;
-		const fNewAxisLength = (fAxisLength + this.alpha);
-		console.log(fAxisLength, oLabelsBox.maxMinWidth);
+		const crossAxisWidth = oLabelsBox.axis.crossAx && oLabelsBox.axis.crossAx.labels ? oLabelsBox.axis.crossAx.labels.extX : 0;
+		const fNewAxisLength = (fAxisLength + this.alpha) - crossAxisWidth;
+		console.log(fAxisLength, crossAxisWidth, fAxisLength - crossAxisWidth, oLabelsBox.maxMinWidth);
 
 		// find labelCount
 		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
+		console.log(labelCount);
 
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
@@ -12023,23 +12032,22 @@ function(window, undefined) {
 		// create new labels for valAx
 		const fPrecision = 0.01;
 
+		let isSingleLabel = false
 		if (!newStep || newStep > (nStep + fPrecision)) {
 			// scale is an array of size at least 2
 			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, nMultiplicator);
 			let aStrings = oLabelsBox.chartSpace ? oLabelsBox.chartSpace.getLabelsForAxis(oLabelsBox.axis) : null;
 			if (aStrings) {
-				const isSingleLabel = (newStep === null);
+				isSingleLabel = (newStep === null);
 				// aStrings should be of size 1 if isSingleLabel is true
 				if (isSingleLabel) {
 					aStrings = [aStrings[0]];
 				}
 				oLabelsBox.initializeLabels(aStrings, oLabelsBox.axis, oLabelsBox.chartSpace);
 				this.nLabelsCount = oLabelsBox.count;
-				this.nLblTickSkip = isSingleLabel ? 2 : 1;
 			}
-		} else {
-			this.nLblTickSkip = 1;
 		}
+		return isSingleLabel;
 	}
 
 	CLabelsParameters.prototype.calculateNLblTickSkip = function (oLabelsBox, fAxisLength) {
@@ -12051,7 +12059,9 @@ function(window, undefined) {
 
 		// valAx recalcute the labels, rather than skipping a portion of them as other labels
 		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
-			this.recalculateLabels(oLabelsBox, fAxisLength);
+			const isSingleLabel = this.recalculateLabels(oLabelsBox, fAxisLength);
+			this.nLblTickSkip = isSingleLabel ? 2 : 1;
+			this.fLabelWidth = oLabelsBox.maxMinWidth;
 			return;
 		}
 
