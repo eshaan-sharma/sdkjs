@@ -11800,7 +11800,7 @@ function(window, undefined) {
 		this.bCalculated = false;
 		this.fLabelHeight = null;
 		this.fLabelWidth = null;
-		this.alpha = 10;
+		this.alpha = 4;
 		// the max width default is 20000;
 		this.maxLabelWidth = 20000;
 	}
@@ -11809,7 +11809,7 @@ function(window, undefined) {
 		// get height of label
 		this.bCalculated = !!nIndex;
 
-		if (this.valid && this.isCorrectlyCalculated(oLabelsBox, fAxisLength)) {
+		if (this.valid && this.isIncorrectlyCalculated(oLabelsBox, fAxisLength)) {
 
 			// get labelHeight
 			this.fLabelHeight = AscFormat.isRealNumber(this.fLabelHeight) ? this.fLabelHeight : this.getSingleLineHeight(oLabelsBox.aLabels);
@@ -11831,7 +11831,7 @@ function(window, undefined) {
 	};
 
 	// function to check whether new Label axis will handle old parameters
-	CLabelsParameters.prototype.isCorrectlyCalculated = function (oLabelsBox, fAxisLength) {
+	CLabelsParameters.prototype.isIncorrectlyCalculated = function (oLabelsBox, fAxisLength) {
 		if (!this.bCalculated) {
 			return true;
 		}
@@ -11842,7 +11842,9 @@ function(window, undefined) {
 		}
 
 		// sometimes it is possible that new fAxisLength is enough for current nLabelsCount
-		if (this.bCalculated && this.nLblTickSkip !== null && this.nLabelsCount !== 0 && this.nLblTickSkip !== 0) {
+		if (this.nAxisType === AscDFH.historyitem_type_ValAx){
+			return true;
+		} else if (this.bCalculated && this.nLblTickSkip !== null && this.nLabelsCount !== 0 && this.nLblTickSkip !== 0) {
 			return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
 		}
 		return false;
@@ -11964,7 +11966,7 @@ function(window, undefined) {
 		}
 
 		const getNewStep = function (multiplicator, nLblTickSkip) {
-			if (nLblTickSkip === -1) {
+			if (nLblTickSkip === null) {
 				// means only 1 label will be shown
 				return null;
 			}else if (nLblTickSkip <= multiplicator) {
@@ -12003,6 +12005,7 @@ function(window, undefined) {
 		// adjust labelWidth and fAxisLength by alpha
 		const labelWidth = oLabelsBox.maxMinWidth + this.alpha;
 		const fNewAxisLength = (fAxisLength + this.alpha);
+		console.log(fAxisLength, oLabelsBox.maxMinWidth);
 
 		// find labelCount
 		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
@@ -12010,7 +12013,7 @@ function(window, undefined) {
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
 		const firstNum = oLabelsBox.axis.scale[0];
-		const nLblTickSkip = labelCount > 1 ? (lastNum - firstNum) / (labelCount - 1) : -1;
+		const nLblTickSkip = labelCount > 1 ? (lastNum - firstNum) / (labelCount - 1) : null;
 
 		// find new step
 		// if null then 0 labels
@@ -12121,7 +12124,7 @@ function(window, undefined) {
 			return;
 		}
 
-		if (this.isUserDefinedRot) {
+		if (this.isUserDefinedRot || this.nAxisType === AscDFH.historyitem_type_ValAx) {
 			return;
 		}
 
