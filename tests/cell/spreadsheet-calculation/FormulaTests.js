@@ -623,6 +623,7 @@ $(function () {
 
 		window["Asc"]["editor"] = api;
 
+		AscCommon.g_oTableId.init(api);
 		wb = new AscCommonExcel.Workbook(new AscCommonExcel.asc_CHandlersList(), api);
 		AscCommon.History.init(wb);
 		wb.maxDigitWidth = 7;
@@ -630,7 +631,6 @@ $(function () {
 
 		api.wbModel = wb;
 
-		AscCommon.g_oTableId.init();
 		if (this.User) {
 			g_oIdCounter.Set_UserId(this.User.asc_getId());
 		}

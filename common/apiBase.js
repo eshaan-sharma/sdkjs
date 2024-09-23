@@ -2637,7 +2637,7 @@
 	};
 	baseEditorsApi.prototype.asc_getAdvancedOptions = function () {
 		var cp            = {
-			'codepage'  : AscCommon.c_oAscCodePageUtf8,
+			'codepage'  : AscCommon.c_oAscCodePageNone,
 			'encodings' : AscCommon.getEncodingParams()
 		};
 		return new AscCommon.asc_CAdvancedOptions(cp);

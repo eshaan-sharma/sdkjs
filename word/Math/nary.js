@@ -853,13 +853,16 @@ CNary.prototype.GetTextOfElement = function(oMathText)
 
 	if (oMathText.IsLaTeX())
 	{
-		strStartCode = AscMath.MathLiterals.nary.Unicode[String.fromCharCode(this.Pr.chr)];
+		strStartCode		= AscMath.MathLiterals.nary.Unicode[String.fromCharCode(this.Pr.chr)];
+		if (undefined === strStartCode)
+			strStartCode = '\\int';
+
+		oMathText.AddText(new AscMath.MathText(strStartCode, oUpper));
 
 		if (oLower)
 		{
 			oMathText.SetGlobalStyle(oLower);
 			let oLowerPos	= oMathText.Add(oLower, true,  2);
-			oMathText.AddBefore(oLowerPos, new AscMath.MathText(strStartCode, oBase));
 			oLowerPos		= oMathText.AddBefore(oLowerPos, new AscMath.MathText("_", oLower));
 		}
 
@@ -870,9 +873,6 @@ CNary.prototype.GetTextOfElement = function(oMathText)
 
 			oMathText.SetGlobalStyle(oUpper);
 			oMathText.Add(oUpper, true, 2);
-
-			if (!oLower)
-				oMathText.AddBefore(oUpperPos, new AscMath.MathText(strStartCode, oUpper));
 		}
 
 		if (oBase)
@@ -883,7 +883,12 @@ CNary.prototype.GetTextOfElement = function(oMathText)
 	}
 	else
 	{
-		let oLastPos = oMathText.AddText(new AscMath.MathText(String.fromCharCode(this.Pr.chr), this));
+		if (undefined === this.Pr.chr)
+			strStartCode = '∫';
+		else
+			strStartCode = String.fromCharCode(this.Pr.chr);
+
+		let oLastPos = oMathText.AddText(new AscMath.MathText(strStartCode, this));
 
 		if (oLower)
 		{

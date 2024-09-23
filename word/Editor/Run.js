@@ -535,33 +535,38 @@ ParaRun.prototype.GetText = function(oText)
  */
 ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 {
-	oMathText = new AscMath.MathTextAndStyles(oMathText);
-
+	oMathText		= new AscMath.MathTextAndStyles(oMathText);
 	let isLatex		= oMathText.IsLaTeX();
-
 	let nStartPos	= (isSelectedText == true ? Math.min(this.Selection.StartPos, this.Selection.EndPos) : 0);
 	let nEndPos		= (isSelectedText == true ? Math.max(this.Selection.StartPos, this.Selection.EndPos) : this.Content.length);
-
 	let isStrFont	= false;
-	let arrFont		= [];
 
 	for (let i = nStartPos; i < nEndPos; i++)
 	{
-		let oCurrentElement = this.Content[i];
-		let strCurrentElement = oCurrentElement.GetTextOfElement().GetText();
+		let oCurrentElement		= this.Content[i];
+		let strCurrentElement	= oCurrentElement.GetTextOfElement().GetText();
 
 		if (this.Content.length === 1 && oCurrentElement.value === 11034)
 			return oMathText;
 
-		// for LaTeX space processing
+		let oLast	= oMathText.GetLastContent();
+		let strLast	= ""
+		if (oLast)
+			strLast	= oLast.text[oLast.text.length - 1];
+
+		// for LaTeX space processing while convert to professional mode
 		if (oMathText.IsDefaultText)
 		{
 			oMathText.AddText(new AscMath.MathText(strCurrentElement, this));
 			continue;
 		}
 
-		let arrFontContent = oMathText.IsLaTeX() ? AscMath.GetLaTeXFont[strCurrentElement] : undefined;
-		let strMathFontName = arrFontContent ? AscMath.oStandardFont[arrFontContent[0]] : undefined;
+		let arrFontContent		= oMathText.IsLaTeX()
+			? AscMath.GetLaTeXFont[strCurrentElement]
+			: undefined;
+		let strMathFontName		= arrFontContent
+			? AscMath.oStandardFont[arrFontContent[0]]
+			: undefined;
 
 		if (!strMathFontName && isLatex)
 		{
@@ -587,7 +592,7 @@ ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 		{
 			if (oMathText.IsLaTeX())
 			{
-				if (strCurrentElement === " ") //normal space
+				if (strCurrentElement === " " && strLast !== "\\") //normal space
 					oMathText.AddText(new AscMath.MathText('\\ ', this))
 				// else if (strCurrentElement === " ")
 				// 	oMathText.AddText(new AscMath.MathText("\\quad", this));
@@ -604,7 +609,6 @@ ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 			{
 				oMathText.AddText(new AscMath.MathText(strCurrentElement, this));
 			}
-
 		}
 	}
 

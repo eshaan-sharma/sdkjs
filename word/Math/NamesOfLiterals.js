@@ -2001,6 +2001,8 @@
 					{
 						let oLocalAdditionalData	= oCurrentElement.GetAdditionalData();
 						let strCurrent 			= oCurrentElement.GetText();
+						if (undefined === strCurrent)
+							continue;
 						let tempLength 			= context.GetStringLength(strCurrent);
 						let arrCurrent 			= context.GetSymbols(strCurrent);
 						arrContent 				= arrContent.concat(arrCurrent);
@@ -5357,11 +5359,12 @@
 
 	function MathTextAdditionalData (oContent, isCtrPr)
 	{
-		this.style = undefined;
-		this.reviewData = {
+		this.style		= undefined;
+		this.reviewData	= {
 			reviewType : undefined,
 			reviewInfo : undefined
 		}
+		this.mathPrp	= undefined;
 
 		if (oContent)
 			this.SetAdditionalDataFromContent(oContent, isCtrPr);
@@ -5382,6 +5385,11 @@
 	MathTextAdditionalData.prototype.SetAdditionalStyleData = function (oStyle)
 	{
 		this.style = oStyle;
+	};
+	MathTextAdditionalData.prototype.SetMathPrp = function (oMathPrp)
+	{
+		if (oMathPrp)
+			this.mathPrp = oMathPrp.Copy();
 	};
 	MathTextAdditionalData.prototype.IsAdditionalStyleData = function()
 	{
@@ -5415,19 +5423,34 @@
 	{
 		this.reviewData.reviewInfo = oReviewInfo;
 	};
+	MathTextAdditionalData.prototype.IsMPrpEqual = function (oMPrp)
+	{
+		return oMPrp !== undefined
+			&& this.mathPrp !== undefined
+			&& this.mathPrp.IsEqual(oMPrp);
+	};
 	MathTextAdditionalData.prototype.IsStyleEqual = function (oStyleParent)
 	{
 		if (this.style === undefined)
 			return false;
 
 		if (oStyleParent instanceof MathTextAdditionalData)
-			return this.style.IsEqual(oStyleParent.GetAdditionalStyleData()) && this.IsReviewDataEqual(oStyleParent);
+			return this.style.IsEqual(oStyleParent.GetAdditionalStyleData())
+				&& this.IsReviewDataEqual(oStyleParent)
+				&& this.IsMPrpEqual(oStyleParent.mathPrp);
 
-		let oStyle = oStyleParent instanceof ParaRun
-			? oStyleParent.Pr
-			: oStyleParent.CtrPrp;
+		if (oStyleParent)
+		{
+			let oStyle = oStyleParent instanceof ParaRun
+				? oStyleParent.Pr
+				: oStyleParent.CtrPrp;
 
-		return this.style.IsEqual(oStyle) && this.IsReviewDataEqual(oStyleParent);
+			return this.style.IsEqual(oStyle)
+				&& this.IsReviewDataEqual(oStyleParent)
+				&& this.IsMPrpEqual(oStyleParent.MathPrp);
+		}
+
+		return false;
 	};
 	MathTextAdditionalData.prototype.IsReviewDataEqual = function (oContent)
 	{
@@ -5436,7 +5459,7 @@
 			if (this.reviewData.reviewType === undefined || oContent.reviewData.reviewInfo === undefined)
 				return true;
 			return this.reviewData.reviewType === oContent.reviewData.reviewType
-				&& this.reviewData.reviewInfo.IsEqual(oContent.reviewData.reviewInfo)
+				&& this.reviewData.reviewInfo.IsEqual(oContent.reviewData.reviewInfo, true)
 		}
 		else
 		{
@@ -5477,6 +5500,9 @@
 		this.SetAdditionalStyleData(oPr);
 		this.SetAdditionalReviewType(oContent.ReviewType);
 		this.SetAdditionalReviewInfo(oContent.ReviewInfo);
+
+		if (oContent instanceof ParaRun)
+			this.SetMathPrp(oContent.MathPrp);
 	};
 
 	/**
@@ -7544,7 +7570,6 @@
 			}
 		};
 
-		console.log(arrBracketsInfo)
 		return arrBracketsInfo;
 	}
 

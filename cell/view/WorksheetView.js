@@ -1351,7 +1351,11 @@
         }
 
         var u = units >= 0 && units <= 3 ? units : 0;
-        return (this._getColLeft(col) - offsetX) * asc_getcvt(0/*px*/, u, this._getPPIX());
+		let _left = this._getColLeft(col) - offsetX;
+		if (_left < this.cellsLeft) {
+			_left = this.cellsLeft;
+		}
+        return _left * asc_getcvt(0/*px*/, u, this._getPPIX());
     };
 
     WorksheetView.prototype.getCellTopRelative = function (row, units) {
@@ -1364,11 +1368,15 @@
             var rFrozen = this.topLeftFrozenCell.getRow0();
             offsetY = (row < rFrozen) ? 0 : this._getRowTop(this.visibleRange.r1) - this._getRowTop(rFrozen);
         } else {
-            offsetY = this._getRowTop(this.visibleRange.r1) - this.cellsTop;
+            offsetY = this._getOffsetY();
         }
 
         var u = units >= 0 && units <= 3 ? units : 0;
-        return (this._getRowTop(row) - offsetY) * asc_getcvt(0/*px*/, u, this._getPPIY());
+		let _top = this._getRowTop(row) - offsetY;
+		if (_top < this.cellsTop) {
+			_top = this.cellsTop;
+		}
+        return _top * asc_getcvt(0/*px*/, u, this._getPPIY());
     };
 
 	WorksheetView.prototype._getColumnWidthInner = function (i) {
@@ -10035,7 +10043,7 @@
 
 		let isReverse = delta < 0;
 		let unitDeltaStep = Asc.round(this.defaultRowHeightPx * this.getZoom());
-		let defaultScrollPxStep = Math.floor(unitDeltaStep * Math.abs(delta));
+		let defaultScrollPxStep = Math.ceil(unitDeltaStep * Math.abs(delta));
 
 		let deltaRows = 0, deltaCorrect = 0;
 		let currentScrollCorrect = this.getScrollCorrect();
@@ -10318,10 +10326,14 @@
         this._drawSelection();
 		//this._cleanPagesModeData();
 
-        if ((reinitScrollY && !this.workbook.getSmoothScrolling()) || (0 > delta && initRowsCount && this._initRowsCount())) {
+		if ((reinitScrollY && !this.workbook.getSmoothScrolling()) || (reinitScrollY && this.workbook.getSmoothScrolling() && deltaCorrect !== currentScrollCorrect) ||
+			(0 > delta && initRowsCount && this._initRowsCount())) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollVertical;
-        }
-		this._reinitializeScroll();
+		}
+		if (delta !== 0) {
+			this._reinitializeScroll();
+		}
+
         this.handlers.trigger("onDocumentPlaceChanged");
 
 		if (editor && this.model.getSelection().activeCell.row >= rFrozen) {
@@ -11004,7 +11016,7 @@
 
 		let isReverse = delta < 0;
 		let unitDeltaStep = Asc.round(this.defaultColWidthPx * this.getZoom());
-		let defaultScrollPxStep = Math.floor(unitDeltaStep * Math.abs(delta));
+		let defaultScrollPxStep = Math.ceil(unitDeltaStep * Math.abs(delta));
 
 		let deltaCols = 0, deltaCorrect = 0;
 		let currentScrollCorrect = this.getHorizontalScrollCorrect();
@@ -11238,14 +11250,18 @@
         this._drawSelection();
         //this._cleanPagesModeData();
 
-		if ((reinitScrollX && !this.workbook.getSmoothScrolling()) || (0 > delta && initColsCount && this._initColsCount())) {
+		if ((reinitScrollX && !this.workbook.getSmoothScrolling()) || (reinitScrollX && this.workbook.getSmoothScrolling() && deltaCorrect !== currentScrollCorrect) ||
+			(0 > delta && initColsCount && this._initColsCount())) {
 			if (reinitScrollX && (start - cFrozen) === 0 && 0 > delta && initColsCount) {
 				this._initColsCount();
 			}
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollHorizontal;
-        }
+		}
 
-		this._reinitializeScroll();
+		if (delta !== 0) {
+			this._reinitializeScroll();
+		}
+
         this.handlers.trigger("onDocumentPlaceChanged");
 
 		if (editor && this.model.getSelection().activeCell.col >= cFrozen) {

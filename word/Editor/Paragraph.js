@@ -3820,6 +3820,9 @@ Paragraph.prototype.private_DrawLineNumber = function(X, Y, oContext, nLineNumbe
 	var nCountBy  = oSectPr.GetLineNumbersCountBy();
 	var nDistance = oSectPr.GetLineNumbersDistance();
 	var nRestart  = oSectPr.GetLineNumbersRestart();
+	
+	if (undefined === nCountBy || nCountBy <= 0)
+		return;
 
 	var _nLineNumber = this.LineNumbersInfo.StartNum + nStart + nCurLine; // nStart - 1 + nCurLine + 1
 
@@ -3846,7 +3849,7 @@ Paragraph.prototype.private_DrawLineNumber = function(X, Y, oContext, nLineNumbe
 		_nLineNumber = nLinesCount + nStart + _nCurLine;  // nStart - 1 + nCurLine + 1
 	}
 
-	if (nCountBy && nCountBy > 1 && 0 !== _nLineNumber % nCountBy)
+	if (nCountBy > 1 && 0 !== _nLineNumber % nCountBy)
 		return;
 
 	var nLineNumDistance = undefined === nDistance ? (this.ColumnsCount > 1 ? AscCommon.TwipsToMM(180) : AscCommon.TwipsToMM(360)) : AscCommon.TwipsToMM(nDistance);

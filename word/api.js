@@ -8676,6 +8676,11 @@ background-repeat: no-repeat;\
 			}
 			t.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Submit);
 		});
+
+		this.sendEvent("onSubmitForm");
+
+		if (window.g_asc_plugins)
+			window.g_asc_plugins.onPluginEvent("onSubmitForm");
 	};
 
     asc_docs_api.prototype.SetTableDrawMode = function(value)
@@ -8985,7 +8990,7 @@ background-repeat: no-repeat;\
 			}
 		} else {
 			if (this.asc_checkNeedCallback("asc_onAdvancedOptions")) {
-				var cp = {'codepage': AscCommon.c_oAscCodePageUtf8, 'encodings': AscCommon.getEncodingParams()};
+				var cp = {'codepage': AscCommon.c_oAscCodePageNone, 'encodings': AscCommon.getEncodingParams()};
 				if (data && typeof Blob !== 'undefined' && typeof FileReader !== 'undefined') {
 					AscCommon.loadFileContent(data, function(httpRequest) {
 						if (httpRequest && httpRequest.response) {

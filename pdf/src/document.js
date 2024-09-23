@@ -180,6 +180,44 @@ var CPresentation = CPresentation || function(){};
         this.Action                 = {};
     }
 
+	CPDFDoc.prototype.RecalculateAll = function() {
+		let fontMap = {};
+		
+		this.widgets.forEach(function(field) {
+			if (field.IsNeedDrawFromStream())
+				return;
+			
+			let fontName = field.GetTextFontActual();
+			if (fontName)
+				fontMap[fontName] = true;
+		});
+		
+		this.drawings.forEach(function(drawing) {
+			drawing.GetAllFonts(fontMap);
+		});
+		
+		this.annots.forEach(function(annot) {
+			annot.GetAllFonts(fontMap);
+		});
+		
+		this.checkFonts(Object.keys(fontMap), this._RecalculateAll.bind(this));
+	};
+	CPDFDoc.prototype._RecalculateAll = function() {
+		this.widgets.forEach(function(field) {
+			if (field.IsNeedDrawFromStream())
+				return;
+			
+			field.Recalculate();
+		});
+		
+		this.drawings.forEach(function(drawing) {
+			drawing.Recalculate();
+		});
+		
+		this.annots.forEach(function(annot) {
+			annot.Recalculate();
+		});
+	};
     CPDFDoc.prototype.UpdatePagesTransform = function() {
         this.pagesTransform = [];
 
@@ -434,7 +472,12 @@ var CPresentation = CPresentation || function(){};
         });
     };
     CPDFDoc.prototype.FillButtonsIconsOnOpen = function() {
-        let oViewer = editor.getDocumentRenderer();
+		let oViewer = editor.getDocumentRenderer();
+		if (window["NATIVE_EDITOR_ENJINE"]) {
+			oViewer.IsOpenFormsInProgress = false;
+			return;
+		}
+		
         let oDoc = this;
 
         let aIconsToLoad = [];

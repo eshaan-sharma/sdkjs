@@ -2259,7 +2259,8 @@
 		let strLiteral = "";
         let styles = [];
 
-		while (this.oLookahead.class === arrTypeOfLiteral.id)
+		while (this.oLookahead.class === arrTypeOfLiteral.id
+		&& (styles.length === 0 || styles[styles.length - 1].IsStyleEqual(this.oLookahead.style)))
 		{
             styles.push(this.oLookahead.style);
 

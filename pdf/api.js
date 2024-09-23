@@ -198,8 +198,14 @@
 			};
 		}
 	};
-	PDFEditorApi.prototype["asc_nativeCalculateFile"] = function()
-	{
+	PDFEditorApi.prototype["asc_nativeCalculateFile"] = function() {
+		// It was added for testing native font loading
+		
+		// let pdfDoc = this.getPDFDoc();
+		// if (!pdfDoc)
+		// 	return;
+		//
+		// pdfDoc.RecalculateAll();
 	};
 	PDFEditorApi.prototype["asc_nativePrintPagesCount"] = function()
 	{

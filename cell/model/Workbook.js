@@ -1894,6 +1894,7 @@
 			let needUpdateCells = [];
 			this._foreachChanged(function (oCell) {
 				if (oCell && oCell.isFormula()) {
+					const oFormulaParsed = oCell.getFormulaParsed();
 					// Logic for iterative calculation
 					if (g_cCalcRecursion.getIsEnabledRecursion()) {
 						const nThisCellIndex = getCellIndex(oCell.nRow, oCell.nCol);
@@ -1968,8 +1969,11 @@
 								oCell.setIsDirty(false);
 								return;
 							}
+						} else if (g_cCalcRecursion.getIterStep() > 1 && oCell.getValueWithoutFormat() && !oFormulaParsed.ca) {
+							oCell.setIsDirty(false);
+							return;
 						}
-					} else if (oCell.getFormulaParsed().ca === true) {
+					} else if (oFormulaParsed.ca === true) {
 						oCell.initStartCellForIterCalc();
 						if (g_cCalcRecursion.getStartCellIndex()) {
 							aCycleCells.push(oCell);
@@ -3192,9 +3196,11 @@
 			AscCommonExcel.executeInR1C1Mode(false, function () {
 				for (let i = 0; i < formulas.length; ++i) {
 					let formula = formulas[i];
+					let caTemp = formula.ca;
 					formula.removeDependencies();
 					formula.setFormula(formula.getFormula());
 					formula.parse();
+					formula.ca = caTemp;
 					formula.buildDependencies();
 				}
 			});

@@ -47,6 +47,10 @@ CMathBreak.prototype.Set_FromObject = function(Obj)
             this.alnAt = Obj.alnAt;
     }
 };
+CMathBreak.prototype.IsEqual = function (oMathBrk)
+{
+	return oMathBrk && oMathBrk.alnAt === this.alnAt;
+}
 CMathBreak.prototype.Copy = function()
 {
     var NewMBreak = new CMathBreak();

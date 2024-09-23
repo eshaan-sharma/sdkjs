@@ -1143,6 +1143,34 @@ $(function () {
 				let isNotMatrix = !(MathContent.Root.Content[1] instanceof CMathMatrix);
 				assert.strictEqual(isNotMatrix, true, 'We must get not Matrix');
 			})
+
+			QUnit.test('Save manual break', function (assert)
+			{
+				Clear();
+				assert.ok(true, "Set Unicode mode");
+				logicDocument.SetMathInputType(0);
+				AddText("1/2+x_2 ");
+				assert.ok(true, "Add '1/2+x_2' and convert it");
+
+				AscTest.MoveCursorLeft(false, false, 6);
+				assert.ok(true, "Move cursor to start of '='");
+
+				let oBase = new CMathMenuBase();
+				oBase.insert_ManualBreak();
+				logicDocument.Set_MathProps(oBase);
+				assert.ok(true, "Add manual break");
+
+				assert.strictEqual(MathContent.Root.Content[2].MathPrp.brk !== undefined, true, 'Check brk in "=" ParaRun');
+
+				logicDocument.ConvertMathView(true);
+				assert.ok(true, "Convert to linear view");
+
+				assert.strictEqual(MathContent.Root.Content[2].MathPrp.brk !== undefined, true, 'Check brk in "=" ParaRun');
+
+				logicDocument.ConvertMathView(false);
+				assert.ok(true, "Convert to professional view");
+				assert.strictEqual(MathContent.Root.Content[2].MathPrp.brk !== undefined, true, 'Check brk in "=" ParaRun');
+			})
 		})
 	})
 
