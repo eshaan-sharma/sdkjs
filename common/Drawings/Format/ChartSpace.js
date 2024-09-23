@@ -11998,6 +11998,7 @@ function(window, undefined) {
 		// find maximum number of allowed labels
 		const aLabels = oLabelsBox.aLabels;
 		// the max width default is 20000;
+		// STOPHERE
 		const maxLabelWidth = 20000;
 		const fFirstLabelContentWidth = aLabels && Array.isArray(aLabels) && aLabels.length > 0 && aLabels[0] ? aLabels[0].getMaxContentWidth(maxLabelWidth) : 0;
 		const fLastLabelContentWidth = aLabels && Array.isArray(aLabels) && aLabels.length > 0 && aLabels[aLabels.length - 1] ? aLabels[aLabels.length - 1].getMaxContentWidth(maxLabelWidth) : 0;

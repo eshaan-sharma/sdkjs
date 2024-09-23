@@ -2438,11 +2438,17 @@
 	CDLbl.prototype.notAllowedWithoutId = function() {
 		return false;
 	};
-    CDLbl.prototype.getMaxContentWidth = function() {
+    CDLbl.prototype.getContentWidth = function() {
+        if (!this.tx || !this.tx.rich || !this.getContentWidth) {
+            return 0;
+        }
+        return this.tx.rich.getContentWidth();
+    };
+    CDLbl.prototype.getMaxContentWidth = function(maxWidth, bLeft) {
         if (!this.tx || !this.tx.rich || !this.getMaxContentWidth) {
             return 0;
         }
-        return this.tx.rich.getMaxContentWidth();
+        return this.tx.rich.getMaxContentWidth(maxWidth, bLeft);
     };
     CDLbl.prototype.Check_AutoFit = function() {
         return true;
