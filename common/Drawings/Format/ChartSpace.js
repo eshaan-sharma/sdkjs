@@ -1644,6 +1644,7 @@ function(window, undefined) {
 				const fLabelWidth =  fAxisLength / Math.ceil(oLabelParams.nLabelsCount / oLabelParams.nLblTickSkip);
 				// if userDefinedTickSkip then each label has same width as axislength
 				fForceContentWidth_ = oLabelParams.isUserDefinedTickSkip ? fAxisLength : fLabelWidth;
+				fInterval = (nAxisType === AscDFH.historyitem_type_ValAx) && oLabelsBox.axis && oLabelsBox.axis.grid ? oLabelsBox.axis.grid.fStride : fInterval;
 			}
 			if (statement) {
 				oLabelsBox.layoutHorRotated(fY, fDistance, fXStart, fXEnd, fInterval, bOnTickMark_, oLabelParams);
@@ -11845,11 +11846,8 @@ function(window, undefined) {
 		if (this.nLblTickSkip && this.nLabelsCount !== 0) {
 			// valAx should be checked on the second turn for new crossAx, when nIndex == 1,
 			const valAxCheck = 1;
-			console.log(fAxisLength);
 			if (this.nAxisType === AscDFH.historyitem_type_ValAx && nIndex === valAxCheck) {
-				const crossAxisWidth = oLabelsBox && oLabelsBox.axis && oLabelsBox.axis.crossAx && oLabelsBox.axis.crossAx.labels ? oLabelsBox.axis.crossAx.labels.extX : 0;
-				console.log((fAxisLength + this.alpha) - crossAxisWidth, this.nLabelsCount, this.nLblTickSkip, this.fLabelWidth);
-				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.alpha) >= (fAxisLength + this.alpha) - crossAxisWidth;
+				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.alpha) >= (fAxisLength + this.alpha);
 			} else {
 				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
 			}
@@ -12011,13 +12009,10 @@ function(window, undefined) {
 
 		// adjust labelWidth and fAxisLength by alpha
 		const labelWidth = oLabelsBox.maxMinWidth + this.alpha;
-		const crossAxisWidth = oLabelsBox.axis.crossAx && oLabelsBox.axis.crossAx.labels ? oLabelsBox.axis.crossAx.labels.extX : 0;
-		const fNewAxisLength = (fAxisLength + this.alpha) - crossAxisWidth;
-		console.log(fAxisLength, crossAxisWidth, fAxisLength - crossAxisWidth, oLabelsBox.maxMinWidth);
+		const fNewAxisLength = (fAxisLength + this.alpha);
 
 		// find labelCount
 		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
-		console.log(labelCount);
 
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
@@ -12043,7 +12038,17 @@ function(window, undefined) {
 				if (isSingleLabel) {
 					aStrings = [aStrings[0]];
 				}
+				// rebuild labels and grid
 				oLabelsBox.initializeLabels(aStrings, oLabelsBox.axis, oLabelsBox.chartSpace);
+
+				//restructure grid
+				const oGrid = oLabelsBox.axis.grid;
+				if (oGrid && aStrings.length > 1) {
+					const nNewCount = aStrings.length - 1;
+					oGrid.aStrings = aStrings;
+					oGrid.fStride = (oGrid.nCount * oGrid.fStride) / nNewCount;
+					oGrid.nCount = nNewCount;
+				}
 				this.nLabelsCount = oLabelsBox.count;
 			}
 		}
