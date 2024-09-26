@@ -9752,9 +9752,11 @@ background-repeat: no-repeat;\
 		this.isDocumentLoadComplete = false;
 		this.turnOffSpecialModes();
 
-		var oLogicDocument = this.WordControl.m_oLogicDocument;
-		oLogicDocument.StopRecalculate();
-		oLogicDocument.StopSpellCheck();
+		if (!this.isPdfEditor()) {
+			var oLogicDocument = this.WordControl.m_oLogicDocument;
+			oLogicDocument.StopRecalculate();
+			oLogicDocument.StopSpellCheck();
+		}
 		AscCommon.pptx_content_loader.ImageMapChecker = {};
 
 		this.WordControl.m_oDrawingDocument.CloseFile();

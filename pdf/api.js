@@ -58,7 +58,11 @@
 	
 	PDFEditorApi.prototype.openDocument = function(file) {
 		let perfStart = performance.now();
-		
+		if (file.changes && this.VersionHistory)
+		{
+			this.VersionHistory.changes = file.changes;
+			this.VersionHistory.applyChanges(this);
+		}
 		this.isOnlyReaderMode     = false;
 		this.ServerIdWaitComplete = true;
 		
