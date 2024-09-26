@@ -11716,6 +11716,8 @@ function(window, undefined) {
 		this.bCalculated = false;
 		this.fLabelHeight = null;
 		this.fLabelWidth = null;
+		// alpha stands for the amount of additional space that label should have, other than the width of its content;
+		// left space + right space = this.alpha
 		this.alpha = (this.nAxisType === AscDFH.historyitem_type_DateAx) ? 1.939 : 0;
 	}
 
