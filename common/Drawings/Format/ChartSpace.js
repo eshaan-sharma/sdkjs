@@ -11979,13 +11979,11 @@ function(window, undefined) {
 
 		const getMultiplicator = function (step) {
 			// Calculate the power of ten that brings the number between 1 and 10
-			console.log(step);
 			const exponent = step ? Math.floor(Math.log10(step)) : 0;
 			return Math.pow(10, exponent);
 		}
 
 		const getNewStep = function (nMultiplicator, nLabelCount ,nLblTickSkip) {
-			console.log(nLblTickSkip, nMultiplicator);
 			if (nLblTickSkip === null) {
 				// means only 1 label will be shown
 				return null;
@@ -12023,11 +12021,9 @@ function(window, undefined) {
 
 			if (!newStep) {
 				// find max that is higher than axis max
-				console.log(oLabelsBox.axis.scale, nMultiplicator);
 				const newMax = Math.ceil(oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1] / (nMultiplicator)) * nMultiplicator;
 				return [oLabelsBox.axis.scale[0], newMax]
 			} else {
-				console.log(newStep, axisMin, axisMax);
 				return oLabelsBox.chartSpace.chartObj._getArrayDataValues(newStep, axisMin, axisMax, manualMin, manualMax, false);
 			}
 		}
@@ -12042,7 +12038,6 @@ function(window, undefined) {
 
 		// find nLabelCount
 		const nLabelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
-		console.log(fAxisLength, oLabelsBox.maxMinWidth, nLabelCount, fNewAxisLength/ labelWidth);
 
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
@@ -12062,7 +12057,6 @@ function(window, undefined) {
 		if (!(oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.logBase) && (!newStep || newStep > (nStep + fPrecision))) {
 			// scale is an array of size at least 2
 			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, nMultiplicator);
-			console.log(oLabelsBox.axis.scale, newStep);
 			let aStrings = oLabelsBox.chartSpace ? oLabelsBox.chartSpace.getLabelsForAxis(oLabelsBox.axis) : null;
 			if (aStrings) {
 				isSingleLabel = (newStep === null);
