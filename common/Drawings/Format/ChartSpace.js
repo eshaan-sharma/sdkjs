@@ -11801,10 +11801,25 @@ function(window, undefined) {
 		this.bCalculated = false;
 		this.fLabelHeight = null;
 		this.fLabelWidth = null;
-		this.alpha = 4;
+		//decisionBoundary states a threshold for the diagonal label width;
+		this.fAutoRotationThreshold = (this.nAxisType === AscDFH.historyitem_type_DateAx) ? 2.5 : 2;
+		// fSpaceBetweenLabels stands for the amount of additional space that label should have, other than the width of its content;
+		// left space + right space = this.fSpaceBetweenLabels
+		this.fSpaceBetweenLabels = this.getSpaceBetweenLabels();
 		// the max width default is 20000;
 		this.maxLabelWidth = 20000;
 	}
+
+	CLabelsParameters.prototype.getSpaceBetweenLabels = function () {
+		switch (this.nAxisType){
+			case (AscDFH.historyitem_type_DateAx):
+				return 1.939;
+			case (AscDFH.historyitem_type_ValAx):
+				return 4;
+			default:
+				return 0;
+		}
+	};
 
 	CLabelsParameters.prototype.calculate = function (oLabelsBox, fAxisLength, fRectHeight, nIndex) {
 		// get height of label
@@ -11847,7 +11862,7 @@ function(window, undefined) {
 			// valAx should be checked on the second turn for new crossAx, when nIndex == 1,
 			const valAxCheck = 1;
 			if (this.nAxisType === AscDFH.historyitem_type_ValAx && nIndex === valAxCheck) {
-				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.alpha) >= (fAxisLength + this.alpha);
+				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.fSpaceBetweenLabels) >= (fAxisLength + this.fSpaceBetweenLabels);
 			} else {
 				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
 			}
@@ -12008,8 +12023,8 @@ function(window, undefined) {
 		const nMultiplicator = getMultiplicator(nStep);
 
 		// adjust labelWidth and fAxisLength by alpha
-		const labelWidth = oLabelsBox.maxMinWidth + this.alpha;
-		const fNewAxisLength = (fAxisLength + this.alpha);
+		const labelWidth = oLabelsBox.maxMinWidth + this.fSpaceBetweenLabels;
+		const fNewAxisLength = (fAxisLength + this.fSpaceBetweenLabels);
 
 		// find labelCount
 		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
@@ -12109,7 +12124,7 @@ function(window, undefined) {
 		
 		if (this.fLabelWidth) {
 			// toDo test configurations for different number labels on excel: finalTestCatAxis
-			const labelCount = fAxisLength > 0 && fAxisLength >= this.fLabelWidth ? Math.floor(fAxisLength / this.fLabelWidth) : 1;
+			const labelCount = fAxisLength > 0 && fAxisLength >= this.fLabelWidth ? Math.floor((fAxisLength + this.fSpaceBetweenLabels) / (this.fLabelWidth + this.fSpaceBetweenLabels)) : 1;
 			nLblTickSkip = Math.ceil(this.nLabelsCount / labelCount);
 
 			// date ax skips labels by significant days 
@@ -12159,10 +12174,10 @@ function(window, undefined) {
 			// multiplier is the square root of 2; 
 			// diagonal rectangle with h is equal to root(2) * h;
 			const fUpdatedLabelHight = 1.41421356237 * this.fLabelHeight;
-			const diagonalLabelWidth = fUpdatedLabelHight * updatedLabelsCount;
+			const diagonalLabelWidth = (fUpdatedLabelHight + this.fSpaceBetweenLabels) * updatedLabelsCount;
 
 			// diagonal angle is 45 degree
-			if (diagonalLabelWidth && diagonalLabelWidth <= fAxisLength) {
+			if (diagonalLabelWidth && oLabelsBox.maxMinWidth > this.fAutoRotationThreshold * this.fLabelHeight && diagonalLabelWidth <= (fAxisLength + this.fSpaceBetweenLabels)) {
 				this.fLabelWidth = fUpdatedLabelHight;
 				this.rot = -45 * this.degree;
 				return;
