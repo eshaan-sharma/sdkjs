@@ -11815,7 +11815,7 @@ function(window, undefined) {
 			case (AscDFH.historyitem_type_DateAx):
 				return 1.939;
 			case (AscDFH.historyitem_type_ValAx):
-				return 4;
+				return 3.8;
 			default:
 				return 0;
 		}
@@ -11859,9 +11859,7 @@ function(window, undefined) {
 
 		// sometimes it is possible that new fAxisLength is enough for current nLabelsCount
 		if (this.nLblTickSkip && this.nLabelsCount !== 0) {
-			// valAx should be checked on the second turn for new crossAx, when nIndex == 1,
-			const valAxCheck = 1;
-			if (this.nAxisType === AscDFH.historyitem_type_ValAx && nIndex === valAxCheck) {
+			if (this.nAxisType === AscDFH.historyitem_type_ValAx) {
 				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * (this.fLabelWidth + this.fSpaceBetweenLabels) >= (fAxisLength + this.fSpaceBetweenLabels);
 			} else {
 				return this.bCalculated = Math.ceil(this.nLabelsCount / this.nLblTickSkip) * this.fLabelWidth >= fAxisLength;
@@ -11981,39 +11979,55 @@ function(window, undefined) {
 
 		const getMultiplicator = function (step) {
 			// Calculate the power of ten that brings the number between 1 and 10
+			console.log(step);
 			const exponent = step ? Math.floor(Math.log10(step)) : 0;
 			return Math.pow(10, exponent);
 		}
 
-		const getNewStep = function (multiplicator, nLblTickSkip) {
+		const getNewStep = function (nMultiplicator, nLabelCount ,nLblTickSkip) {
+			console.log(nLblTickSkip, nMultiplicator);
 			if (nLblTickSkip === null) {
 				// means only 1 label will be shown
 				return null;
-			}else if (nLblTickSkip <= multiplicator) {
-				return multiplicator;
-			} else if (nLblTickSkip <= 2 * multiplicator) {
-				return 2 * multiplicator;
-			} else if (nLblTickSkip <= 5 * multiplicator) {
-				return 5 * multiplicator;
-			} else if (nLblTickSkip <= 10 * multiplicator) {
-				return 10 * multiplicator;
-			} else {
+			}
+
+			if (nLabelCount === 2) {
 				// means only 2 labels will be shown
 				return 0;
 			}
+
+			// find the new step
+			// while loop can be used, however no practical example of greater than 100 * nMultiplicator was found
+			if (nLblTickSkip <= nMultiplicator) {
+				return nMultiplicator;
+			} else if (nLblTickSkip <= 2 * nMultiplicator) {
+				return 2 * nMultiplicator;
+			} else if (nLblTickSkip <= 5 * nMultiplicator) {
+				return 5 * nMultiplicator;
+			} else if (nLblTickSkip <= 10 * nMultiplicator) {
+				return 10 * nMultiplicator;
+			} else if (nLblTickSkip <= 20 * nMultiplicator) {
+				return 20 * nMultiplicator;
+			} else if (nLblTickSkip <= 50 * nMultiplicator) {
+				return 50 * nMultiplicator;
+			} else if (nLblTickSkip <= 100 * nMultiplicator) {
+				return 100 * nMultiplicator;
+			}
 		}
 
-		const createNewScale = function (newStep, oLabelsBox, multiplication) {
+		const createNewScale = function (newStep, oLabelsBox, nMultiplicator) {
 			const axisMin = oLabelsBox.axis.min;
 			const axisMax = oLabelsBox.axis.max;
 			let manualMin = oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.min !== null ? oLabelsBox.axis.scaling.min : null;
 			let manualMax = oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.max !== null ? oLabelsBox.axis.scaling.max : null;
 
 			if (!newStep) {
-				// find max that is higher than axis max 
-				const newMax = Math.ceil(oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1] / (multiplication * 10)) * 10 * multiplication;
+				// find max that is higher than axis max
+				console.log(oLabelsBox.axis.scale, nMultiplicator);
+				const newMax = Math.ceil(oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1] / (nMultiplicator)) * nMultiplicator;
 				return [oLabelsBox.axis.scale[0], newMax]
 			} else {
+				console.log(newStep, axisMin, axisMax);
 				return oLabelsBox.chartSpace.chartObj._getArrayDataValues(newStep, axisMin, axisMax, manualMin, manualMax, false);
 			}
 		}
@@ -12026,26 +12040,29 @@ function(window, undefined) {
 		const labelWidth = oLabelsBox.maxMinWidth + this.fSpaceBetweenLabels;
 		const fNewAxisLength = (fAxisLength + this.fSpaceBetweenLabels);
 
-		// find labelCount
-		const labelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
+		// find nLabelCount
+		const nLabelCount = fAxisLength > 0 && fAxisLength >= labelWidth ? Math.floor( fNewAxisLength/ labelWidth) : 1;
+		console.log(fAxisLength, oLabelsBox.maxMinWidth, nLabelCount, fNewAxisLength/ labelWidth);
 
 		// find minimum tick skip
 		const lastNum = oLabelsBox.axis.scale[oLabelsBox.axis.scale.length - 1];
 		const firstNum = oLabelsBox.axis.scale[0];
-		const nLblTickSkip = labelCount > 1 ? (lastNum - firstNum) / (labelCount - 1) : null;
+		const nLblTickSkip = nLabelCount > 1 ? (lastNum - firstNum) / (nLabelCount - 1) : null;
 
 		// find new step
 		// if null then 0 labels
 		// if 0 then 1 label
-		const newStep = getNewStep(nMultiplicator, nLblTickSkip);
+		const newStep = getNewStep(nMultiplicator, nLabelCount, nLblTickSkip);
 
 		// create new labels for valAx
 		const fPrecision = 0.01;
 
 		let isSingleLabel = false
-		if (!newStep || newStep > (nStep + fPrecision)) {
+		// check if axis is not logarithmic and if newStep is different than the previous;
+		if (!(oLabelsBox.axis.scaling && oLabelsBox.axis.scaling.logBase) && (!newStep || newStep > (nStep + fPrecision))) {
 			// scale is an array of size at least 2
 			oLabelsBox.axis.scale = createNewScale(newStep, oLabelsBox, nMultiplicator);
+			console.log(oLabelsBox.axis.scale, newStep);
 			let aStrings = oLabelsBox.chartSpace ? oLabelsBox.chartSpace.getLabelsForAxis(oLabelsBox.axis) : null;
 			if (aStrings) {
 				isSingleLabel = (newStep === null);
@@ -12124,8 +12141,8 @@ function(window, undefined) {
 		
 		if (this.fLabelWidth) {
 			// toDo test configurations for different number labels on excel: finalTestCatAxis
-			const labelCount = fAxisLength > 0 && fAxisLength >= this.fLabelWidth ? Math.floor((fAxisLength + this.fSpaceBetweenLabels) / (this.fLabelWidth + this.fSpaceBetweenLabels)) : 1;
-			nLblTickSkip = Math.ceil(this.nLabelsCount / labelCount);
+			const nLabelCount = fAxisLength > 0 && fAxisLength >= this.fLabelWidth ? Math.floor((fAxisLength + this.fSpaceBetweenLabels) / (this.fLabelWidth + this.fSpaceBetweenLabels)) : 1;
+			nLblTickSkip = Math.ceil(this.nLabelsCount / nLabelCount);
 
 			// date ax skips labels by significant days 
 			// two days, week or weeks, mounths, years
