@@ -38,10 +38,9 @@ jobs:
       
       - name: Run unit tests
         run: |
-          sudo rm -r /opt/hostedtoolcache/node/18.20.4/x64/lib/node_modules/node-qunit-puppeteer
-          npm install -g grunt-cli node-qunit-puppeteer
+          npm install grunt-cli node-qunit-puppeteer
           npm install --prefix build
-          grunt --gruntfile build/Gruntfile.js develop
+          node node_modules/grunt-cli/bin/grunt --gruntfile build/Gruntfile.js develop
           node-qunit-puppeteer tests/common/api/api.html 30000
   builder-tests:
     runs-on: ubuntu-latest
