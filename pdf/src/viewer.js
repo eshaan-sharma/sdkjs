@@ -103,15 +103,75 @@
 	// страницы на экране в приоритете.
 	function CPageInfo()
 	{
+		this.Id = null;
+		if ((AscCommon.g_oIdCounter.m_bLoad || AscCommon.History.CanAddChanges())) {
+			this.Id = AscCommon.g_oIdCounter.Get_NewId();
+			AscCommon.g_oTableId.Add(this, this.Id);
+		}
+
+		this.nativePage = {
+			W:					undefined,
+			H:					undefined,
+			Dpi:				72,
+			Rotate:				0,
+			originRotate:		0,
+			fontsUpdateType:	0,
+			originIndex:		undefined,
+			fonts:				[]
+		}
+
 		this.isPainted				= false;
 		this.links					= null;
 		this.fields					= [];
 		this.annots					= [];
 		this.drawings				= [];
+		this.Lock					= new AscCommon.CLock();
 		this.needRedrawForms		= true;
 		this.needRedrawDrawings		= true;
 		this.needRedrawAnnots		= true;
-	}
+	};
+	AscFormat.InitClass(CPageInfo, AscFormat.CBaseNoIdObject, AscDFH.historyitem_type_Pdf_Page);
+	CPageInfo.prototype.constructor = CPageInfo;
+
+	CPageInfo.prototype.IsLocked = function() {
+		return false == [AscCommon.c_oAscLockTypes.kLockTypeNone, AscCommon.c_oAscLockTypes.kLockTypeMine].includes(this.Lock.Get_Type());
+	};
+	CPageInfo.prototype.GetId = function()
+	{
+		return this.Id;
+	};
+	CPageInfo.prototype.Copy = function() {
+		let oCopy = new CPageInfo();
+		oCopy.SetWidth(this.nativePage.W);
+		oCopy.SetHeight(this.nativePage.H);
+		oCopy.SetDpi(this.nativePage.Dpi);
+		oCopy.SetRotate(this.nativePage.Rotate);
+
+		return oCopy
+	};
+	CPageInfo.prototype.SetWidth = function(nWidthPt) {
+		AscCommon.History.Add(new CChangesPDFDocumentPageWidth(this, this.nativePage.W, nWidthPt));
+		this.nativePage.W = nWidthPt;
+	};
+	CPageInfo.prototype.SetHeight = function(nHeightPt) {
+		AscCommon.History.Add(new CChangesPDFDocumentPageHeight(this, this.nativePage.H, nHeightPt));
+		this.nativePage.H = nHeightPt;
+	};
+	CPageInfo.prototype.SetDpi = function(nDpi) {
+		// AscCommon.History.Add(new CChangesPDFDocumentPageWidth(this, this.nativePage.Dpi, nDpi));
+		this.nativePage.Dpi = nDpi;
+	};
+	CPageInfo.prototype.SetRotate = function(nRotate) {
+		// AscCommon.History.Add(new CChangesPDFDocumentPageHeight(this, this.nativePage.Rotate, nRotate));
+		this.nativePage.Rotate = nRotate;
+	};
+	CPageInfo.prototype.GetIndex = function()
+    {
+		let oViewer = Asc.editor.getDocumentRenderer();
+		let oDocPages = oViewer.pagesInfo;
+
+		return oDocPages.pages.indexOf(this);
+    };
 	
 	function CDocumentPagesInfo()
 	{
@@ -120,18 +180,28 @@
 		// все страницы ДО this.countCurrentPage должны иметь текстовые команды
 		this.countTextPages = 0;
 	}
-	CDocumentPagesInfo.prototype.setCount = function(count)
+	CDocumentPagesInfo.prototype.init = function(nativePages)
 	{
-		this.pages = new Array(count);
-		for (var i = 0; i < count; i++)
+		this.pages = new Array(nativePages.length);
+		for (var i = 0; i < this.pages.length; i++)
 		{
 			this.pages[i] = new CPageInfo();
+			this.pages[i].nativePage = nativePages[i];
 		}
+
 		this.countTextPages = 0;
 	};
 	CDocumentPagesInfo.prototype.setPainted = function(index)
 	{
 		this.pages[index].isPainted = true;
+	};
+	CDocumentPagesInfo.prototype.removePage = function(index)
+	{
+		return this.pages.splice(index, 1);
+	};
+	CDocumentPagesInfo.prototype.addPage = function(index, pageInfo)
+	{
+		this.pages.splice(index, 0, pageInfo)
 	};
 
 	function CHtmlPage(id, api)
@@ -876,7 +946,7 @@
 
 		this.afterOpen = function()
 		{
-			this.pagesInfo.setCount(this.file.pages.length);
+			this.pagesInfo.init(this.file.pages);
 			let oDoc = this.getPDFDoc();
 			oDoc.GetDrawingDocument().m_lPagesCount = this.file.pages.length;
 
@@ -3681,9 +3751,6 @@
 				break;
 
 			let aForms = this.pagesInfo.pages[i].fields != null ? this.pagesInfo.pages[i].fields : null;
-			if (this.pagesInfo.pages[i].graphics == null)
-				this.pagesInfo.pages[i].graphics = {};
-			
 			if (aForms.length == 0)
 				continue;
 
@@ -3795,9 +3862,6 @@
 				break;
 
 			let aAnnots = this.pagesInfo.pages[i].annots != null ? this.pagesInfo.pages[i].annots : null;
-			if (this.pagesInfo.pages[i].graphics == null)
-				this.pagesInfo.pages[i].graphics = {};
-			
 			if (aAnnots.length == 0)
 				continue;
 
@@ -3882,9 +3946,6 @@
 				break;
 
 			let aDrawings = this.pagesInfo.pages[i].drawings != null ? this.pagesInfo.pages[i].drawings : null;
-			if (this.pagesInfo.pages[i].graphics == null)
-				this.pagesInfo.pages[i].graphics = {};
-			
 			if (aDrawings.length == 0)
 				continue;
 

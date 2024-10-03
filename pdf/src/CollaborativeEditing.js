@@ -96,6 +96,19 @@ CPDFCollaborativeEditing.prototype.Update_ForeignSelectedObjectsLabelsPositions 
         }
     }
 };
+CPDFCollaborativeEditing.prototype.private_LockByMe = function() {
+	for (let nIndex = 0, nCount = this.m_aCheckLocks.length; nIndex < nCount; ++nIndex) {
+		let oItem = this.m_aCheckLocks[nIndex];
+        
+		if (true !== oItem && false !== oItem) {
+			let oClass = AscCommon.g_oTableId.Get_ById(oItem["guid"]);
+			if (oClass) {
+				oClass.Lock.Set_Type(AscCommon.c_oAscLockTypes.kLockTypeMine);
+				this.Add_Unlock2(oClass);
+			}
+		}
+	}
+};
 CPDFCollaborativeEditing.prototype.GetDocumentPositionBinary = function(oWriter, PosInfo) {
     if (!PosInfo)
         return '';

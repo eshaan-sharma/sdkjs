@@ -145,7 +145,13 @@
         this.page.draw(ctx, this.pageRect.x, this.pageRect.y - offsetV, this.pageRect.w, this.pageRect.h);
 
         var lineW, offsetW, color = undefined;
-        if (this.num === doc.selectPage)
+        if (doc.checkPageLocked(this.num))
+        {
+            lineW = Math.max(1, (PageStyle.hoverColorWidth * AscCommon.AscBrowser.retinaPixelRatio) >> 0);
+            offsetW = PageStyle.hoverColorOffset + 0.5 * lineW;
+            color = PageStyle.lockedColor;
+        }
+        else if (this.num === doc.selectPage)
         {
             lineW = Math.max(1, (PageStyle.selectColorWidth * AscCommon.AscBrowser.retinaPixelRatio) >> 0);
             offsetW = PageStyle.selectColorOffset + 0.5 * lineW;
@@ -325,6 +331,12 @@
         this.createComponents();
     }
 
+    // COLLABORATION
+    CDocument.prototype.checkPageLocked = function(nIdx)
+    {
+        return this.viewer.pagesInfo.pages[nIdx].IsLocked();
+    };
+    
     // INTERFACE
     CDocument.prototype.repaint = function()
     {
@@ -1044,6 +1056,7 @@
     CDocument.prototype.updateSkin = function()
     {
         ThumbnailsStyle.backgroundColor = AscCommon.GlobalSkin.BackgroundColorThumbnails;
+        PageStyle.lockedColor = AscCommon.GlobalSkin.ThumbnailsLockColor;
         PageStyle.hoverColor = AscCommon.GlobalSkin.ThumbnailsPageOutlineHover;
         PageStyle.selectColor = AscCommon.GlobalSkin.ThumbnailsPageOutlineActive;
         PageStyle.numberColor = AscCommon.GlobalSkin.ThumbnailsPageNumberText;

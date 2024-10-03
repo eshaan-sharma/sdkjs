@@ -188,6 +188,7 @@
             mouseDown:  null,
             rollover:   null
         }
+        this.Lock = new AscCommon.CLock();
 
         this._partialName = sName;
         this.api = this.GetFormApi();
