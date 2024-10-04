@@ -4443,15 +4443,15 @@
 	};
 	CContentChanges.prototype.GetPos = function(pos)
 	{
-		return this.Check(AscCommon.contentchanges_Remove, pos);
+		return this.Check(AscCommon.contentchanges_Remove, pos, true);
 	};
-	CContentChanges.prototype.Check = function (Type, Pos)
+	CContentChanges.prototype.Check = function (Type, Pos, checkPos)
 	{
 		var CurPos = Pos;
 		var Count = this.m_aChanges.length;
 		for (var Index = 0; Index < Count; Index++)
 		{
-			var NewPos = this.m_aChanges[Index].Check_Changes(Type, CurPos);
+			var NewPos = this.m_aChanges[Index].Check_Changes(Type, CurPos, checkPos);
 			if (false === NewPos)
 				return false;
 
@@ -4504,10 +4504,10 @@
 		this.m_pData.Binary.Pos = Binary_Pos;
 		this.m_pData.Binary.Len = Binary_Len;
 	};
-	CContentChangesElement.prototype.Check_Changes = function (Type, Pos)
+	CContentChangesElement.prototype.Check_Changes = function (Type, Pos, checkPos)
 	{
 		var CurPos = Pos;
-		if (contentchanges_Add === Type)
+		if (AscCommon.contentchanges_Add === Type)
 		{
 			for (var Index = 0; Index < this.m_nCount; Index++)
 			{
@@ -4517,7 +4517,7 @@
 						this.m_aPositions[Index]++;
 					else
 					{
-						if (contentchanges_Add === this.m_nType)
+						if (AscCommon.contentchanges_Add === this.m_nType)
 							CurPos++;
 						else //if ( contentchanges_Remove === this.m_nType )
 							CurPos--;
@@ -4529,29 +4529,32 @@
 		{
 			for (var Index = 0; Index < this.m_nCount; Index++)
 			{
-				if (false !== this.m_aPositions[Index])
+				if (false === this.m_aPositions[Index])
+					continue;
+				
+				if (CurPos < this.m_aPositions[Index])
+					this.m_aPositions[Index]--;
+				else if (CurPos > this.m_aPositions[Index])
 				{
-					if (CurPos < this.m_aPositions[Index])
-						this.m_aPositions[Index]--;
-					else if (CurPos > this.m_aPositions[Index])
+					if (AscCommon.contentchanges_Add === this.m_nType)
+						CurPos++;
+					else //if ( contentchanges_Remove === this.m_nType )
+						CurPos--;
+				}
+				else //if ( CurPos === this.m_aPositions[Index] )
+				{
+					if (AscCommon.contentchanges_Remove === this.m_nType)
 					{
-						if (contentchanges_Add === this.m_nType)
-							CurPos++;
-						else //if ( contentchanges_Remove === this.m_nType )
-							CurPos--;
-					}
-					else //if ( CurPos === this.m_aPositions[Index] )
-					{
-						if (AscCommon.contentchanges_Remove === this.m_nType)
-						{
-							// Отмечаем, что действия совпали
+						// Мы попали в позицию, удаленную другим пользователем
+						// Если наше действие удаляем тоже самое место, то помечаем, что удалять ничего не нужно
+						if (!checkPos)
 							this.m_aPositions[Index] = false;
-							return false;
-						}
-						else
-						{
-							CurPos++;
-						}
+						
+						return false;
+					}
+					else
+					{
+						CurPos++;
 					}
 				}
 			}
