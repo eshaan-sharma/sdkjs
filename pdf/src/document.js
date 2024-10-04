@@ -162,6 +162,7 @@ var CPresentation = CPresentation || function(){};
         this.annotsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
         this.fieldsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
         this.drawingsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
+		this.pagesContentChanges = new AscCommon.CContentChanges();
 
         if (AscCommon.History)
         {
@@ -5532,6 +5533,7 @@ var CPresentation = CPresentation || function(){};
         this.annotsContentChanges.Clear();
         this.fieldsContentChanges.Clear();
         this.drawingsContentChanges.Clear();
+		this.pagesContentChanges.Clear();
     };
     CPDFDoc.prototype.Add_ContentChanges = function(Changes) {
         let oChange = Changes.m_pData.Data;
@@ -5546,12 +5548,17 @@ var CPresentation = CPresentation || function(){};
             case AscDFH.historyitem_PDF_Document_DrawingsContent:
                 this.drawingsContentChanges.Add(Changes);
                 break;
+			case AscDFH.historyitem_PDF_Document_AddPage:
+			case AscDFH.historyitem_PDF_Document_RemovePage:
+				this.pagesContentChanges.Add(Changes);
+				break;
         }
     };
     CPDFDoc.prototype.Refresh_ContentChanges = function() {
         this.annotsContentChanges.Refresh();
         this.fieldsContentChanges.Refresh();
         this.drawingsContentChanges.Refresh();
+		this.pagesContentChanges.Refresh();
     };
     CPDFDoc.prototype.GetRecalcId = function () {
         return Infinity;

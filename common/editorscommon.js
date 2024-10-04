@@ -4441,6 +4441,10 @@
 	{
 		this.m_aChanges.length = 0;
 	};
+	CContentChanges.prototype.GetPos = function(pos)
+	{
+		return this.Check(AscCommon.contentchanges_Remove, pos);
+	};
 	CContentChanges.prototype.Check = function (Type, Pos)
 	{
 		var CurPos = Pos;
