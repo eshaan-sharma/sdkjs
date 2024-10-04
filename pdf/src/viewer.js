@@ -120,6 +120,10 @@
 			fonts:				[]
 		}
 
+		this.annotsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
+        this.fieldsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
+        this.drawingsContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
+
 		this.isPainted				= false;
 		this.links					= null;
 		this.fields					= [];
@@ -133,6 +137,136 @@
 	AscFormat.InitClass(CPageInfo, AscFormat.CBaseNoIdObject, AscDFH.historyitem_type_Pdf_Page);
 	CPageInfo.prototype.constructor = CPageInfo;
 
+	CPageInfo.prototype.SetNeedRedrawDrawings = function(bRedraw) {
+		if (!bRedraw) {
+			this.needRedrawDrawings = false;
+		}
+
+		let oThis = this;
+		let oViewer = Asc.editor.getDocumentRenderer();
+		let oDoc = this.GetDocument();
+		let oThumbnails = oDoc.GetThumbnails();
+
+        function setRedrawPageOnRepaint() {
+            oThis.needRedrawDrawings = true;
+			oThumbnails && oThumbnails._repaintPage(nPage);
+        }
+
+        oViewer.paint(setRedrawPageOnRepaint);
+	};
+	CPageInfo.prototype.GetDocument = function() {
+		return Asc.editor.getPDFDoc();
+	};
+	CPageInfo.prototype.Clear_ContentChanges = function() {
+        this.annotsContentChanges.Clear();
+        this.fieldsContentChanges.Clear();
+        this.drawingsContentChanges.Clear();
+    };
+    CPageInfo.prototype.Add_ContentChanges = function(Changes) {
+        let oChange = Changes.m_pData.Data;
+        
+        switch (oChange.Type) {
+            case AscDFH.historyitem_PDF_Document_AnnotsContent:
+                this.annotsContentChanges.Add(Changes);
+                break;
+            case AscDFH.historyitem_PDF_Document_FieldsContent:
+                this.fieldsContentChanges.Add(Changes);
+                break;
+            case AscDFH.historyitem_PDF_Document_DrawingsContent:
+                this.drawingsContentChanges.Add(Changes);
+                break;
+        }
+    };
+    CPageInfo.prototype.Refresh_ContentChanges = function() {
+        this.annotsContentChanges.Refresh();
+        this.fieldsContentChanges.Refresh();
+        this.drawingsContentChanges.Refresh();
+    };
+	CPageInfo.prototype.AddDrawing = function(oDrawing, nPos) {
+		if (nPos == undefined) {
+            nPos = this.drawings.length;
+        }
+
+		this.drawings.splice(nPos, 0, oDrawing);
+		AscCommon.History.Add(new CChangesPDFDocumentDrawingsContent(this, nPos, [oDrawing], true));
+
+		oDrawing.SetPage(this.GetIndex());
+        oDrawing.SetParentPage(this);
+        oDrawing.AddToRedraw();
+	};
+	CPageInfo.prototype.RemoveDrawing = function(sId) {
+        let oDrawing = this.drawings.find(function(drawing) {
+            return drawing.GetId() === sId;
+        });
+
+        if (!oDrawing)
+            return;
+
+        let nPos = this.drawings.indexOf(oDrawing);
+        this.drawings.splice(nPos, 1);
+        
+        AscCommon.History.Add(new CChangesPDFDocumentDrawingsContent(this, nPos, [oDrawing], false));
+		oDrawing.AddToRedraw();
+	};
+	CPageInfo.prototype.AddAnnot = function(oAnnot, nPos) {
+		if (nPos == undefined) {
+            nPos = this.annots.length;
+        }
+
+        this.annots.splice(nPos, 0, oAnnot);
+
+        AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], true));
+		oAnnot.SetParentPage(this);
+        oAnnot.AddToRedraw();
+	};
+	CPageInfo.prototype.RemoveAnnot = function(sId) {
+		let oAnnot = this.annots.find(function(annot) {
+            return annot.GetId() === sId;
+        });
+
+        if (!oAnnot)
+            return;
+
+        let nPos = this.annots.indexOf(oAnnot);
+        this.annots.splice(nPos, 1);
+        
+        AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], false));
+		oAnnot.AddToRedraw();
+	};
+	CPageInfo.prototype.AddField = function(oField, nPos) {
+		if (nPos == undefined) {
+            nPos = this.fields.length;
+        }
+
+		this.fields.splice(nPos, 0, oField);
+
+        AscCommon.History.Add(new CChangesPDFDocumentFieldsContent(this, nPos, [oField], true));
+		oField.SetParentPage(this);
+        oField.AddToRedraw();
+	};
+	CPageInfo.prototype.RemoveField = function(sId) {
+		let oDoc = this.GetDocument();
+		let oField = this.fields.find(function(field) {
+            return field.GetId() === sId;
+        });
+
+        if (!oField)
+            return;
+
+        let nPos = this.fields.indexOf(oField);
+        this.fields.splice(nPos, 1);
+        
+        AscCommon.History.Add(new CChangesPDFDocumentFieldsContent(this, nPos, [oField], false));
+
+		// удаляем из родителя
+        let oParent = oField.GetParent();
+        if (oParent) {
+            oParent.RemoveKid(oField);
+            oDoc.CheckParentForm(oParent); // проверяем родителя
+        }
+
+		oField.AddToRedraw();
+	};
 	CPageInfo.prototype.IsLocked = function() {
 		return false == [AscCommon.c_oAscLockTypes.kLockTypeNone, AscCommon.c_oAscLockTypes.kLockTypeMine].includes(this.Lock.Get_Type());
 	};
@@ -172,6 +306,8 @@
 
 		return oDocPages.pages.indexOf(this);
     };
+	
+	CPageInfo.prototype.Is_Inline = function(){};
 	
 	function CDocumentPagesInfo()
 	{
@@ -1387,7 +1523,7 @@
 					let modDate			= oAnnotInfo["LastModified"] ? AscPDF.ParsePDFDate(oAnnotInfo["LastModified"]) : null;
 					let modStamp		= modDate ? modDate.getTime() : undefined;
 
-					oAnnot = oDoc.AddAnnot({
+					oAnnot = oDoc.AddAnnotByProps({
 						page:			oAnnotInfo["page"],
 						name:			oAnnotInfo["UniqueName"], 
 						creationDate:	creationStamp,

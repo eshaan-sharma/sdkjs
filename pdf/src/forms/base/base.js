@@ -278,15 +278,17 @@
         if (nPage == nCurPage)
             return;
 
+        let oDoc = this.GetDocument();
+        let oCurPage = oDoc.GetPageInfo(nCurPage);
+        let oNewPage = oDoc.GetPageInfo(nPage);
 
-        let oViewer = editor.getDocumentRenderer();
-        let nCurIdxOnPage = oViewer.pagesInfo.pages[nCurPage] && oViewer.pagesInfo.pages[nCurPage].fields ? oViewer.pagesInfo.pages[nCurPage].fields.indexOf(this) : -1;
-        if (oViewer.pagesInfo.pages[nPage]) {
+        let nCurIdxOnPage = oCurPage && oCurPage.fields ? oCurPage.fields.indexOf(this) : -1;
+        if (oNewPage) {
             if (nCurIdxOnPage != -1)
-                oViewer.pagesInfo.pages[nCurPage].fields.splice(nCurIdxOnPage, 1);
+                oCurPage.fields.splice(nCurIdxOnPage, 1);
 
-            if (oViewer.pagesInfo.pages[nPage].fields.indexOf(this) == -1)
-                oViewer.pagesInfo.pages[nPage].fields.push(this);
+            if (oNewPage.fields.indexOf(this) == -1)
+                oNewPage.fields.push(this);
 
             this._page = nPage;
             this.selectStartPage = nPage;
@@ -648,6 +650,12 @@
 
     CBaseField.prototype.GetParent = function() {
         return this._parent;
+    };
+    CBaseField.prototype.SetParentPage = function(oParent) {
+        this.parentPage = oParent;
+    };
+    CBaseField.prototype.GetParentPage = function() {
+        return this.parentPage;
     };
 
     /**
@@ -1209,6 +1217,9 @@
     
     CBaseField.prototype.Get_Id = function() {
         return this._id;
+    };
+    CBaseField.prototype.GetId = function() {
+        return this.Get_Id();
     };
     CBaseField.prototype.SetNeedRecalc = function(bRecalc, bSkipAddToRedraw) {
         if (bRecalc == false) {

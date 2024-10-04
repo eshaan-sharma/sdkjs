@@ -236,6 +236,12 @@
         AscCommon.History.Add(new CChangesPDFDocumentSetDocument(this, this._doc, oDoc));
         this._doc = oDoc;
     };
+    CPdfDrawingPrototype.prototype.SetParentPage = function(oParent) {
+        this.setParent(oParent);
+    };
+    CPdfDrawingPrototype.prototype.GetParentPage = function() {
+        return this.parent;
+    };
     CPdfDrawingPrototype.prototype.OnContentChange = function() {
         if (this.group) {
             this.group.SetNeedRecalc(true);
@@ -263,9 +269,6 @@
         if (nPage == nCurPage)
             return;
 
-        let oViewer = editor.getDocumentRenderer();
-        let oDoc    = this.GetDocument();
-
         AscCommon.History.Add(new CChangesPDFDrawingPage(this, nCurPage, nPage));
 
         // initial set
@@ -274,21 +277,26 @@
             return;
         }
         
-        let nCurIdxOnPage = oViewer.pagesInfo.pages[nCurPage] && oViewer.pagesInfo.pages[nCurPage].drawings ? oViewer.pagesInfo.pages[nCurPage].drawings.indexOf(this) : -1;
-        if (oViewer.pagesInfo.pages[nPage]) {
+        let oDoc            = this.GetDocument();
+        let oCurPage        = oDoc.GetPageInfo(nCurPage);
+        let oNewPage        = oDoc.GetPageInfo(nPage);
+        let nCurIdxOnPage   = oCurPage && oCurPage.drawings ? oCurPage.drawings.indexOf(this) : -1;
+        
+        if (oNewPage) {
             if (oDoc.drawings.indexOf(this) != -1) {
                 if (nCurIdxOnPage != -1) {
-                    oViewer.pagesInfo.pages[nCurPage].drawings.splice(nCurIdxOnPage, 1);
+                    oCurPage.drawings.splice(nCurIdxOnPage, 1);
                 }
     
-                if (this.IsUseInDocument() && oViewer.pagesInfo.pages[nPage].drawings.indexOf(this) == -1)
-                    oViewer.pagesInfo.pages[nPage].drawings.push(this);
+                if (this.IsUseInDocument() && oNewPage.drawings.indexOf(this) == -1)
+                    oNewPage.drawings.push(this);
 
                 // добавляем в перерисовку исходную страницу
                 this.AddToRedraw();
             }
 
             this._page = nPage;
+            this.setParent(oNewPage);
             this.selectStartPage = nPage;
             this.AddToRedraw();
         }

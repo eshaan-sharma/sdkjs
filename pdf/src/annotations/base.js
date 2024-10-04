@@ -568,24 +568,30 @@
     CAnnotationBase.prototype.GetPopupIdx = function() {
         return this._popupIdx;
     };
+    CAnnotationBase.prototype.SetParentPage = function(oParent) {
+        this.parentPage = oParent;
+    };
+    CAnnotationBase.prototype.GetParentPage = function() {
+        return this.parentPage;
+    };
     CAnnotationBase.prototype.SetPage = function(nPage) {
         let nCurPage = this.GetPage();
         if (nPage == nCurPage)
             return;
 
-        let oViewer     = editor.getDocumentRenderer();
         let oDoc        = this.GetDocument();
-        let oPageInfo   = oViewer.pagesInfo.pages[nCurPage];
+        let oCurPage    = oDoc.GetPageInfo(nCurPage);
+        let nNewPage    = oDoc.GetPageInfo(nPage);
 
-        let nCurIdxOnPage = oPageInfo && oPageInfo.annots ? oPageInfo.annots.indexOf(this) : -1;
-        if (oViewer.pagesInfo.pages[nPage]) {
+        let nCurIdxOnPage = oCurPage && oCurPage.annots ? oCurPage.annots.indexOf(this) : -1;
+        if (nNewPage) {
             if (oDoc.annots.indexOf(this) != -1) {
                 if (nCurIdxOnPage != -1) {
-                    oPageInfo.annots.splice(nCurIdxOnPage, 1);
+                    oCurPage.annots.splice(nCurIdxOnPage, 1);
                 }
     
-                if (this.IsUseInDocument() && oViewer.pagesInfo.pages[nPage].annots.indexOf(this) == -1)
-                    oViewer.pagesInfo.pages[nPage].annots.push(this);
+                if (this.IsUseInDocument() && nNewPage.annots.indexOf(this) == -1)
+                    nNewPage.annots.push(this);
 
                 // добавляем в перерисовку исходную страницу
                 this.AddToRedraw();

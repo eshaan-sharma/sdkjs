@@ -4376,12 +4376,13 @@
 	window['AscDFH'].historyitem_PDF_Document_AnnotsContent   = window['AscDFH'].historyitem_type_PDF_Document | 1;
 	window['AscDFH'].historyitem_PDF_Document_DrawingsContent = window['AscDFH'].historyitem_type_PDF_Document | 2;
 	window['AscDFH'].historyitem_PDF_Document_FieldsContent   = window['AscDFH'].historyitem_type_PDF_Document | 3;
-	window['AscDFH'].historyitem_PDF_Document_PagesContent    = window['AscDFH'].historyitem_type_PDF_Document | 4;
-	window['AscDFH'].historyitem_PDF_Document_RotatePage      = window['AscDFH'].historyitem_type_PDF_Document | 5;
-	window['AscDFH'].historyitem_PDF_Document_RecognizePage   = window['AscDFH'].historyitem_type_PDF_Document | 6;
-	window['AscDFH'].historyitem_PDF_Document_SetDocument     = window['AscDFH'].historyitem_type_PDF_Document | 7;
-	window['AscDFH'].historyitem_PDF_Document_PageWidth		  = window['AscDFH'].historyitem_type_PDF_Document | 8;
-	window['AscDFH'].historyitem_PDF_Document_PageHeight      = window['AscDFH'].historyitem_type_PDF_Document | 9;
+	window['AscDFH'].historyitem_PDF_Document_FieldsParent    = window['AscDFH'].historyitem_type_PDF_Document | 4;
+	window['AscDFH'].historyitem_PDF_Document_PagesContent    = window['AscDFH'].historyitem_type_PDF_Document | 5;
+	window['AscDFH'].historyitem_PDF_Document_RotatePage      = window['AscDFH'].historyitem_type_PDF_Document | 6;
+	window['AscDFH'].historyitem_PDF_Document_RecognizePage   = window['AscDFH'].historyitem_type_PDF_Document | 7;
+	window['AscDFH'].historyitem_PDF_Document_SetDocument     = window['AscDFH'].historyitem_type_PDF_Document | 8;
+	window['AscDFH'].historyitem_PDF_Document_PageWidth		  = window['AscDFH'].historyitem_type_PDF_Document | 9;
+	window['AscDFH'].historyitem_PDF_Document_PageHeight      = window['AscDFH'].historyitem_type_PDF_Document | 10;
 
 
 	AscDFH.historyitem_CustomPropertiesAddProperty = AscDFH.historyitem_type_CustomProperties | 0;
