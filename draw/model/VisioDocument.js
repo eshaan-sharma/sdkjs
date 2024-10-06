@@ -416,7 +416,6 @@
 				cGroupShape.localTransform = group.localTransform;
 				cGroupShape.pen = group.pen;
 
-
 				let shape_drawer = new AscCommon.CShapeDrawer();
 				shape_drawer.fromShape2(cGroupShape, graphics, cGroupShape.getGeometry());
 				let groupGeometry = cGroupShape.getGeometry();
@@ -515,6 +514,26 @@
 
 				shapeOrGroup.draw(graphics, shapeOrGroup.transform, shapeOrGroup.transformText);
 
+				if (shapeOrGroup.Id.substring(shapeOrGroup.Id.length - 4) === "Text") {
+					graphics.SaveGrState();
+					graphics.SetIntegerGrid(false);
+					graphics.transform3(new AscCommon.CMatrix());
+					graphics.b_color1( 255, 0, 0, 10 );
+					graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
+					// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
+					graphics.df();
+					graphics.RestoreGrState();
+				} else {
+					graphics.SaveGrState();
+					graphics.SetIntegerGrid(false);
+					graphics.transform3(new AscCommon.CMatrix());
+					graphics.b_color1( 0, 255, 0, 10 );
+					graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
+					// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
+					graphics.df();
+					graphics.RestoreGrState();
+				}
+
 				if (changeTextDirection && shapeOrGroup.Id.substring(shapeOrGroup.Id.length - 4) === "Text") {
 					graphics.SetBaseTransform(baseMatrix);
 				}
@@ -612,9 +631,9 @@
 			//visio y coordinate goes up while
 			//ECMA-376-11_5th_edition and Geometry.js y coordinate goes down
 			let baseMatrix = new AscCommon.CMatrix();
-			// baseMatrix.SetValues(1, 0, 0, 1, 0, 0);
-			baseMatrix.SetValues(1, 0, 0, -1, 0, logic_h_mm);
-			graphics.SetBaseTransform(baseMatrix);
+			baseMatrix.SetValues(1, 0, 0, 1, 0, 0);
+			// // baseMatrix.SetValues(1, 0, 0, -1, 0, logic_h_mm);
+			// graphics.SetBaseTransform(baseMatrix);
 
 			let baseTextMatrix = new AscCommon.CMatrix();
 			baseTextMatrix.SetValues(1, 0, 0, 1, 0, 0);
@@ -623,7 +642,7 @@
 			/**
 			 * @type {boolean}
 			 */
-			let changeTextDirection = true;
+			let changeTextDirection = false;
 
 
 			graphics.SaveGrState();
@@ -673,7 +692,7 @@
 		let panelThumbnails = api.HtmlElement.querySelector("#id_panel_thumbnails");
 		panelThumbnails.innerHTML = "";
 
-		let drawThumbnails = true;
+		let drawThumbnails = false;
 
 		if (drawThumbnails) {
 			for (let thumbPageIndex = 0; thumbPageIndex < this.pages.page.length; thumbPageIndex++) {
