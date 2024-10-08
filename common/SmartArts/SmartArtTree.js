@@ -6510,9 +6510,21 @@ function HierarchyAlgorithm() {
 	CompositeAlgorithm.prototype.createShadowShape = function (isCalculateScaleCoefficients) {
 		return this.parentNode.createShadowShape(true, isCalculateScaleCoefficients);
 	};
+	CompositeAlgorithm.prototype.setScaleCoefficient = function () {
+		const nodeWidth = this.parentNode.getConstr(AscFormat.Constr_type_w);
+		const nodeHeight = this.parentNode.getConstr(AscFormat.Constr_type_h);
+		const bounds = this.getAlgorithmAlignBounds(true);
+		const width = bounds.r - bounds.l;
+		const height = bounds.b - bounds.t;
+		const aspectRatio = this.parentNode.getAspectRatio();
+		const heightCoefficient = nodeHeight / height;
+		const widthCoeffcient = nodeWidth / width;
+	};
 	CompositeAlgorithm.prototype.calculateShapePositions = function (smartartAlgorithm, isCalculateCoefficients) {
 		this.applyAlgorithmAligns(isCalculateCoefficients);
-		if (!isCalculateCoefficients) {
+		if (isCalculateCoefficients) {
+			this.setScaleCoefficient();
+		} else {
 			this.setConnections();
 		}
 		this.createShadowShape(isCalculateCoefficients);
@@ -8171,29 +8183,29 @@ function CConnectionDistanceResolver() {
 		return null;
 	}
 
-		// document.body.addEventListener('keydown', function (e) {
-		// 	if (e.ctrlKey && e.altKey && e.keyCode === 82) {
-		// 			const oSM = editor.getGraphicController().selectedObjects[0];
-		// 			const smartArtAlgorithm = new SmartArtAlgorithm(oSM);
-		// 			smartArtAlgorithm.startFromBegin();
-		// 			const drawing = oSM.spTree[0];
-		// 			const shapeLength = drawing.spTree.length;
-		// 			for (let i = 0; i < shapeLength; i++) {
-		// 				drawing.removeFromSpTreeByPos(0);
-		// 			}
-		// 			const shapes = smartArtAlgorithm.getShapes();
-		//
-		// 			for (let i = shapes.length - 1; i >= 0; i -= 1) {
-		// 				drawing.addToSpTree(0, shapes[i]);
-		// 			}
-		//
-		// 			oSM.recalculate();
-		//
-		// 			editor.getLogicDocument().Recalculate();
-		// 			oSM.fitFontSize();
-		// 			editor.getLogicDocument().Recalculate();
-		// 	}
-		// });
+		document.body.addEventListener('keydown', function (e) {
+			if (e.ctrlKey && e.altKey && e.keyCode === 82) {
+					const oSM = editor.getGraphicController().selectedObjects[0];
+					const smartArtAlgorithm = new SmartArtAlgorithm(oSM);
+					smartArtAlgorithm.startFromBegin();
+					const drawing = oSM.spTree[0];
+					const shapeLength = drawing.spTree.length;
+					for (let i = 0; i < shapeLength; i++) {
+						drawing.removeFromSpTreeByPos(0);
+					}
+					const shapes = smartArtAlgorithm.getShapes();
+
+					for (let i = shapes.length - 1; i >= 0; i -= 1) {
+						drawing.addToSpTree(0, shapes[i]);
+					}
+
+					oSM.recalculate();
+
+					editor.getLogicDocument().Recalculate();
+					oSM.fitFontSize();
+					editor.getLogicDocument().Recalculate();
+			}
+		});
 
 	AscFormat.SmartArtAlgorithm = SmartArtAlgorithm;
 })(window);

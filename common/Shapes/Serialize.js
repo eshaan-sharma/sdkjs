@@ -314,10 +314,10 @@ function BinaryPPTYLoader()
         this.ImageMapChecker = null;
     };
 		this.GenerateSmartArts = function () {
-			while (this.smartarts.length) {
-				const smartart = this.smartarts.pop();
-				smartart.generateDrawingPart();
-			}
+			// while (this.smartarts.length) {
+			// 	const smartart = this.smartarts.pop();
+			// 	smartart.generateDrawingPart();
+			// }
 		};
 	this.ClearSmartArts = function () {
 		this.smartarts.length = 0;

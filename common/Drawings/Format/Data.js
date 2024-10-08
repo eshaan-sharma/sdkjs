@@ -9977,7 +9977,7 @@ Because of this, the display is sometimes not correct.
 		SmartArt.prototype.setRecalculateInfo = function () {
 			CGroupShape.prototype.setRecalculateInfo.call(this);
 			this.recalcInfo.fitFontSize = true;
-			this.recalcInfo.reconnectSmartArtShapes = true;
+			// this.recalcInfo.reconnectSmartArtShapes = true;
 		};
     SmartArt.prototype.getObjectType = function() {
       return AscDFH.historyitem_type_SmartArt;
