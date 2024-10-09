@@ -6518,7 +6518,14 @@ function HierarchyAlgorithm() {
 		const height = bounds.b - bounds.t;
 		const aspectRatio = this.parentNode.getAspectRatio();
 		const heightCoefficient = nodeHeight / height;
-		const widthCoeffcient = nodeWidth / width;
+		const widthCoefficient = nodeWidth / width;
+		const tHeight = nodeWidth / aspectRatio;
+		const tHeightCoefficient = height / tHeight;
+		const coefficient = heightCoefficient / tHeightCoefficient;
+		const tNodeCoefficient = nodeHeight / tHeight;
+		const lastCoefficient = tNodeCoefficient * coefficient;
+		const lastCoefficient2 = tNodeCoefficient * heightCoefficient * (tHeight / height);
+		debugger
 	};
 	CompositeAlgorithm.prototype.calculateShapePositions = function (smartartAlgorithm, isCalculateCoefficients) {
 		this.applyAlgorithmAligns(isCalculateCoefficients);
