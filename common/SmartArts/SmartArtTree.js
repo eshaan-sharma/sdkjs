@@ -6511,20 +6511,47 @@ function HierarchyAlgorithm() {
 		return this.parentNode.createShadowShape(true, isCalculateScaleCoefficients);
 	};
 	CompositeAlgorithm.prototype.setScaleCoefficient = function () {
+		if (this.parentNode.parent) {
+			return;
+		}
 		const nodeWidth = this.parentNode.getConstr(AscFormat.Constr_type_w);
 		const nodeHeight = this.parentNode.getConstr(AscFormat.Constr_type_h);
 		const bounds = this.getAlgorithmAlignBounds(true);
 		const width = bounds.r - bounds.l;
 		const height = bounds.b - bounds.t;
 		const aspectRatio = this.parentNode.getAspectRatio();
-		const heightCoefficient = nodeHeight / height;
-		const widthCoefficient = nodeWidth / width;
+		const heightCoefficient = Math.min(nodeHeight / height, 1);
+		const widthCoefficient = Math.min(nodeWidth / width, 1);
 		const tHeight = nodeWidth / aspectRatio;
 		const tHeightCoefficient = height / tHeight;
 		const coefficient = heightCoefficient / tHeightCoefficient;
 		const tNodeCoefficient = nodeHeight / tHeight;
 		const lastCoefficient = tNodeCoefficient * coefficient;
 		const lastCoefficient2 = tNodeCoefficient * heightCoefficient * (tHeight / height);
+		const commonCoefficient = Math.min(heightCoefficient, widthCoefficient);
+		if (commonCoefficient < 1) {
+			let truthCoefficient;
+			if (aspectRatio) {
+				if (nodeWidth / aspectRatio < nodeHeight) {
+					if (heightCoefficient < 1) {
+						truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
+					} else {
+						truthCoefficient = commonCoefficient;
+					}
+				} else {
+					if (heightCoefficient < 1) {
+						truthCoefficient = commonCoefficient;
+						// truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
+					} else {
+						// truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
+						truthCoefficient = nodeHeight * commonCoefficient / (nodeWidth / aspectRatio);
+					}
+
+				}
+				this.parentNode.setRootScale(truthCoefficient, truthCoefficient);
+			}
+		}
+
 		debugger
 	};
 	CompositeAlgorithm.prototype.calculateShapePositions = function (smartartAlgorithm, isCalculateCoefficients) {
@@ -6563,7 +6590,10 @@ function PresNode(presPoint, contentNode) {
 	this._isTxXfrm = null;
 	this.textConstraints = {};
 	this.textConstraintRelations = [];
-
+	this.rootScale = {
+		width: 1,
+		height: 1
+	};
 	this.cleanRules();
 	this.cleanConstraints();
 	this.cleanScales();
@@ -6572,6 +6602,10 @@ function PresNode(presPoint, contentNode) {
 	PresNode.prototype.cleanPosition = function () {
 		this.position = null;
 	};
+	PresNode.prototype.setRootScale = function (heightCoeffcient, widthCoefficient) {
+		this.rootScale.height = heightCoeffcient;
+		this.rootScale.width = widthCoefficient;
+	}
 PresNode.prototype.cleanScales = function () {
 	this.moveScaleCoefficients = {
 		width: 1,
@@ -7518,8 +7552,10 @@ PresNode.prototype.addChild = function (ch, pos) {
 			if (aspectRatio) {
 				switch (constr.refType) {
 					case AscFormat.Constr_type_h:
-							const width = constrObject[AscFormat.Constr_type_w];
+						value *= this.rootScale.height;
+							let width = constrObject[AscFormat.Constr_type_w];
 							if (width !== undefined) {
+								width *= this.rootScale.width;
 								const aspectWidth = width / aspectRatio;
 								if (aspectWidth < value) {
 									value = aspectWidth;
@@ -7528,8 +7564,10 @@ PresNode.prototype.addChild = function (ch, pos) {
 
 						break;
 					case AscFormat.Constr_type_w:
-							const height = constrObject[AscFormat.Constr_type_h];
+							let height = constrObject[AscFormat.Constr_type_h];
+						value *= this.rootScale.width;
 							if (height !== undefined) {
+								height *= this.rootScale.height;
 								const aspectHeight = height * aspectRatio;
 								if (aspectHeight < value) {
 									value = aspectHeight;
