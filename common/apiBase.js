@@ -2649,17 +2649,17 @@
 	};
 	baseEditorsApi.prototype.asc_refreshFile = function(docInfo) {
 		this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.RefreshFile);
+		//todo always call asc_CloseFile ?
 		if (this.isDocumentLoadComplete) {
 			this.asc_CloseFile();
 		}
 
+		//todo wopiSrc shardKey
 		this.asc_setDocInfo(docInfo);
-		this.CoAuthoringApi.disconnect(AscCommon.c_oCloseCode.quiet);
+
 		this.isOnLoadLicense = false;
 		this.ServerIdWaitComplete = false;
-		this.ServerImagesWaitComplete = false;
-		this.FontLoadWaitComplete = false;
-
+		this.CoAuthoringApi.disconnect(AscCommon.c_oCloseCode.quiet);
 		//create new connection because new docId can be on different shard
 		this.CoAuthoringApi = new AscCommon.CDocsCoApi();
 		this._coAuthoringInit();
@@ -2671,7 +2671,7 @@
 		let t = this;
 		this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.RefreshFile);
 		if (this.documentIsWopi) {
-			let callback = function(isTimeout, response) {
+			let callback = function (isTimeout, response) {
 				if (response) {
 					//todo event to simulate 'refreshFile' integrator method
 					let newDocIndo = t.DocInfo.extendWithWopiParams(response);
@@ -2685,7 +2685,7 @@
 			if (!this.CoAuthoringApi.callPRC({'type': 'wopi_RefreshFile', 'name': name}, Asc.c_nCommonRequestTime, callback)) {
 				callback(false, undefined);
 			}
-		} else{
+		} else {
 			this.sendEvent("asc_onRequestRefreshFile");
 		}
 	}
