@@ -1194,6 +1194,8 @@ function (window, undefined) {
 		//if first argument - link, when - text only inside " "
 		//if second argument - link, when - text only without " "
 
+		const selectedRange = arguments[1];
+		const ws = arguments[3];
 		let arg0 = arg[0], arg1 = arg[1];
 
 		if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type || cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
@@ -1271,6 +1273,19 @@ function (window, undefined) {
 								let externalCell = row.getCell(j);
 								if (externalCell) {
 									let cellValue = externalCell.getFormulaValue();
+									let externalHyperlink = externalWs.getHyperlinkByCell(i, j);
+
+									if (externalHyperlink) {
+										let range = (selectedRange && ws) && ws.getRange3(selectedRange.r1, selectedRange.c1, selectedRange.r2, selectedRange.c2);
+										let hyperlink = externalHyperlink.clone(ws);
+										if (range) {
+											hyperlink.Ref = range;
+											// todo additional recalculation come up in _foreachChanged at the end of receiving data from the promise
+											range.setHyperlink(hyperlink);
+										}
+										cellValue.hyperlink = hyperlink.Hyperlink;
+									}
+
 									ret.addElement(cellValue);
 								}
 							}

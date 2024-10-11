@@ -2088,7 +2088,8 @@
 		_foreachChanged: function(callback) {
 			var sheetId, changedSheet, ws, bbox;
 			for (sheetId in this.changedCell) {
-				if (this.changedCell.hasOwnProperty(sheetId)) {
+				// todo when adding a hyperlink in IMPORTRANGE, we perform an additional recalculation of all changed cells whose object will be empty
+				if (this.changedCell && this.changedCell.hasOwnProperty(sheetId)) {
 					changedSheet = this.changedCell[sheetId];
 					ws = this.wb.getWorksheetById(sheetId);
 					if (changedSheet && ws) {
