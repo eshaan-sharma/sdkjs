@@ -4764,6 +4764,12 @@ function (window, undefined) {
 		docInfo.put_Mode(userAuth["mode"]);
 		//todo does permissions can change? (formsubmit, dchat)
 		docInfo.put_CoEditingMode(userAuth["mode"] !== "view" ? "fast" : "strict");
+
+		docInfo.put_Wopi({
+			"FileNameMaxLength": fileInfo.FileNameMaxLength && fileInfo.FileNameMaxLength > 0 ? fileInfo.FileNameMaxLength : 250,
+			"WOPISrc": userAuth["wopiSrc"],
+			"UserSessionId": userAuth["userSessionId"]
+		});
 		return docInfo;
 	};
 	prot.isFormatWithForms = function () {

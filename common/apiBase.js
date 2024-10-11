@@ -2652,9 +2652,14 @@
 		//todo always call asc_CloseFile ?
 		if (this.isDocumentLoadComplete) {
 			this.asc_CloseFile();
+		} else if (docInfo.get_Id() === this.DocInfo.get_Id()) {
+			//loop protection (need backoff and retry?)
+			//todo unique error
+			this.sendEvent("asc_onDocumentUpdateVersion", function() {});
+			// this.sendEvent('asc_onError', Asc.c_oAscError.ID.UpdateVersion, Asc.c_oAscError.Level.Critical);
+			return;
 		}
 
-		//todo wopiSrc shardKey
 		this.asc_setDocInfo(docInfo);
 
 		this.isOnLoadLicense = false;
