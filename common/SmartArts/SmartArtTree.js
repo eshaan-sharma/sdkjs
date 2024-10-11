@@ -6540,7 +6540,7 @@ function HierarchyAlgorithm() {
 					}
 				} else {
 					if (heightCoefficient < 1) {
-						truthCoefficient = commonCoefficient;
+						truthCoefficient = 1/*1 / (nodeWidth / aspectRatio / nodeHeight * 0.98167 * heightCoefficient)*/;
 						// truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
 					} else {
 						// truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
