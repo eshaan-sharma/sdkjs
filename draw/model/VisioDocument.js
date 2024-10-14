@@ -432,8 +432,10 @@
 			} else {
 				// shape came to argument
 
+				const isFlipImages = false;
+
 				// flip images
-				if (shapeOrGroup.constructor.name === "CImageShape") {
+				if (shapeOrGroup.constructor.name === "CImageShape" && isFlipImages) {
 					shapeOrGroup.transform.sy = -1;
 					shapeOrGroup.transform.ty += shapeOrGroup.spPr.xfrm.extY;
 				}
@@ -527,7 +529,7 @@
 					graphics.SaveGrState();
 					graphics.SetIntegerGrid(false);
 					graphics.transform3(new AscCommon.CMatrix());
-					graphics.b_color1( 0, 255, 0, 10 );
+					graphics.b_color1( 0, 255, 0, 30 );
 					graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
 					// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
 					graphics.df();
@@ -543,7 +545,7 @@
 					shapeOrGroup.transform.ty = logic_h_mm - shapeOrGroup.transform.ty - shapeOrGroup.spPr.xfrm.extY;
 					shapeOrGroup.recalculateTransformText();
 				}
-				if (shapeOrGroup.constructor.name === "CImageShape") {
+				if (shapeOrGroup.constructor.name === "CImageShape" && isFlipImages) {
 					shapeOrGroup.transform.sy = 1;
 					shapeOrGroup.transform.ty -= shapeOrGroup.spPr.xfrm.extY;
 				}
@@ -678,7 +680,12 @@
 				let pageScale = pageInfo.pageSheet.getCellNumberValue("PageScale");
 				let drawingPageScale = drawingScale / pageScale;
 
-				let topLevelShapesAndGroups = this.convertToCShapesAndGroups(pageInfo, pageContent, drawingPageScale);
+				const logic_h_mm = this.GetHeightScaledMM(pageIndex) / g_dKoef_in_to_mm;
+				const isInvertY = true;
+
+
+				let topLevelShapesAndGroups = this.convertToCShapesAndGroups(pageInfo, pageContent,
+					drawingPageScale, isInvertY, logic_h_mm);
 				this.pageShapesCache[pageIndex] = topLevelShapesAndGroups;
 			}
 		}
@@ -724,9 +731,11 @@
 	 * @param pageInfo
 	 * @param pageContent
 	 * @param {Number} drawingPageScale
+	 * @param {boolean} isInvertY
+	 * @param {number} logicHmm
 	 * @return {(CShape | CGroupShape | CImageShape)[]} topLevelShapesAndGroups
 	 */
-	CVisioDocument.prototype.convertToCShapesAndGroups = function(pageInfo, pageContent, drawingPageScale) {
+	CVisioDocument.prototype.convertToCShapesAndGroups = function(pageInfo, pageContent, drawingPageScale, isInvertY, logicHmm) {
 		/** @type {(CShape | CGroupShape | CImageShape)[]} */
 		let topLevelShapesAndGroups = [];
 
@@ -739,13 +748,13 @@
 			shape.realizeStyleInheritanceRecursively(this.styleSheets);
 
 			if (shape.type === "Group") {
-				let cGroupShapeAndText = shape.toCGroupShapeRecursively(this, pageInfo, drawingPageScale);
+				let cGroupShapeAndText = shape.toCGroupShapeRecursively(this, pageInfo, drawingPageScale, isInvertY, logicHmm);
 				topLevelShapesAndGroups.push(cGroupShapeAndText.cGroupShape);
 				if (cGroupShapeAndText.textCShape) {
 					topLevelShapesAndGroups.push(cGroupShapeAndText.textCShape);
 				}
 			} else {
-				let cShapes = shape.toGeometryAndTextCShapes(this, pageInfo, drawingPageScale);
+				let cShapes = shape.toGeometryAndTextCShapes(this, pageInfo, drawingPageScale, isInvertY, logicHmm);
 				topLevelShapesAndGroups.push(cShapes.geometryCShape);
 				if (cShapes.textCShape !== null) {
 					topLevelShapesAndGroups.push(cShapes.textCShape);

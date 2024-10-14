@@ -102,12 +102,19 @@
 	/**
 	 * Calls mmToEmu on value:
 	 * value * additionalUnitKoef then convert to Emus
-	 * @param {number} value - mmUnits value
+	 * @param {number} value - inchUnits value
 	 * @param {number} additionalUnitKoef
+	 * @param {number?} shapeHeightInch
+	 * @param {boolean} isInvertY
 	 * @returns {number} valueCorrectUnits
 	 */
-	function convertUnits(value, additionalUnitKoef) {
-		let valueCorrectUnits = mmToEmu(value * additionalUnitKoef);
+	function convertUnits(valueInch, additionalUnitKoef, shapeHeightInch, isInvertY) {
+		let valueCorrectUnits;
+		if (shapeHeightInch !== undefined && isInvertY) {
+			valueCorrectUnits = mmToEmu((shapeHeightInch - valueInch) * additionalUnitKoef);
+		} else  {
+			valueCorrectUnits = mmToEmu(valueInch * additionalUnitKoef);
+		}
 		return valueCorrectUnits;
 	}
 
@@ -127,11 +134,16 @@
 	/**
 	 * get Geometry object from shape object reading shape elements
 	 * @param {Shape_Type} shape
+	 * @param {number} pageScale
+	 * @param {boolean} isInvertY
+	 * @param {number} logicHinch
 	 * @returns {Geometry} geometry
 	 */
-	function getGeometryFromShape(shape, pageScale) {
+	function getGeometryFromShape(shape, pageScale, isInvertY, logicHinch) {
 		// init geometry
 		let geometry = new AscFormat.Geometry();
+
+		isInvertY = true;
 
 		// in visio Geometry section represents Path:
 		// A path is a collection of vertices and line or curve segments that specifies an enclosed area.
@@ -282,11 +294,11 @@
 			/* extrusionOk, fill, stroke, w, h*/
 			// path.AddPathCommand(0, undefined, fillValue, undefined, undefined, undefined);
 
-			//TODO maybe get shapeWidth and Height from outside
+			//TODO maybe get shapeWidthInch and Height from outside
 			//TODO shape with RelMoveTo and RelLineTo takes wrong position
 
-			let shapeWidth = Number(shape.getCell("Width").v);
-			let shapeHeight = Number(shape.getCell("Height").v);
+			let shapeWidthInch = Number(shape.getCell("Width").v);
+			let shapeHeightInch = Number(shape.getCell("Height").v);
 
 			/**
 			 *
@@ -334,7 +346,7 @@
 						let moveToYTextValue = Number(commandRow.getCell("Y").v);
 
 						let newX = convertUnits(moveToXTextValue, additionalUnitCoefficient);
-						let newY = convertUnits(moveToYTextValue, additionalUnitCoefficient);
+						let newY = convertUnits(moveToYTextValue, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 
 						path.moveTo(newX, newY);
 						lastPoint.x = newX;
@@ -347,10 +359,10 @@
 						let relMoveToYTextValue = Number(commandRow.getCell("Y").v);
 
 						let newX = convertUnits(relMoveToXTextValue, additionalUnitCoefficient);
-						let newY = convertUnits(relMoveToYTextValue, additionalUnitCoefficient);
+						let newY = convertUnits(relMoveToYTextValue, additionalUnitCoefficient, 1, isInvertY);
 
-						let relX = newX * shapeWidth;
-						let relY = newY * shapeHeight;
+						let relX = newX * shapeWidthInch;
+						let relY = newY * shapeHeightInch;
 						path.moveTo(relX, relY);
 						lastPoint.x = relX;
 						lastPoint.y = relY;
@@ -362,7 +374,7 @@
 						let lineToYTextValue = Number(commandRow.getCell("Y").v);
 
 						let newX = convertUnits(lineToXTextValue, additionalUnitCoefficient);
-						let newY = convertUnits(lineToYTextValue, additionalUnitCoefficient);
+						let newY = convertUnits(lineToYTextValue, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 
 						path.lnTo(newX, newY);
 						lastPoint.x = newX;
@@ -375,10 +387,10 @@
 						let relLineToYTextValue = Number(commandRow.getCell("Y").v);
 
 						let newX = convertUnits(relLineToXTextValue, additionalUnitCoefficient);
-						let newY = convertUnits(relLineToYTextValue, additionalUnitCoefficient);
+						let newY = convertUnits(relLineToYTextValue, additionalUnitCoefficient, 1, isInvertY);
 
-						let newXRel = newX * shapeWidth;
-						let newYRel = newY * shapeHeight;
+						let newXRel = newX * shapeWidthInch;
+						let newYRel = newY * shapeHeightInch;
 						path.lnTo(newXRel, newYRel);
 						lastPoint.x = newXRel;
 						lastPoint.y = newYRel;
@@ -395,10 +407,10 @@
 						let d = Number(commandRow.getCell("D").v);
 
 						let newX = convertUnits(x, additionalUnitCoefficient);
-						let newY = convertUnits(y, additionalUnitCoefficient);
+						let newY = convertUnits(y, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						let newA = convertUnits(a, additionalUnitCoefficient);
-						let newB = convertUnits(b, additionalUnitCoefficient);
-						let newC = c * radToC;
+						let newB = convertUnits(b, additionalUnitCoefficient, shapeHeightInch, isInvertY);
+						let newC = isInvertY ? -c * radToC: c * radToC;
 						let newD = d;
 
 						// same but with a length in EMUs units and an angle in C-units, which will be expected clockwise
@@ -457,11 +469,11 @@
 						let anotherPointYTextValue = Number(commandRow.getCell("D").v);
 
 						let newX = convertUnits(centerPointXTextValue, additionalUnitCoefficient);
-						let newY = convertUnits(centerPointYTextValue, additionalUnitCoefficient);
+						let newY = convertUnits(centerPointYTextValue, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						let newA = convertUnits(somePointXTextValue, additionalUnitCoefficient);
-						let newB = convertUnits(somePointYTextValue, additionalUnitCoefficient);
+						let newB = convertUnits(somePointYTextValue, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						let newC = convertUnits(anotherPointXTextValue, additionalUnitCoefficient);
-						let newD = convertUnits(anotherPointYTextValue, additionalUnitCoefficient);
+						let newD = convertUnits(anotherPointYTextValue, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 
 						let wRhR = transformEllipseParams(newX, newY, newA, newB, newC, newD);
 						if (!wRhR) {
@@ -492,7 +504,7 @@
 						let a = Number(commandRow.getCell("A").v);					// middleGap
 
 						let newX = convertUnits(x, additionalUnitCoefficient);
-						let newY = convertUnits(y, additionalUnitCoefficient);
+						let newY = convertUnits(y, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						let newA = convertUnits(a, additionalUnitCoefficient);
 
 						// transform params for ellipticalArcTo
@@ -530,10 +542,12 @@
 
 						//Convert units to EMUs
 						let xEndPointNew = convertUnits(x, additionalUnitCoefficient);
-						let yEndPointNew = convertUnits(y, additionalUnitCoefficient);
+						let yEndPointNew = convertUnits(y, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						for (let k = 2; k < formulaValues.length; k++) {
 							// convert x and y
-							formulaValues[k] = convertUnits(Number(formulaValues[k]), additionalUnitCoefficient);
+							formulaValues[k] = (k + 1) % 2 === 0 ?
+								convertUnits(Number(formulaValues[k]), additionalUnitCoefficient, shapeHeightInch, isInvertY) :
+								convertUnits(Number(formulaValues[k]), additionalUnitCoefficient);
 						}
 
 						let xType = parseInt(formulaValues[0]);
@@ -543,9 +557,9 @@
 						let yScale = 1;
 
 						if (xType === 0)
-							xScale = shapeWidth;
+							xScale = shapeWidthInch;
 						if (yType === 0)
-							yScale = shapeHeight;
+							yScale = shapeHeightInch;
 
 						// scale x and y and draw line
 						let groupsCount = (formulaValues.length - 2) / 2;
@@ -582,11 +596,12 @@
 
 						//Convert units to EMUs
 						let xEndPointNew = convertUnits(xEndPoint, additionalUnitCoefficient);
-						let yEndPointNew = convertUnits(yEndPoint, additionalUnitCoefficient);
+						let yEndPointNew = convertUnits(yEndPoint, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						for (let k = 4; k < formulaValues.length; k++) {
 							if (k % 4 == 0 || k % 4 == 1) {
 								// convert x and y
-								formulaValues[k] = convertUnits(Number(formulaValues[k]), additionalUnitCoefficient);
+								formulaValues[k] = k % 4 == 0 ? convertUnits(Number(formulaValues[k]), additionalUnitCoefficient) :
+									convertUnits(Number(formulaValues[k]), additionalUnitCoefficient, shapeHeightInch, isInvertY);
 							}
 						}
 
@@ -603,9 +618,9 @@
 						let yScale = 1;
 
 						if (xType === 0)
-							xScale = shapeWidth;
+							xScale = shapeWidthInch;
 						if (yType === 0)
-							yScale = shapeHeight;
+							yScale = shapeHeightInch;
 
 						/** @type {{x: Number, y: Number}[]} */
 						let controlPoints = [];
@@ -689,9 +704,9 @@
 						let b = Number(commandRow.getCell("B").v);
 
 						let xNew = convertUnits(x, additionalUnitCoefficient);
-						let yNew = convertUnits(y, additionalUnitCoefficient);
+						let yNew = convertUnits(y, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 						let aNew = convertUnits(a, additionalUnitCoefficient);
-						let bNew = convertUnits(b, additionalUnitCoefficient);
+						let bNew = convertUnits(b, additionalUnitCoefficient, shapeHeightInch, isInvertY);
 
 						let maxValue = 10000000000;
 						if (xNew === aNew) {
@@ -717,12 +732,12 @@
 						let c = Number(commandRow.getCell("C").v);
 						let d = Number(commandRow.getCell("D").v);
 
-						let xNew = convertUnits(x, additionalUnitCoefficient) * shapeWidth;
-						let yNew = convertUnits(y, additionalUnitCoefficient) * shapeHeight;
-						let aNew = convertUnits(a, additionalUnitCoefficient) * shapeWidth;
-						let bNew = convertUnits(b, additionalUnitCoefficient) * shapeHeight;
-						let cNew = convertUnits(c, additionalUnitCoefficient) * shapeWidth;
-						let dNew = convertUnits(d, additionalUnitCoefficient) * shapeHeight;
+						let xNew = convertUnits(x, additionalUnitCoefficient) * shapeWidthInch;
+						let yNew = convertUnits(y, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
+						let aNew = convertUnits(a, additionalUnitCoefficient) * shapeWidthInch;
+						let bNew = convertUnits(b, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
+						let cNew = convertUnits(c, additionalUnitCoefficient) * shapeWidthInch;
+						let dNew = convertUnits(d, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
 
 						path.cubicBezTo(aNew, bNew, cNew, dNew, xNew, yNew);
 
@@ -732,6 +747,7 @@
 					}
 					case "RelEllipticalArcTo":
 					{
+						// https://learn.microsoft.com/en-us/office/client-developer/visio/relellipticalarcto-row-geometry-section
 						let x = Number(commandRow.getCell("X").v);
 						let y = Number(commandRow.getCell("Y").v);
 						let a = Number(commandRow.getCell("A").v);
@@ -739,10 +755,10 @@
 						let c = Number(commandRow.getCell("C").v);
 						let d = Number(commandRow.getCell("D").v);
 
-						let newX = convertUnits(x, additionalUnitCoefficient) * shapeWidth;
-						let newY = convertUnits(y, additionalUnitCoefficient) * shapeHeight;
-						let newA = convertUnits(a, additionalUnitCoefficient) * shapeWidth;
-						let newB = convertUnits(b, additionalUnitCoefficient) * shapeHeight;
+						let newX = convertUnits(x, additionalUnitCoefficient) * shapeWidthInch;
+						let newY = convertUnits(y, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
+						let newA = convertUnits(a, additionalUnitCoefficient) * shapeWidthInch;
+						let newB = convertUnits(b, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
 						let newC = c * radToC;
 						let newD = d;
 
@@ -761,10 +777,10 @@
 						let a = Number(commandRow.getCell("A").v);
 						let b = Number(commandRow.getCell("B").v);
 
-						let xNew = convertUnits(x, additionalUnitCoefficient) * shapeWidth;
-						let yNew = convertUnits(y, additionalUnitCoefficient) * shapeHeight;
-						let aNew = convertUnits(a, additionalUnitCoefficient) * shapeWidth;
-						let bNew = convertUnits(b, additionalUnitCoefficient) * shapeHeight;
+						let xNew = convertUnits(x, additionalUnitCoefficient) * shapeWidthInch;
+						let yNew = convertUnits(y, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
+						let aNew = convertUnits(a, additionalUnitCoefficient) * shapeWidthInch;
+						let bNew = convertUnits(b, additionalUnitCoefficient, 1, isInvertY) * shapeHeightInch;
 
 						path.quadBezTo(aNew, bNew, xNew, yNew);
 

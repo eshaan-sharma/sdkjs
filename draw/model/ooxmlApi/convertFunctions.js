@@ -43,9 +43,12 @@
 	 * @param {CVisioDocument} visioDocument
 	 * @param {Page_Type} pageInfo
 	 * @param {Number} drawingPageScale
+	 * @param {boolean} isInvertY
+	 * @param {number} logicHinch
 	 * @return {{geometryCShape: CShape | CImageShape, textCShape: ?CShape}} cShapesObjects
 	 */
-	Shape_Type.prototype.toGeometryAndTextCShapes = function (visioDocument, pageInfo, drawingPageScale) {
+	Shape_Type.prototype.toGeometryAndTextCShapes = function (visioDocument, pageInfo,
+															  drawingPageScale, isInvertY, logicHinch) {
 
 		/**
 		 * handle QuickStyleVariation cell which can change color (but only if color is a result of ThemeVal)
@@ -724,6 +727,8 @@
 			textCShape.setSpPr(oSpPr);
 			oSpPr.setParent(textCShape);
 
+			return textCShape;
+
 			// just trash below
 			//
 			// // placeholder
@@ -754,8 +759,6 @@
 			// use ParaRun.prototype.Set_Color
 			// cShape.txBody.content.Content[0].Content[1].Pr.Color = TextColor1;
 			// cShape.txBody.content.Content[0].Content[0].Pr.Color = TextColor1;
-
-			return textCShape;
 		}
 
 		/**
@@ -980,7 +983,7 @@
 			return {geometryCShape: emptyCShape, textCShape: null};
 		}
 
-		let shapeAngle = this.getCellNumberValue("Angle");
+		let shapeAngle = isInvertY ? -this.getCellNumberValue("Angle") : this.getCellNumberValue("Angle");
 		let locPinX_inch = this.getCellNumberValueWithScale("LocPinX", drawingPageScale);
 		let locPinY_inch = this.getCellNumberValueWithScale("LocPinY", drawingPageScale);
 		let shapeWidth_inch = this.getCellNumberValueWithScale("Width", drawingPageScale);
@@ -998,7 +1001,7 @@
 		let y_inch = rotatedCenter.y + turquoiseVector.y + redVector.y;
 
 		let x_mm = x_inch * g_dKoef_in_to_mm;
-		let y_mm = y_inch * g_dKoef_in_to_mm;
+		let y_mm = isInvertY ? (logicHinch - y_inch - shapeHeight_inch) * g_dKoef_in_to_mm  : y_inch * g_dKoef_in_to_mm;
 		let shapeWidth_mm = shapeWidth_inch * g_dKoef_in_to_mm;
 		let shapeHeight_mm = shapeHeight_inch * g_dKoef_in_to_mm;
 
@@ -1328,7 +1331,9 @@
 			flipHorizontally: flipHorizontally, flipVertically: flipVertically,
 			pageInfo: pageInfo,
 			cVisioDocument: visioDocument,
-			drawingPageScale : drawingPageScale
+			drawingPageScale : drawingPageScale,
+			isInvertY: isInvertY,
+			logicHinch: logicHinch
 		});
 
 		cShape.Id = String(this.iD); // it was string in cShape
@@ -1384,14 +1389,16 @@
 	 * @param {CVisioDocument} visioDocument
 	 * @param {Page_Type} pageInfo
 	 * @param {Number} drawingPageScale
+	 * @param {boolean} isInvertY
+	 * @param {number} logicHmm
 	 * @param {CGroupShape?} currentGroupHandling
 	 * @return {{cGroupShape: CGroupShape, textCShape: CShape}}
 	 */
 	Shape_Type.prototype.toCGroupShapeRecursively = function (visioDocument, pageInfo,
-															  drawingPageScale, currentGroupHandling) {
+															  drawingPageScale,  isInvertY, logicHmm, currentGroupHandling) {
 		// if we need to create CGroupShape create CShape first then copy its properties to CGroupShape object
 		// so anyway create CShapes
-		let cShapes = this.toGeometryAndTextCShapes(visioDocument, pageInfo, drawingPageScale);
+		let cShapes = this.toGeometryAndTextCShapes(visioDocument, pageInfo, drawingPageScale, isInvertY, logicHmm);
 
 		if (this.type === "Group") {
 			// CGroupShape cant support text. So cShape will represent everything related to Shape Type="Group".
@@ -1437,7 +1444,7 @@
 				let subShapes = this.getSubshapes();
 				for (let i = 0; i < subShapes.length; i++) {
 					const subShape = subShapes[i];
-					subShape.toCGroupShapeRecursively(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
+					subShape.toCGroupShapeRecursively(visioDocument, pageInfo, drawingPageScale, isInvertY, logicHmm, currentGroupHandling);
 				}
 
 				// textCShape is returned from this function
@@ -1460,7 +1467,7 @@
 				let subShapes = this.getSubshapes();
 				for (let i = 0; i < subShapes.length; i++) {
 					const subShape = subShapes[i];
-					subShape.toCGroupShapeRecursively(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
+					subShape.toCGroupShapeRecursively(visioDocument, pageInfo, drawingPageScale, isInvertY, logicHmm, currentGroupHandling);
 				}
 			}
 			// recalculate positions to local (group) coordinates
@@ -1512,7 +1519,8 @@
 
 	/**
 	 * @memberOf Shape_Type
-	 * @param {{x_mm, y_mm, w_mm, h_mm, rot, oFill, oStroke, flipHorizontally, flipVertically, cVisioDocument, drawingPageScale}} paramsObj
+	 * @param {{x_mm, y_mm, w_mm, h_mm, rot, oFill, oStroke, flipHorizontally, flipVertically, cVisioDocument, drawingPageScale
+	 * , isInvertY, logicHinch}} paramsObj
 	 * @return {CShape} CShape
 	 */
 	Shape_Type.prototype.convertToCShapeUsingParamsObj = function(paramsObj) {
@@ -1527,8 +1535,10 @@
 		let flipHorizontally = paramsObj.flipHorizontally;
 		let flipVertically = paramsObj.flipVertically;
 		let drawingPageScale = paramsObj.drawingPageScale;
+		let isInvertY = paramsObj.isInvertY;
+		let logicHinch = paramsObj.logicHinch;
 
-		let shapeGeom = AscCommonDraw.getGeometryFromShape(this, drawingPageScale);
+		let shapeGeom = AscCommonDraw.getGeometryFromShape(this, drawingPageScale, isInvertY, logicHinch);
 
 		let sType   = "rect";
 		let nWidth_mm  = Math.round(w_mm);
