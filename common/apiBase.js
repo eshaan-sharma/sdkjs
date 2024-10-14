@@ -2646,9 +2646,13 @@
 	baseEditorsApi.prototype.asc_refreshFile = function(docInfo) {
 		this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.RefreshFile);
 		//todo always call asc_CloseFile ?
+		let isInfinityLoop = this.documentIsWopi
+			? docInfo.get_Wopi()["Version"] === this.DocInfo.get_Wopi()["Version"]
+			&& docInfo.get_Wopi()["LastModifiedTime"] === this.DocInfo.get_Wopi()["LastModifiedTime"]
+			: docInfo.get_Id() === this.DocInfo.get_Id();
 		if (this.isDocumentLoadComplete) {
 			this.asc_CloseFile();
-		} else if (docInfo.get_Id() === this.DocInfo.get_Id()) {
+		} else if (isInfinityLoop) {
 			//loop protection (need backoff and retry?)
 			//todo unique error
 			this.sendEvent("asc_onDocumentUpdateVersion", function() {});

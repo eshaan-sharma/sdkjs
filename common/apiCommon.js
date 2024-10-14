@@ -4766,9 +4766,11 @@ function (window, undefined) {
 		docInfo.put_CoEditingMode(userAuth["mode"] !== "view" ? "fast" : "strict");
 
 		docInfo.put_Wopi({
-			"FileNameMaxLength": fileInfo.FileNameMaxLength && fileInfo.FileNameMaxLength > 0 ? fileInfo.FileNameMaxLength : 250,
+			"FileNameMaxLength": fileInfo["FileNameMaxLength"] && fileInfo["FileNameMaxLength"] > 0 ? fileInfo["FileNameMaxLength"] : 250,
 			"WOPISrc": userAuth["wopiSrc"],
-			"UserSessionId": userAuth["userSessionId"]
+			"UserSessionId": userAuth["userSessionId"],
+			"Version": fileInfo["Version"],
+			"LastModifiedTime": fileInfo["LastModifiedTime"]
 		});
 		return docInfo;
 	};
