@@ -369,12 +369,6 @@
     }
   };
 
-  CDocsCoApi.prototype.versionHistory = function(data) {
-    if (this._CoAuthoringApi && this._onlineWork) {
-      this._CoAuthoringApi.versionHistory(data);
-    }
-  };
-
 	CDocsCoApi.prototype.forceSave = function() {
 		if (this._CoAuthoringApi && this._onlineWork) {
 			return this._CoAuthoringApi.forceSave();
@@ -928,10 +922,6 @@
 
   DocsCoApi.prototype.extendSession = function(idleTime) {
     this._send({'type': 'extendSession', 'idletime': idleTime});
-  };
-
-  DocsCoApi.prototype.versionHistory = function(data) {
-    this._send({'type': 'versionHistory', 'cmd': data});
   };
 
 	DocsCoApi.prototype.forceSave = function() {

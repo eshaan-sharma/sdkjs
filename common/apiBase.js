@@ -1040,7 +1040,7 @@
 	{
 		this.sendEvent("asc_onPrint");
 	};
-	baseEditorsApi.prototype._getOpenCmd = function(versionHistory)
+	baseEditorsApi.prototype._getOpenCmd = function()
 	{
 		var rData                  = null;
 		if (!(this.DocInfo && this.DocInfo.get_OfflineApp()))
@@ -1075,30 +1075,21 @@
 				rData["convertToOrigin"] += Asc.c_sNativeViewerFormats;
 			}
 
-			if (versionHistory)
+			if (this.VersionHistory)
 			{
-				rData["serverVersion"] = versionHistory.serverVersion;
-                rData["closeonerror"] = versionHistory.isRequested;
-				rData["tokenHistory"] = versionHistory.token;
-				//чтобы результат пришел только этому соединению, а не всем кто в документе
-				rData["userconnectionid"] = this.CoAuthoringApi.getUserConnectionId();
+				rData["serverVersion"] = this.VersionHistory.serverVersion;
 			}
 		}
 		return rData;
 	}
 	// Open
-	baseEditorsApi.prototype.asc_LoadDocument                    = function(versionHistory, isRepeat)
+	baseEditorsApi.prototype.asc_LoadDocument                    = function(isRepeat)
 	{
 		// Меняем тип состояния (на открытие)
 		this.advancedOptionsAction = AscCommon.c_oAscAdvancedOptionsAction.Open;
 
-		let rData = this._getOpenCmd(versionHistory);
-		if (versionHistory) {
-			this.CoAuthoringApi.versionHistory(rData);
-		} else {
-			//todo auth on connection
-			this.CoAuthoringApi.auth(this.getViewMode(), rData);
-		}
+		//todo auth on connection
+		this.CoAuthoringApi.auth(this.getViewMode(), this._getOpenCmd());
 
 		if (!isRepeat) {
 			this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Open);
@@ -1625,7 +1616,7 @@
 					t.CoAuthoringApi.auth(t.getViewMode(), undefined, t.isIdle());
 				} else {
 					//первый запрос или ответ не дошел надо повторить открытие
-					t.asc_LoadDocument(undefined, true);
+					t.asc_LoadDocument(true);
 				}
 			}
 		};
@@ -2627,12 +2618,17 @@
 		if (bUpdate) {
 			this.asc_CloseFile();
 
-			this.DocInfo.put_Id(this.VersionHistory.docId);
-			this.DocInfo.put_Url(this.VersionHistory.url);
 			this.documentUrlChanges = this.VersionHistory.urlChanges;
 			this.documentTokenChanges = this.VersionHistory.token;
-			this.asc_setDocInfo(this.DocInfo);
-			this.asc_LoadDocument(this.VersionHistory);
+
+			let newDocInfo = this.DocInfo.clone();
+			newDocInfo.put_Id(this.VersionHistory.docId);
+			newDocInfo.put_Url(this.VersionHistory.url);
+			newDocInfo.put_Mode('view');
+			newDocInfo.put_CoEditingMode('strict');
+			newDocInfo.put_Token(this.VersionHistory.token);
+
+			this.reopenFileWithReconnection(newDocInfo);
 		} else if (this.VersionHistory.currentChangeId < newObj.currentChangeId) {
 			var oApi = Asc.editor || editor;
 			this.isApplyChangesOnVersionHistory = true;
@@ -2659,15 +2655,7 @@
 			// this.sendEvent('asc_onError', Asc.c_oAscError.ID.UpdateVersion, Asc.c_oAscError.Level.Critical);
 			return;
 		}
-
-		this.asc_setDocInfo(docInfo);
-
-		this.isOnLoadLicense = false;
-		this.ServerIdWaitComplete = false;
-		this.CoAuthoringApi.disconnect(AscCommon.c_oCloseCode.quiet);
-		//create new connection because new docId can be on different shard
-		this.CoAuthoringApi = new AscCommon.CDocsCoApi();
-		this._coAuthoringInit();
+		this.reopenFileWithReconnection(docInfo);
 	};
 	baseEditorsApi.prototype.canRefreshFile = function () {
 		return this.documentIsWopi || this.asc_checkNeedCallback('asc_onRequestRefreshFile');
@@ -2679,10 +2667,10 @@
 			let callback = function (isTimeout, response) {
 				if (response) {
 					//todo event to simulate 'refreshFile' integrator method
-					let newDocIndo = t.DocInfo.extendWithWopiParams(response);
+					let newDocInfo = t.DocInfo.extendWithWopiParams(response);
 					//send rename event
-					t.CoAuthoringApi.onMeta({'title': newDocIndo.get_Title()});
-					t.asc_refreshFile(newDocIndo);
+					t.CoAuthoringApi.onMeta({'title': newDocInfo.get_Title()});
+					t.asc_refreshFile(newDocInfo);
 				} else {
 					t.sendEvent("asc_onError", c_oAscError.ID.Unknown, c_oAscError.Level.NoCritical);
 				}
@@ -2694,6 +2682,16 @@
 			this.sendEvent("asc_onRequestRefreshFile");
 		}
 	}
+	baseEditorsApi.prototype.reopenFileWithReconnection = function(docInfo) {
+		this.asc_setDocInfo(docInfo);
+
+		this.isOnLoadLicense = false;
+		this.ServerIdWaitComplete = false;
+		this.CoAuthoringApi.disconnect(AscCommon.c_oCloseCode.quiet);
+		//create new connection because new docId can be on different shard
+		this.CoAuthoringApi = new AscCommon.CDocsCoApi();
+		this._coAuthoringInit();
+	};
 	baseEditorsApi.prototype.asc_undoAllChanges = function()
 	{
 	};
