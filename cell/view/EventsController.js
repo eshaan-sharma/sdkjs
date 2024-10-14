@@ -1031,7 +1031,7 @@
 					if (t.getCellEditMode()) {
 						return true;
 					}
-					var isSelectColumns = ctrlKey;
+					var isSelectColumns = !AscCommon.getAltGr(event) && (!!event.metaKey !== !!event.ctrlKey);
 					var isSelectAllMacOs = isSelectColumns && shiftKey && macOs;
 					// Обработать как обычный текст
 					if ((!isSelectColumns && !shiftKey) || isSelectAllMacOs) {
@@ -1045,12 +1045,14 @@
 					}
 					// Отключим стандартную обработку браузера нажатия
 					// Ctrl+Shift+Spacebar, Ctrl+Spacebar, Shift+Spacebar
-					stop();
 					if (isSelectColumns) {
 						t.handlers.trigger("selectColumnsByRange");
 					}
 					if (shiftKey) {
 						t.handlers.trigger("selectRowsByRange");
+					}
+					if (shiftKey || isSelectColumns) {
+						stop();
 					}
 					return result;
 

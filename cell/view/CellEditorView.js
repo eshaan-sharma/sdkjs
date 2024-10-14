@@ -2523,16 +2523,6 @@ function (window, undefined) {
 				}
 				t._removeChars(bIsWordRemove ? kPrevWord : kPrevChar);
 				return false;
-
-			case 32:  // "space"
-
-				t._addChars(String.fromCharCode(32));
-				event.stopPropagation();
-				event.preventDefault();
-
-				t._setSkipKeyPress(false);
-				return false;
-
 			case 35:  // "end"
 				if (!this.enableKeyEvents) {
 					break;
