@@ -6536,7 +6536,7 @@ function HierarchyAlgorithm() {
 					if (heightCoefficient < 1) {
 						truthCoefficient = nodeWidth * commonCoefficient / (nodeHeight * aspectRatio);
 					} else {
-						truthCoefficient = commonCoefficient;
+						truthCoefficient = 1/*commonCoefficient*//*(nodeWidth / aspectRatio / nodeHeight) ** (1 / (width / height))*/;
 					}
 				} else {
 					if (heightCoefficient < 1) {
