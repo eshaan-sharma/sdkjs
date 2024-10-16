@@ -3064,15 +3064,26 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 
 		return this.array;
 	};
-	cArray.prototype.fillFromArray = function (arr) {
+	cArray.prototype.fillFromArray = function (arr, fChangeElems) {
 		if (arr && arr.length !== undefined) {
 			this.array = arr;
 			this.rowCount = arr.length;
 			for (var i = 0; i < arr.length; i++) {
 				this.countElementInRow[i] = arr[i].length;
 				this.countElement += arr[i].length;
+				if (fChangeElems){
+					for (let j = 0; j < arr[i].length; j++) {
+						let changeRes = fChangeElems(arr[i][j]);
+						if (changeRes !== null) {
+							arr[i][j] = changeRes;
+						} else {
+							return null;
+						}
+					}
+				}
 			}
 		}
+		return true;
 	};
 	cArray.prototype.fillEmptyFromRange = function (range) {
 		if(!range) {
@@ -3173,6 +3184,34 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 	};
 	cArray.prototype.getFirstElement = function () {
 		return this.getElementRowCol(0,0);	
+	};
+	//check two-dimensional array
+	cArray.prototype.checkValidArray = function (array, bConvertToValid) {
+		if (!array || !array.length) {
+			return false;
+		}
+		let isOneDimensional = null;
+		for (let i = 0; i < array.length; i++) {
+			if (Array.isArray(array[i])) {
+				if (isOneDimensional) {
+					return false;
+				}
+				for (let j = 0; j < array[i].length; j++) {
+					if (Array.isArray(array[i][j])) {
+						return false;
+					}
+				}
+				isOneDimensional = false;
+			} else if (isOneDimensional === null) {
+				isOneDimensional = true;
+			}
+		}
+		if (isOneDimensional && bConvertToValid) {
+			let temp = [];
+			temp.push(array);
+			array = temp;
+		}
+		return array;
 	};
 
 

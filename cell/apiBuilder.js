@@ -1509,9 +1509,12 @@
 		if (!func) {
 			return;
 		}
+		let sendException = function () {
+			throwException(new Error('Arguments count error.'));
+		};
 		let argsCount = arg.length;
 		if (!func.checkArguments(argsCount)) {
-			throwException(new Error('Arguments count error.'));
+			sendException();
 			return null;
 		}
 
@@ -1524,16 +1527,57 @@
 				newArguments.push(new AscCommonExcel.cString(arg[i]));
 			} else if ('boolean' === typeof arg[i]) {
 				newArguments.push(new AscCommonExcel.cBool(arg[i]));
-			} else if (arg[i] instanceof ApiRange ) {
+			} else if (arg[i] instanceof ApiRange) {
 				//cArea/cRef/cArea3D/cRef3d
 				if (arg[i].range && arg[i].range.bbox && arg[i].range.worksheet) {
 					newArguments.push(new AscCommonExcel.cArea3D(arg[i].range.bbox.getName(), arg[i].range.worksheet, arg[i].range.worksheet));
 				} else {
-					throwException(new Error('Arguments type error.'));
+					sendException();
 					return null;
 				}
+			} else if (Array.isArray(arg[i])) {
+				//cArea/cRef/cArea3D/cRef3d
+				if (arg[i] && arg[i].length) {
+
+					let elem = arg[i];
+					let checkedArray = AscCommonExcel.cArray.prototype.checkValidArray.call(null, elem, true);
+					if (checkedArray) {
+						let newArray = new AscCommonExcel.cArray();
+						let bFillRes = newArray.fillFromArray(checkedArray, function (_elem) {
+							if ('number' === typeof _elem) {
+								return new AscCommonExcel.cNumber(_elem);
+							} else if ('string' === typeof _elem) {
+								return new AscCommonExcel.cString(_elem);
+							} else if ('boolean' === typeof _elem) {
+								return new AscCommonExcel.cBool(_elem);
+							}
+							return null;
+						});
+						if (bFillRes && newArray.isValidArray()) {
+							newArguments.push(newArray);
+						} else {
+							sendException();
+							return null;
+						}
+					} else {
+						sendException();
+						return null;
+					}
+				} else {
+					sendException();
+					return null;
+				}
+			} else if (arg[i] instanceof ApiName) {
+				let _name = arg[i].GetName && arg[i].GetName();
+				let _ws = arg[i].DefName && arg[i].DefName.parsedRef && arg[i].DefName.parsedRef.ws;
+				if (_name && _ws) {
+					let oName = new AscCommonExcel.cName(_name, _ws);
+					let nameRes = oName.getValue && oName.getValue();
+					newArguments.push(nameRes);
+				}
+
 			} else {
-				throwException(new Error('Arguments type error.'));
+				sendException();
 				return null;
 			}
 		}
@@ -1550,14 +1594,15 @@
 			return null;
 		}
 
-
+		let isArray = null;
 		if (AscCommonExcel.cElementType.cell === result.type || AscCommonExcel.cElementType.cell3D === result.type) {
 			result = result.getValue();
 			if (AscCommonExcel.cElementType.empty === result.type) {
 				result = new AscCommonExcel.cNumber(0);
 			}
 		} else if (AscCommonExcel.cElementType.array === result.type) {
-			result = result.getElement(0);
+			result = result.toArray(true);
+			isArray = true;
 		} else if (AscCommonExcel.cElementType.cellsRange === result.type || AscCommonExcel.cElementType.cellsRange3D === result.type) {
 			if (AscCommonExcel.cElementType.cellsRange === result.type) {
 				result = result.getValue2(0, 0);
@@ -1566,9 +1611,11 @@
 			}
 		}
 
-		if (result && result.getValue) {
+		if (!isArray && result && result.getValue) {
 			result = result.getValue();
-		} else {
+		}
+
+		if (result == null) {
 			throwException(new Error('Result type error.'));
 			return null;
 		}
