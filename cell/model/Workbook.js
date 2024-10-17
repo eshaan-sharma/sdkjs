@@ -6537,7 +6537,7 @@
 
 			this.workbook.handlers.trigger("changeSheetViewSettings", this.getId(), AscCH.historyitem_Worksheet_SetRightToLeft);
 			if (!this.workbook.bCollaborativeChanges) {
-				this.workbook.handlers.trigger("asc_onUpdateFormulasViewSettings");
+				this.workbook.handlers.trigger("asc_onUpdateSheetViewSettings");
 			}
 		}
 	};
