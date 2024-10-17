@@ -19788,7 +19788,7 @@
 		var isDataValidation = props.isOverlay;
 
 		let isClip = null;
-		if (this._clipDrawingRect(ctx, new Asc.Range(props.col, props.row, props.col, props.row), clipType.range)) {
+		if (!isDataValidation && this._clipDrawingRect(ctx, new Asc.Range(props.col, props.row, props.col, props.row), clipType.range)) {
 			isClip = true;
 		}
 
