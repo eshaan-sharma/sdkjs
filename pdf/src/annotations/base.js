@@ -261,7 +261,6 @@
         let oViewer = editor.getDocumentRenderer();
 
         if (this._wasChanged !== isChanged && oViewer.IsOpenAnnotsInProgress == false) {
-            // AscCommon.History.Add(new CChangesPDFAnnotWasChanged(this, this.IsChanged(), isChanged));
             this._wasChanged = isChanged;
             this.SetDrawFromStream(!isChanged);
         }
@@ -322,6 +321,9 @@
         if (this._apIdx == -1)
             return null;
 
+        nPageW = Math.round(nPageW);
+        nPageH = Math.round(nPageH);
+
         let oViewer = editor.getDocumentRenderer();
         let oFile   = oViewer.file;
         
@@ -377,7 +379,7 @@
         return canvas;
     };
     /**
-     * Returns AP info of this field.
+     * Returns AP info of this annotation.
 	 * @memberof CAnnotationBase
 	 * @typeofeditors ["PDF"]
      * @returns {Object}
@@ -511,6 +513,9 @@
         return false;
     };
     CAnnotationBase.prototype.IsFreeText = function() {
+        return false;
+    };
+    CAnnotationBase.prototype.IsStamp = function() {
         return false;
     };
     CAnnotationBase.prototype.SetNeedRecalc = function(bRecalc, bSkipAddToRedraw) {
@@ -691,23 +696,23 @@
         this.draw(oGraphicsWord);
 
         // draw annot rect
-        // oGraphicsPDF.SetLineWidth(1);
-        // let aOringRect  = this.GetOrigRect();
-        // let X       = aOringRect[0];
-        // let Y       = aOringRect[1];
-        // let nWidth  = aOringRect[2] - aOringRect[0];
-        // let nHeight = aOringRect[3] - aOringRect[1];
+        oGraphicsPDF.SetLineWidth(1);
+        let aOringRect  = this.GetOrigRect();
+        let X       = aOringRect[0];
+        let Y       = aOringRect[1];
+        let nWidth  = aOringRect[2] - aOringRect[0];
+        let nHeight = aOringRect[3] - aOringRect[1];
 
-        // Y += 1 / 2;
-        // X += 1 / 2;
-        // nWidth  -= 1;
-        // nHeight -= 1;
+        Y += 1 / 2;
+        X += 1 / 2;
+        nWidth  -= 1;
+        nHeight -= 1;
 
-        // oGraphicsPDF.SetStrokeStyle(0, 255, 255);
-        // oGraphicsPDF.SetLineDash([]);
-        // oGraphicsPDF.BeginPath();
-        // oGraphicsPDF.Rect(X, Y, nWidth, nHeight);
-        // oGraphicsPDF.Stroke();
+        oGraphicsPDF.SetStrokeStyle(0, 255, 255);
+        oGraphicsPDF.SetLineDash([]);
+        oGraphicsPDF.BeginPath();
+        oGraphicsPDF.Rect(X, Y, nWidth, nHeight);
+        oGraphicsPDF.Stroke();
     };
     CAnnotationBase.prototype.GetReplies = function() {
         return this._replies;
