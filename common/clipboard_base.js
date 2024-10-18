@@ -150,6 +150,9 @@
 		{
 			this._console_log("oncopy");
 
+			this.Button_Copy_New();
+			return;
+
 			if (!this.Api.asc_IsFocus(true))
 				return;
 
@@ -922,6 +925,8 @@
 
 		isUseNewCopy : function()
 		{
+			return true
+
 			if (this.Api.isMobileVersion)
 			{
 				if (this.Api.isViewMode || this.Api.isRestrictionView())
@@ -953,7 +958,8 @@
 					const data = [new ClipboardItem({
 						"text/plain"        : new Blob([copy_data.data[c_oAscClipboardDataFormat.Text]], {type: "text/plain"}),
 						"text/html"         : new Blob([copy_data.data[c_oAscClipboardDataFormat.Html]], {type: "text/html"}),
-						"web text/x-custom" : new Blob(["asc_internalData2;" + copy_data.data[c_oAscClipboardDataFormat.Internal]], {type: "web text/x-custom"})
+						"web text/x-custom" : new Blob(["asc_internalData2;" + copy_data.data[c_oAscClipboardDataFormat.Internal]], {type: "web text/x-custom"}),
+						"image/png" : window._blob
 					})];
 
 					navigator.clipboard.write(data).then(function(){},function(){});
