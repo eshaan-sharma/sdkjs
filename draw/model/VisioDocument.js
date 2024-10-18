@@ -516,25 +516,25 @@
 
 				shapeOrGroup.draw(graphics, shapeOrGroup.transform, shapeOrGroup.transformText);
 
-				if (shapeOrGroup.Id.substring(shapeOrGroup.Id.length - 4) === "Text") {
-					graphics.SaveGrState();
-					graphics.SetIntegerGrid(false);
-					graphics.transform3(new AscCommon.CMatrix());
-					graphics.b_color1( 255, 0, 0, 10 );
-					graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
-					// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
-					graphics.df();
-					graphics.RestoreGrState();
-				} else {
-					graphics.SaveGrState();
-					graphics.SetIntegerGrid(false);
-					graphics.transform3(new AscCommon.CMatrix());
-					graphics.b_color1( 0, 255, 0, 30 );
-					graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
-					// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
-					graphics.df();
-					graphics.RestoreGrState();
-				}
+				// if (shapeOrGroup.Id.substring(shapeOrGroup.Id.length - 4) === "Text") {
+				// 	graphics.SaveGrState();
+				// 	graphics.SetIntegerGrid(false);
+				// 	graphics.transform3(new AscCommon.CMatrix());
+				// 	graphics.b_color1( 255, 0, 0, 10 );
+				// 	graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
+				// 	// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
+				// 	graphics.df();
+				// 	graphics.RestoreGrState();
+				// } else {
+				// 	graphics.SaveGrState();
+				// 	graphics.SetIntegerGrid(false);
+				// 	graphics.transform3(new AscCommon.CMatrix());
+				// 	graphics.b_color1( 0, 255, 0, 30 );
+				// 	graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, shapeOrGroup.spPr.xfrm.extX, shapeOrGroup.spPr.xfrm.extY );
+				// 	// graphics.rect( shapeOrGroup.transform.tx, shapeOrGroup.transform.ty, 10, 1 );
+				// 	graphics.df();
+				// 	graphics.RestoreGrState();
+				// }
 
 				if (changeTextDirection && shapeOrGroup.Id.substring(shapeOrGroup.Id.length - 4) === "Text") {
 					graphics.SetBaseTransform(baseMatrix);

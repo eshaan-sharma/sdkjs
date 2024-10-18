@@ -416,7 +416,6 @@
 				}
 				oRun.Set_RFonts(cRFonts);
 
-				// add run to last paragraph
 				paragraph.Add_ToContent(paragraph.Content.length - 1, oRun);
 			}
 
@@ -538,6 +537,19 @@
 					console.log("undkown type in text tag");
 				}
 			});
+
+			// visio set \r\n at the end of each paragraph
+			for (let i = 0; i < oContent.Content.length; i++) {
+				const paragraph = oContent.Content[i];
+				if (paragraph.Content.length > 1) {
+					// get second to last run. extra line drop should be here. Bcs last run is default
+					const penultimateRun = paragraph.Content[paragraph.Content.length - 2];
+					if (penultimateRun.Content[penultimateRun.Content.length - 1] instanceof AscWord.CRunBreak) {
+						// remove CRunBreak i.e. lineBreak from run
+						penultimateRun.Content.splice(penultimateRun.Content.length - 1, 1);
+					}
+				}
+			}
 
 			// create defaultParagraph if no strings found
 			if (oContent.Content.length === 0) {
