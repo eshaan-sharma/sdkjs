@@ -40,6 +40,7 @@ var CreateSolidFillRGBA = AscFormat.CreateSolidFillRGBA;
 var CShapeDrawer = AscCommon.CShapeDrawer;
 var DrawLineEnd = AscCommon.DrawLineEnd;
 // var builder_CreateLine = AscFormat.builder_CreateLine;
+var ParaRun = AscWord.ParaRun;
 
 /**
  * @memberOf CShape
@@ -396,3 +397,83 @@ CShapeDrawer.prototype.ds = function()
 		this.CheckDash();
 	}
 }
+
+/**
+ * Добавляем в конец рана заданную строку
+ * @param {string} sString
+ * @param {number} [nPos=-1] если позиция не задана (или значение -1), то добавляем в конец
+ */
+ParaRun.prototype.AddText = function(sString, nPos)
+{
+	var nCharPos = undefined !== nPos && null !== nPos && -1 !== nPos ? nPos : this.Content.length;
+
+	let oForm     = this.GetParentForm();
+	var oTextForm = oForm ? oForm.GetTextFormPr() : null;
+	var nMax      = oTextForm ? oTextForm.GetMaxCharacters() : 0;
+
+	if (this.IsMathRun())
+	{
+		for (var oIterator = sString.getUnicodeIterator(); oIterator.check(); oIterator.next())
+		{
+			var nCharCode = oIterator.value();
+
+			var oMathText = new CMathText();
+			oMathText.add(nCharCode);
+			this.AddToContent(nCharPos++, oMathText);
+		}
+	}
+	else if (nMax > 0)
+	{
+		var arrLetters = [], nLettersCount = 0;
+		for (var oIterator = sString.getUnicodeIterator(); oIterator.check(); oIterator.next())
+		{
+			var nCharCode = oIterator.value();
+
+			if (9 === nCharCode) // \t
+				continue;
+			else if (10 === nCharCode) // \n
+				continue;
+			else if (13 === nCharCode) // \r
+				continue;
+			else if (8232 === nCharCode) // Line Separator
+				continue;
+			else if (AscCommon.IsSpace(nCharCode)) // space
+			{
+				nLettersCount++;
+				arrLetters.push(new AscWord.CRunSpace(nCharCode));
+			}
+			else
+			{
+				nLettersCount++;
+				arrLetters.push(new AscWord.CRunText(nCharCode));
+			}
+		}
+
+		for (var nIndex = 0; nIndex < arrLetters.length; ++nIndex)
+		{
+			this.AddToContent(nCharPos++, arrLetters[nIndex], true);
+		}
+
+		oForm.TrimTextForm();
+	}
+	else
+	{
+		for (var oIterator = sString.getUnicodeIterator(); oIterator.check(); oIterator.next())
+		{
+			var nCharCode = oIterator.value();
+
+			if (9 === nCharCode) // \t
+				this.AddToContent(nCharPos++, new AscWord.CRunTab(), true);
+			else if (10 === nCharCode) // \n
+				this.AddToContent(nCharPos++, new AscWord.CRunBreak(AscWord.break_Line), true);
+			else if (8232 === nCharCode) // Line Separator
+				this.AddToContent(nCharPos++, new AscWord.CRunBreak(AscWord.break_Line), true);
+			else if (13 === nCharCode) // \r
+				continue;
+			else if (AscCommon.IsSpace(nCharCode)) // space
+				this.AddToContent(nCharPos++, new AscWord.CRunSpace(nCharCode), true);
+			else
+				this.AddToContent(nCharPos++, new AscWord.CRunText(nCharCode), true);
+		}
+	}
+};
