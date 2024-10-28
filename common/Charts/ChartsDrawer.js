@@ -225,6 +225,9 @@ CChartsDrawer.prototype =
 			case AscFormat.SERIES_LAYOUT_PARETO_LINE :
 				this.charts.chartEx = new drawParetoChart(seria, this);
 				break;
+			case AscFormat.SERIES_LAYOUT_SUNBURST :
+				this.charts.chartEx = new drawSunburstChart(seria, this);
+				break;
 			default :
 				this.charts.chartEx = null;
 		}
@@ -2979,6 +2982,44 @@ CChartsDrawer.prototype =
 		}
 	},
 
+	_chartExHandleSunburst: function (type, cachedData, numArr, strCache) {
+		if (type !== AscFormat.SERIES_LAYOUT_SUNBURST || !numArr || !cachedData) {
+			return;
+		}
+
+		if (!cachedData.sunburst) {
+			cachedData.sunburst = [];
+        }
+
+		const _getTotalValue = function (arr) {
+			let sum = 0;
+			for (let i = 0; i < arr.length; i++) {
+				if (arr[i].val >= 0) {
+					sum += arr[i].val;
+				}
+			}
+			return sum;
+		}
+
+		const total = _getTotalValue(numArr);
+
+
+		// two situations
+		if (!strCache) {
+			for (let i = 0; i < numArr.length; i++) {
+				cachedData.sunburst.push({next: [], name : numArr[i].val,  pVal: numArr[i].val / total, parent : null});
+			}
+		} else {
+			cachedData.sunburst = {
+				data : [{name: 'a', pVal: 0.3}, {name: 'b', pVal: 0.7}
+					, {name: 'a', pVal: 0.1}, {name: 'a', pVal: 0.2}, {name: 'b', pVal: 0.3}
+					, {name: 'b', pVal: 0.4}],
+				layers : [2, 6]
+			}
+			console.log(numArr, strCache, cachedData.sunburst);
+		}
+	},
+
 	_prepChartExData: function (chartSpace) {
 		// plotArea: CPlotArea
 		// data: CNumericPoint
@@ -3050,6 +3091,7 @@ CChartsDrawer.prototype =
 				this._chartExHandleClusteredColumn(type, plotArea.plotAreaRegion.cachedData, numArr, strArr, axisProperties);
 				this._chartExHandleWaterfall(type, plotArea.plotAreaRegion.cachedData, numArr, axisProperties, seria);
 				this._chartExHandleFunnel(type, plotArea.plotAreaRegion.cachedData, numArr, axisProperties);
+				this._chartExHandleSunburst(type, plotArea.plotAreaRegion.cachedData, numArr, strCache);
 				this._chartExHandleAxesConfigurations(plotArea.axId, axisProperties);
 			}
 		}
@@ -3682,8 +3724,8 @@ CChartsDrawer.prototype =
 
 		return res;
 	},
-	
-	
+
+
 	//****accessory functions****
 	_getSumArray: function (arr, isAbs) {
 		if (typeof(arr) === 'number') {
@@ -8191,6 +8233,117 @@ drawParetoChart.prototype.drawParetoLine = function () {
 		this.cChartDrawer.drawPath(this.linePath, pen);
 	}
 };
+
+function drawSunburstChart(chart, chartsDrawer) {
+	this.chartProp = chartsDrawer.calcProp;
+	this.cChartDrawer = chartsDrawer;
+	this.cChartSpace = chartsDrawer.cChartSpace;
+
+	this.paths = {};
+}
+
+drawSunburstChart.prototype = {
+	constructor : drawSunburstChart,
+	recalculate : function () {
+		if (!this.cChartSpace || !this.cChartSpace.chart || !this.cChartSpace.chart.plotArea || !this.cChartSpace.chart.plotArea.plotAreaRegion || !this.cChartSpace.chart.plotArea.plotAreaRegion.cachedData) {
+			return;
+		}
+		const sunburst = this.cChartSpace.chart.plotArea.plotAreaRegion.cachedData.sunburst;
+
+		if (sunburst) {
+			const trueWidth = this.chartProp.trueWidth;
+			const trueHeight = this.chartProp.trueHeight;
+
+			const diagramRadius = Math.min(trueHeight, trueWidth) / 2;
+			const coords = {
+				x : this.chartProp.chartGutter._left + trueWidth / 2,
+				y : this.chartProp.chartGutter._top + trueHeight / 2
+			}
+
+			const ringWidth = diagramRadius / (sunburst.layers.length + 1);
+			let innerRadius = ringWidth;
+			let outerRadius = ringWidth * 2;
+			let j = 0;
+			let totalAngle = Math.PI / 2;
+			for (let i = 0; i < sunburst.data.length; i++) {
+				if (i === sunburst.layers[j]) {
+					innerRadius = outerRadius;
+					outerRadius = innerRadius + ringWidth;
+					j++;
+				}
+				const angle = (sunburst.data[i].pVal * Math.PI * 2);
+				this.paths[i] = this._calculateSegment(totalAngle, angle,  outerRadius, innerRadius, coords);
+				totalAngle += angle;
+			}
+		}
+	},
+
+	_calculateSegment : function (stAngle, swAngle, outerRadius, innerRadius, coords) {
+		if (!AscFormat.isRealNumber(stAngle) || !AscFormat.isRealNumber(swAngle) || !AscFormat.isRealNumber(outerRadius) || !AscFormat.isRealNumber(innerRadius) || !coords || !AscFormat.isRealNumber(coords.x) || !AscFormat.isRealNumber(coords.y)) {
+			return;
+		}
+
+		const pathId = this.cChartSpace.AllocPath();
+		const path = this.cChartSpace.GetPath(pathId);
+
+		const pathH = this.chartProp.pathH;
+		const pathW = this.chartProp.pathW;
+
+		const pxToMm = this.chartProp.pxToMM;
+
+		const xRight = coords.x + outerRadius * Math.cos(stAngle + swAngle);
+		const yRight = coords.y - outerRadius * Math.sin(stAngle + swAngle);
+
+		const xLeft = coords.x + innerRadius * Math.cos(stAngle);
+		const yLeft = coords.y - innerRadius * Math.sin(stAngle);
+
+		path.moveTo(xLeft / pxToMm * pathW, yLeft / pxToMm * pathH);
+		path.arcTo(innerRadius / pxToMm * pathW, innerRadius / pxToMm * pathH, -1 * stAngle * cToDeg, -1 * swAngle * cToDeg);
+		path.lnTo(xRight / pxToMm * pathW, yRight / pxToMm * pathH);
+		path.arcTo(outerRadius / pxToMm * pathW, outerRadius / pxToMm * pathH, -1 * (stAngle + swAngle) * cToDeg, swAngle * cToDeg);
+		path.lnTo(xLeft / pxToMm * pathW, yLeft / pxToMm * pathH);
+
+		return pathId;
+	},
+	draw : function () {
+		if (!this.cChartDrawer || !this.cChartDrawer.calcProp || !this.cChartDrawer.cShapeDrawer || !this.cChartDrawer.cShapeDrawer.Graphics || !this.cChartDrawer.calcProp.chartGutter) {
+			return;
+		}
+
+		// find chart starting coordinates, width and height;
+		let leftRect = this.cChartDrawer.calcProp.chartGutter._left / this.cChartDrawer.calcProp.pxToMM;
+		let topRect = (this.cChartDrawer.calcProp.chartGutter._top) / this.cChartDrawer.calcProp.pxToMM;
+		let rightRect = this.cChartDrawer.calcProp.trueWidth / this.cChartDrawer.calcProp.pxToMM;
+		let bottomRect = (this.cChartDrawer.calcProp.trueHeight) / this.cChartDrawer.calcProp.pxToMM;
+
+		if (!AscFormat.isRealNumber(leftRect) || !AscFormat.isRealNumber(topRect) || !AscFormat.isRealNumber(rightRect) || !AscFormat.isRealNumber(bottomRect) ) {
+			return;
+		}
+
+		this.cChartDrawer.cShapeDrawer.Graphics.SaveGrState();
+		this.cChartDrawer.cShapeDrawer.Graphics.AddClipRect(leftRect, topRect, rightRect, bottomRect);
+
+		let series = this.cChartSpace.chart.plotArea.plotAreaRegion.series;
+
+		let oSeries = series[0];
+		if(oSeries) {
+			for (let i in this.paths) {
+				if (this.paths.hasOwnProperty(i) && this.paths[i]) {
+					let nPtIdx = parseInt(i);
+					let pen = oSeries.getPtPen(nPtIdx);
+					let brush = oSeries.getPtBrush(nPtIdx);
+					pen.Fill = brush.createDuplicate();
+					pen.Fill.fill.color.RGBA.B = 255;
+					pen.Fill.fill.color.RGBA.G = 255;
+					pen.Fill.fill.color.RGBA.R = 255;
+					this.cChartDrawer.drawPath(this.paths[i], pen, brush);
+				}
+			}
+		}
+
+		this.cChartDrawer.cShapeDrawer.Graphics.RestoreGrState();
+	}
+}
 
 /** @constructor */
 function drawWaterfallChart(chart, chartsDrawer) {
