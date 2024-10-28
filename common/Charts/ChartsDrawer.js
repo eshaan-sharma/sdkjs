@@ -3010,12 +3010,107 @@ CChartsDrawer.prototype =
 				cachedData.sunburst.push({next: [], name : numArr[i].val,  pVal: numArr[i].val / total, parent : null});
 			}
 		} else {
-			cachedData.sunburst = {
-				data : [{name: 'a', pVal: 0.3}, {name: 'b', pVal: 0.7}
-					, {name: 'a', pVal: 0.1}, {name: 'a', pVal: 0.2}, {name: 'b', pVal: 0.3}
-					, {name: 'b', pVal: 0.4}],
-				layers : [2, 6]
+			let i = 0;
+			let j = 1;
+			let startingJ = 0;
+			let strPts = strCache[i].pts;
+			const router = [strCache[i].pts.length];
+			const lastLayer = strCache.length - 1;
+			let previousName = strPts[i].val;
+			let head = cachedData.sunburst;
+			let parent = null;
+
+			// whenever new value added to tree, we need to update all parents pValues
+			const fillAncestors = function (cell, pVal) {
+				let parent = cell.parent;
+				while (parent) {
+					parent[parent.length - 1].pVal += pVal;
+					parent = parent[parent.length - 1].parent;
+				}
 			}
+
+			const sortArray = function () {
+				if (i === lastLayer) {
+					head.sort(function(a, b) {
+						return a.pVal - b.pVal;
+					});
+				} else {
+					const index = head.length - 1;
+
+					for (let i = 0; i < index; i++) {
+						if (head[index].pVal < head[i].pVal) {
+							const cell = head[i];
+							head[i] = head[index];
+							head[index] = cell;
+						}
+					}
+				}
+			}
+
+			const removeLastRoutes = function (lastPosition) {
+				while (router.length > 0 && router[router.length - 1] === lastPosition) {
+					router.pop();
+				}
+			}
+
+			const goBack = function () {
+				const lastPosition = router[router.length - 1];
+				if (lastPosition - 1 === j) {
+
+					removeLastRoutes(lastPosition);
+
+					const newI = router.length - 1;
+
+					sortArray();
+					while (i !== newI && head[head.length - 1].parent) {
+						head = head[head.length - 1].parent;
+						sortArray();
+						i -= 1;
+					}
+					parent = head[head.length - 1].parent;
+
+					strPts = strCache[i].pts;
+					j = lastPosition;
+					previousName = strPts[j] ? strPts[j].val : null;
+
+					startingJ = lastPosition;
+				}
+			}
+
+			const goNext = function (cell) {
+				parent = head;
+				head = cell.next;
+
+				router.push(j);
+
+				i += 1;
+				strPts = strCache[i].pts;
+
+				if (i === lastLayer) {
+					j = startingJ - 1;
+				}else {
+					j = startingJ;
+					previousName = strPts[j].val;
+				}
+			}
+
+			for (; j <= strPts.length; j++) {
+				if (i === lastLayer) {
+					const pVal = numArr[j].val / total;
+					const cell = {next: null, name: strPts[j].val, pVal: pVal, parent : parent};
+					fillAncestors(cell, pVal);
+					head.push(cell);
+					goBack();
+				} else {
+					const lastVal = router[router.length - 1];
+					if (j === lastVal || strPts[j].val !== previousName) {
+						const cell = {next: [], name: previousName, pVal: 0, parent : parent};
+						head.push(cell);
+						goNext(cell);
+					}
+				}
+			}
+
 			console.log(numArr, strCache, cachedData.sunburst);
 		}
 	},
