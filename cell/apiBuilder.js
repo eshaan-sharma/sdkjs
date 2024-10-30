@@ -1841,8 +1841,8 @@
 	 * Returns the average of the absolute deviations of data points from their mean.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 numeric values for which the average of the absolute deviations will be returned. The first argument is required,
-	 * subsequent arguments are optional.
+	 * @param {number | ApiName | number[]} args - Up to 255 numeric values for which the average of the absolute deviations will be returned. The first argument is required,
+	 * subsequent arguments are optional. Arguments can be numbers, names, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.AVEDEV = function () {
@@ -1852,8 +1852,8 @@
 	 * Returns the average (arithmetic mean) of the specified arguments.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 numeric values for which the average value will be returned. The first argument is required,
-	 * subsequent arguments are optional.
+	 * @param {number | ApiName | number[]} args - Up to 255 numeric values for which the average value will be returned. The first argument is required,
+	 * subsequent arguments are optional. Arguments can be numbers, names, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.AVERAGE = function () {
@@ -1863,8 +1863,8 @@
 	 * Returns the average (arithmetic mean) of the specified arguments, evaluating text and <b>false</b> in arguments as 0; <b>true</b> evaluates as 1.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string} args - Up to 255 numeric values for which the average value will be returned. The first argument is required,
-	 * subsequent arguments are optional. Arguments can be numbers, text, or logical values, such as <b>true</b> and <b>false</b>.
+	 * @param {number | string | ApiName | number[]} args - Up to 255 numeric values for which the average value will be returned. The first argument is required,
+	 * subsequent arguments are optional. Arguments can be numbers, text, or logical values, such as <b>true</b> and <b>false</b>, names, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.AVERAGEA = function () {
@@ -2164,7 +2164,8 @@
 	 * Counts a number of cells in a range that contains numbers ignoring empty cells or those contaning text.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {string | number | boolean | ApiRange} args - Up to 255 items, or ranges to count numbers. The first argument is required, subsequent arguments are optional.
+	 * @param {string | number | boolean | ApiRange | array | ApiName} args - Up to 255 items, or ranges to count numbers.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values and text representations of numbers, ranges, names, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.COUNT = function () {
@@ -2174,7 +2175,8 @@
 	 * Counts a number of cells in a range that are not empty.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {string | number | boolean | ApiRange} args - Up to 255 items, or ranges to count values. The first argument is required, subsequent arguments are optional.
+	 * @param {string | number | boolean | ApiRange | array | ApiName} args - Up to 255 items, or ranges to count values.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values, text strings, ranges, names, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.COUNTA = function () {
@@ -2269,7 +2271,8 @@
 	 * Returns the sum of squares of deviations of data points from their sample mean.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 numerical values for which to find the sum of squares of deviations. The first argument is required, subsequent arguments are optional. 
+	 * @param {number | number[] | ApiName} args - Up to 255 numerical values for which to find the sum of squares of deviations.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.DEVSQ = function () {
@@ -2425,7 +2428,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - A date for which a new value will be predicted. Must be after the last date in the timeline.
-	 * @param {ApiRange} arg2 - A range of numeric data that determines the historical values for which a new point will be predicted.
+	 * @param {ApiRange | number[]} arg2 - A range or an array of numeric data that determines the historical values for which a new point will be predicted.
 	 * @param {ApiRange} arg3 - A range of date/time values that correspond to the historical values.
 	 * The timeline range must be of the same size as the second argument. Date/time values must have a constant step between them and can't be zero.
 	 * @param {?number} arg4 - An optional numeric value that specifies the length of the seasonal pattern. The default value of 1 indicates seasonality is detected automatically.
@@ -2442,7 +2445,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - A date for which a new value will be predicted. Must be after the last date in the timeline.
-	 * @param {ApiRange} arg2 - A range of numeric data that determines the historical values for which a new point will be predicted.
+	 * @param {ApiRange | number[]} arg2 - A range or an array of numeric data that determines the historical values for which a new point will be predicted.
 	 * @param {ApiRange} arg3 - A range of date/time values that correspond to the historical values.
 	 * The timeline range must be of the same size as the second argument. Date/time values must have a constant step between them and can't be zero.
 	 * @param {?number} arg4 - A number between 0 and 1 that shows the confidence level for the calculated confidence interval. The default value is .95.
@@ -2459,7 +2462,7 @@
 	 * Returns the length of the repetitive pattern an application detects for the specified time series.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of numeric data that determines the historical values for which a new point will be predicted.
+	 * @param {ApiRange | number[]} arg1 - A range or an array of numeric data that determines the historical values for which a new point will be predicted.
 	 * @param {ApiRange} arg2 - A range of date/time values that correspond to the historical values.
 	 * The timeline range must be of the same size as the second argument. Date/time values must have a constant step between them and can't be zero.
 	 * @param {?number} arg3 - An optional numeric value to handle missing values. The default value of 1 replaces missing values by interpolation, and 0 replaces them with zeros.
@@ -2487,7 +2490,7 @@
 	 * Returns the requested statistic for the forecast.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of numeric data that determines the historical values for which a new point will be predicted.
+	 * @param {ApiRange | number[]} arg1 - A range or an array of numeric data that determines the historical values for which a new point will be predicted.
 	 * @param {ApiRange} arg2 - A range of date/time values that correspond to the historical values.
 	 * The timeline range must be of the same size as the second argument. Date/time values must have a constant step between them and can't be zero.
 	 * @param {StatisticType} arg3 - A number between 1 and 8, indicating which statistic will be returned for the calculated forecast.
@@ -2517,8 +2520,8 @@
 	 * Calculates how often values occur within a range of values and then returns the first value of the returned vertical array of numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The selected range for which the frequencies will be counted (blanks and text are ignored).
-	 * @param {ApiRange} arg2 - The selected range into which the values in the first range will be grouped.
+	 * @param {ApiRange | number[]} arg1 - An array of values or the selected range for which the frequencies will be counted (blanks and text are ignored).
+	 * @param {ApiRange | number[]} arg2 - An array of intervals or the selected range into which the values in the first range will be grouped.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.FREQUENCY = function (arg1, arg2) {
@@ -2644,7 +2647,8 @@
 	 * Returns the geometric mean of positive numeric data.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 numeric values for which the geometric mean will be calculated.
+	 * @param {ApiRange | number[] | ApiName} args - Up to 255 numeric values for which the geometric mean will be calculated.
+	 * Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.GEOMEAN = function () {
@@ -2654,9 +2658,9 @@
 	 * Calculates predicted exponential growth by using existing data.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The set of y-values from the <em>y = b*m^x</em> equation, a range of positive numbers.
-	 * @param {?ApiRange} arg2 - An optional set of x-values from the <em>y = b*m^x</em> equation, a range of positive numbers that has the same size as the set of y-values.
-	 * @param {?ApiRange} arg3 - New x-values for which the function will return the corresponding y-values.
+	 * @param {ApiRange | number[]} arg1 - The set of y-values from the <em>y = b*m^x</em> equation, an array or range of positive numbers.
+	 * @param {?ApiRange | number[]} arg2 - An optional set of x-values from the <em>y = b*m^x</em> equation, an array or range of positive numbers that has the same size as the set of y-values.
+	 * @param {?ApiRange | number[]} arg3 - New x-values for which the function will return the corresponding y-values.
 	 * @param {?boolean} arg4 - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b>,
 	 * and <em>b</em> is set equal to 1 if the parameter is <b>false</b> or omitted.
 	 * @returns {number}
@@ -2668,7 +2672,8 @@
 	 * Returns the harmonic mean of a data set of positive numbers: the reciprocal of the arithmetic mean of reciprocals.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} args - Up to 255 numeric values for which the harmonic mean will be calculated.
+	 * @param {ApiRange | number[] | ApiName} args - Up to 255 numeric values for which the harmonic mean will be calculated.
+	 * Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.HARMEAN = function () {
@@ -2718,7 +2723,8 @@
 	 * Returns the kurtosis of a data set.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} args - Up to 255 numeric values for which the kurtosis will be calculated.
+	 * @param {ApiRange | number[] | ApiName} args - Up to 255 numeric values for which the kurtosis will be calculated.
+	 * Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.KURT = function () {
@@ -2728,8 +2734,8 @@
 	 * Returns the k-th largest value in a data set. For example, the fifth largest number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data for which the k-th largest value will be determined.
-	 * @param {number} arg2 - The position (from the largest) in the cell range of data to return.
+	 * @param {ApiRange | number[]} arg1 - The array or range of data for which the k-th largest value will be determined.
+	 * @param {number} arg2 - The position (from the largest) in the array or cell range of data to return.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.LARGE = function (arg1, arg2) {
@@ -2820,8 +2826,8 @@
 	 * Returns the largest value in a set of values. Ignores logical values and text.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the largest number will be returned.
-	 * The first argument is required, subsequent arguments are optional.
+	 * @param {number | array | ApiRange | ApiName} args - Up to 255 numeric values for which the largest number will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MAX = function () {
@@ -2831,8 +2837,8 @@
 	 * Returns the largest value in a set of values. Does not ignore logical values and text.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values (number, text, logical value) for which the largest value will be returned.
-	 * The first argument is required, subsequent arguments are optional.
+	 * @param {number | string | boolean | ApiRange | array | ApiName} args - Up to 255 values (number, text, logical value) for which the largest value will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values and text representations of numbers, names, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MAXA = function () {
@@ -2842,8 +2848,8 @@
 	 * Returns the median, or the number in the middle of the set of given numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the median will be calculated.
-	 * The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiRange | array | ApiName} args - Up to 255 numeric values for which the median will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MEDIAN = function () {
@@ -2853,8 +2859,8 @@
 	 * Returns the smallest number in a set of values. Ignores logical values and text.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the smallest number will be returned.
-	 * The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiRange | array | ApiName} args - Up to 255 numeric values for which the smallest number will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MIN = function () {
@@ -2864,8 +2870,8 @@
 	 * Returns the smallest value in a set of values. Does not ignore logical values and text.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values (number, text, logical value) for which the smallest value will be returned.
-	 * The first argument is required, subsequent arguments are optional.
+	 * @param {number | string | boolean | ApiRange | array | ApiName} args - Up to 255 values (number, text, logical value) for which the smallest value will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values and text representations of numbers, names, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.MINA = function () {
@@ -3042,7 +3048,7 @@
 	 * Returns the k-th percentile of values in a range.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data that defines relative standing.
 	 * @param {number} arg2 - The percentile value that is equal to 0 but less than or equal to 1.
 	 * @returns {number}
 	 */
@@ -3053,7 +3059,7 @@
 	 * Returns the k-th percentile of values in a range, where k is in the range 0..1, exclusive.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data that defines relative standing.
 	 * @param {number} arg2 - The percentile value that is greater than 0 but less than 1.
 	 * @returns {number}
 	 */
@@ -3064,7 +3070,7 @@
 	 * Returns the k-th percentile of values in a range, where k is in the range 0..1, inclusive.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data that defines relative standing.
 	 * @param {number} arg2 - The percentile value that is equal to 0 but less than or equal to 1.
 	 * @returns {number}
 	 */
@@ -3075,7 +3081,7 @@
 	 * Returns the rank of a value in a data set as a percentage of the data set.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data with numeric values that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data with numeric values that defines relative standing.
 	 * @param {number} arg2 - The value for which the rank will be returned.
 	 * @param {?number} arg3 - An optional value that identifies the number of significant digits for the returned percentage, three digits if omitted (0.xxx%).
 	 * @returns {number}
@@ -3087,7 +3093,7 @@
 	 * Returns the rank of a value in a data set as a percentage (0..1, exclusive) of the data set.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data with numeric values that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data with numeric values that defines relative standing.
 	 * @param {number} arg2 - The value for which the rank will be returned.
 	 * @param {?number} arg3 - An optional value that identifies the number of significant digits for the returned percentage, three digits if omitted (0.xxx%).
 	 * @returns {number}
@@ -3099,7 +3105,7 @@
 	 * Returns the rank of a value in a data set as a percentage (0..1, inclusive) of the data set.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data with numeric values that defines relative standing.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data with numeric values that defines relative standing.
 	 * @param {number} arg2 - The value for which the rank will be returned.
 	 * @param {?number} arg3 - An optional value that identifies the number of significant digits for the returned percentage, three digits if omitted (0.xxx%).
 	 * @returns {number}
@@ -3185,7 +3191,7 @@
 	 * Returns the quartile of a data set.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The cell range of numeric values for which the quartile value will be returned.
+	 * @param {number[] | ApiRange} arg1 - The array or cell range of numeric values for which the quartile value will be returned.
 	 * @param {number} arg2 - The quartile value to return: minimum value = 0; 1st quartile = 1; median value = 2; 3rd quartile = 3; maximum value = 4.
 	 * @returns {number}
 	 */
@@ -3196,7 +3202,7 @@
 	 * Returns the quartile of a data set, based on percentile values from 0..1, exclusive.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The cell range of numeric values for which the quartile value will be returned.
+	 * @param {number[] | ApiRange} arg1 - The array or cell range of numeric values for which the quartile value will be returned.
 	 * @param {number} arg2 - The quartile value to return: 1st quartile = 1; median value = 2; 3rd quartile = 3.
 	 * @returns {number}
 	 */
@@ -3207,7 +3213,7 @@
 	 * Returns the quartile of a data set, based on percentile values from 0..1, inclusive.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The cell range of numeric values for which the quartile value will be returned.
+	 * @param {number[] | ApiRange} arg1 - The array or cell range of numeric values for which the quartile value will be returned.
 	 * @param {number} arg2 - The quartile value to return: minimum value = 0; 1st quartile = 1; median value = 2; 3rd quartile = 3; maximum value = 4.
 	 * @returns {number}
 	 */
@@ -3219,7 +3225,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The number for which the rank will be returned.
-	 * @param {ApiRange} arg2 - A range of numbers. Nonnumeric values are ignored.
+	 * @param {number[] | ApiRange} arg2 - An array or range of numbers. Nonnumeric values are ignored.
 	 * @param {?boolean} arg3 - The numeric value that specifyes how to order the numbers. If it is 0 or omitted, the rank in the list will be sorted in descending order.
 	 * Any other numeric value means that the rank in the list will be sorted in ascending order.
 	 * @returns {number}
@@ -3232,7 +3238,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The number for which the rank will be returned.
-	 * @param {ApiRange} arg2 - A range of numbers. Nonnumeric values are ignored.
+	 * @param {number[] | ApiRange} arg2 - An array or range of numbers. Nonnumeric values are ignored.
 	 * @param {?boolean} arg3 - The numeric value that specifyes how to order the numbers. If it is 0 or omitted, the rank in the list will be sorted in descending order.
 	 * Any other numeric value means that the rank in the list will be sorted in ascending order.
 	 * @returns {number}
@@ -3245,7 +3251,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The number for which the rank will be returned.
-	 * @param {ApiRange} arg2 - A range of numbers. Nonnumeric values are ignored.
+	 * @param {number[] | ApiRange} arg2 - An array or range of numbers. Nonnumeric values are ignored.
 	 * @param {?boolean} arg3 - The numeric value that specifyes how to order the numbers. If it is 0 or omitted, the rank in the list will be sorted in descending order.
 	 * Any other numeric value means that the rank in the list will be sorted in ascending order.
 	 * @returns {number}
@@ -3270,7 +3276,8 @@
 	 * Returns the skewness of a distribution: a characterization of the degree of asymmetry of a distribution around its mean.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the skewness of a distribution will be returned. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | number[] | ApiRange} args - Up to 255 numeric values for which the skewness of a distribution will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SKEW = function () {
@@ -3280,7 +3287,8 @@
 	 * Returns the skewness of a distribution based on a population: a characterization of the degree of asymmetry of a distribution around its mean.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the skewness of a distribution will be returned. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | number[] | ApiRange} args - Up to 255 numeric values for which the skewness of a distribution will be returned.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SKEW_P = function () {
@@ -3302,7 +3310,7 @@
 	 * Returns the k-th smallest value in a data set. For example, the fifth smallest number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of numerical data for which the k-th smallest value will be determined.
+	 * @param {number[] | ApiRange} arg1 - An array or range of numerical data for which the k-th smallest value will be determined.
 	 * @param {number} arg2 - The position (from the smallest) in the range of the value to return.
 	 * @returns {number}
 	 */
@@ -3325,7 +3333,8 @@
 	 * Estimates standard deviation based on a sample (ignores logical values and text in the sample).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number[] | number | ApiName | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEV = function () {
@@ -3335,7 +3344,8 @@
 	 * Estimates standard deviation based on a sample (ignores logical values and text in the sample).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number[] | number | ApiName | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEV_S = function () {
@@ -3345,7 +3355,8 @@
 	 * Estimates standard deviation based on a sample, including logical values and text. Text and the <b>false</b> logical value have the value 0; the <b>true</b> logical value has the value 1.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number[] | number | string | boolean | ApiRange | ApiName} args - Up to 255 values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values, text strings, names, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEVA = function () {
@@ -3355,7 +3366,8 @@
 	 * Calculates standard deviation based on the entire population given as arguments (ignores logical values and text).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number[] | number | ApiName | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEVP = function () {
@@ -3365,18 +3377,21 @@
 	 * Calculates standard deviation based on the entire population given as arguments (ignores logical values and text).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number[] | number | ApiName | ApiRange} args - Up to 255 numeric values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEV_P = function () {
 		return this.private_calculateFunction("STDEV.P", arguments);
 	};
 	/**
-	 * Calculates standard deviation based on an entire population, including logical values and text. Text and the <b>false</b> logical value have the value 0; the <b>true</b> logical value has the value 1.
+	 * Calculates standard deviation based on the entire population, including logical values and text.
+	 * Text and the <b>false</b> logical value have the value 0; the <b>true</b> logical value has the value 1.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values for which the standard deviation will be calculated. The first argument is required, subsequent arguments are optional.
-	 * @returns {number | string | boolean}
+	 * @param {number[] | number | string | boolean | ApiRange | ApiName} args - Up to 255 values for which the standard deviation will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values, text strings, names, ranges, or arrays.
+	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.STDEVPA = function () {
 		return this.private_calculateFunction("STDEVPA", arguments);
@@ -3478,9 +3493,9 @@
 	 * Returns numbers in a linear trend matching known data points, using the least squares method.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of y-values from the <em>y = mx + b</em> equation.
-	 * @param {?ApiRange} arg2 - An optional range of x-values from the <em>y = mx + b</em> equation, a range of the same size as a range of y-values.
-	 * @param {?ApiRange} arg3 - A range of new x-values for which this function will return corresponding y-values.
+	 * @param {ApiRange | number[]} arg1 - A range or array of y-values from the <em>y = mx + b</em> equation.
+	 * @param {?ApiRange | number[]} arg2 - An optional range or array of x-values from the <em>y = mx + b</em> equation, an array of the same size as an array of y-values.
+	 * @param {?ApiRange | number[]} arg3 - A range or array of new x-values for which this function will return corresponding y-values.
 	 * @param {?boolean} arg4 - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b> or omitted,
 	 * and <em>b</em> is set equal to 0 if the parameter is <b>false</b>.
 	 * @returns {number}
@@ -3492,7 +3507,7 @@
 	 * Returns the mean of the interior portion of a set of data values.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of values to trim and average.
+	 * @param {ApiRange | number[]} arg1 - The array or range of values to trim and average.
 	 * @param {number} arg2 - The fractional number of data points to exclude from the top and bottom of the data set.
 	 * @returns {number}
 	 */
@@ -3531,7 +3546,8 @@
 	 * Estimates variance based on a sample (ignores logical values and text in the sample).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | ApiRange | number[]} args - Up to 255 numeric values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VAR = function () {
@@ -3541,7 +3557,8 @@
 	 * Estimates variance based on a sample, including logical values and text. Text and the <b>false</b> logical value have the value 0; the <b>true</b> logical value has the value 1.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | string | boolean | ApiRange | array | ApiName} args - Up to 255 values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values or text representations of numbers, names, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VARA = function () {
@@ -3551,7 +3568,8 @@
 	 * Calculates variance based on the entire population (ignores logical values and text in the population).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | ApiRange | number[]} args - Up to 255 numeric values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VARP = function () {
@@ -3561,7 +3579,8 @@
 	 * Calculates variance based on the entire population (ignores logical values and text in the population).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | ApiRange | number[]} args - Up to 255 numeric values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VAR_P = function () {
@@ -3571,7 +3590,8 @@
 	 * Estimates variance based on a sample (ignores logical values and text in the sample).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange} args - Up to 255 numeric values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiName | ApiRange | number[]} args - Up to 255 numeric values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, names, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VAR_S = function () {
@@ -3581,7 +3601,8 @@
 	 * Calculates variance based on the entire population, including logical values and text. Text and the <b>false</b> logical value have the value 0; the <b>true</b> logical value has the value 1.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} args - Up to 255 values for which the variance will be calculated. The first argument is required, subsequent arguments are optional.
+	 * @param {number | string | boolean | ApiRange | array | ApiName} args - Up to 255 values for which the variance will be calculated.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, logical values or text representations of numbers, names, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.VARPA = function () {
@@ -3621,7 +3642,7 @@
 	 * Returns the one-tailed P-value of a z-test.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data against which to test X.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data against which to test X.
 	 * @param {number} arg2 - The value to test.
 	 * @param {?number} arg3 - The population (known) standard deviation. If omitted, the sample standard deviation is used.
 	 * @returns {number}
@@ -3633,7 +3654,7 @@
 	 * Returns the one-tailed P-value of a z-test.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - The range of data against which to test X.
+	 * @param {number[] | ApiRange} arg1 - The array or range of data against which to test X.
 	 * @param {number} arg2 - The value to test.
 	 * @param {?number} arg3 - The population (known) standard deviation. If omitted, the sample standard deviation is used.
 	 * @returns {number}
@@ -3768,7 +3789,7 @@
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - A serial date number that represents the end date.
-	 * @param {?ApiRange} arg3 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
+	 * @param {?ApiRange | number[]} arg3 - An optional range or array of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.NETWORKDAYS = function (arg1, arg2, arg3) {
@@ -3781,7 +3802,7 @@
 	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - A serial date number that represents the end date.
 	 * @param {?number | ?string} arg3 - A number or string specifying when weekends occur.
-	 * @param {?ApiRange} arg4 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
+	 * @param {?ApiRange | number[]} arg4 - An optional range or array of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.NETWORKDAYS_INTL = function (arg1, arg2, arg3, arg4) {
@@ -3866,7 +3887,7 @@
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of nonweekend and non-holiday days before or after the start date. A positive value for days yields a future date; a negative value yields a past date.
-	 * @param {?ApiRange} arg3 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
+	 * @param {?ApiRange | number[]} arg3 - An optional range or array of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.WORKDAY = function (arg1, arg2, arg3) {
@@ -3879,7 +3900,7 @@
 	 * @param {number} arg1 - A serial date number that represents the start date.
 	 * @param {number} arg2 - The number of nonweekend and non-holiday days before or after the start date. A positive value for days yields a future date; a negative value yields a past date.
 	 * @param {?number | ?string} arg3 - A number or string specifying when weekends occur.
-	 * @param {?ApiRange} arg4 - An optional range of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
+	 * @param {?ApiRange | number[]} arg4 - An optional range or array of one or more serial date numbers to exclude from the working calendar, such as state and federal holidays and floating holidays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.WORKDAY_INTL = function (arg1, arg2, arg3, arg4) {
@@ -4347,7 +4368,7 @@
 	 * Returns the product of the specified complex numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {string} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.IMPRODUCT = function () {
@@ -4428,7 +4449,7 @@
 	 * Returns the sum of the specified complex numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {string} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.IMSUM = function () {
@@ -4901,7 +4922,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The present value of an investment.
-	 * @param {ApiRange} arg2 - A range of interest rates to apply.
+	 * @param {number[]} arg2 - An array of interest rates to apply.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.FVSCHEDULE = function (arg1, arg2) {
@@ -4940,7 +4961,7 @@
 	 * Returns the internal rate of return for a series of cash flows.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells that contain numbers for which the internal rate of return will be calculated.
+	 * @param {number[] | ApiRange} arg1 - A range or array of cells that contain numbers for which the internal rate of return will be calculated.
 	 * @param {?number} arg2 - An estimate at what the internal rate of return will be. If it is omitted, the function will assume guess to be 0.1 (10 percent).
 	 * @returns {number}
 	 */
@@ -4979,7 +5000,7 @@
 	 * Returns the internal rate of return for a series of periodic cash flows, considering both cost of investment and interest on reinvestment of cash.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells that contain numbers that represent a series of payments (negative) and income (positive) at regular periods.
+	 * @param {ApiRange | number[]} arg1 - A range or array of cells that contain numbers that represent a series of payments (negative) and income (positive) at regular periods.
 	 * @param {number} arg2 - The interest rate paid on the money used in the cash flows.
 	 * @param {number} arg3 - The interest rate received on the cash reinvestment.
 	 * @returns {number}
@@ -5017,8 +5038,8 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The discount rate.
-	 * @param {number | ApiRange} args - Up to 255 arguments representing future payments (negative values) and income (positive values).
-	 * The first argument is required, the subsequent values are optional. 
+	 * @param {number | ApiRange | number[]} args - Up to 255 arguments representing future payments (negative values) and income (positive values).
+	 * The first argument is required, the subsequent values are optional. Arguments can be numbers, ranges, arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.NPV = function () {
@@ -5034,7 +5055,7 @@
 	 * @param {number} arg4 - The first coupon date of the security, expressed as a serial date number.
 	 * @param {number} arg5 - The interest rate of the security.
 	 * @param {number} arg6 - The annual yield of the security.
-	 * @param {anumberny} arg7 - The redemption value of the security, per $100 face value.
+	 * @param {number} arg7 - The redemption value of the security, per $100 face value.
 	 * @param {number} arg8 - The number of interest payments per year. The possible values are: 1 for annual payments, 2 for semiannual payments, 4 for quarterly payments.
 	 * @param {?number} arg9 - The day count basis to use: <b>0</b> or omitted - US (NASD) 30/360; <b>1</b> - Actual/actual; <b>2</b> - Actual/360; <b>3</b> - Actual/365; <b>4</b> - European 30/360.
 	 * @returns {number}
@@ -5442,8 +5463,9 @@
 	 * @param {number} arg2 - A numeric value that specifies which values should be ignored: <b>0</b> or omitted - nested SUBTOTAL and AGGREGATE functions,
 	 * <b>1</b> - hidden rows, nested SUBTOTAL and AGGREGATE functions, <b>2</b> - error values, nested SUBTOTAL and AGGREGATE functions,
 	 * <b>3</b> - hidden rows, error values, nested SUBTOTAL and AGGREGATE functions, <b>4</b> - nothing, <b>5</b> - hidden rows, <b>6</b> - error values, <b>7</b> - hidden rows and error values.
-	 * @param {number | ApiRange} arg3 - The first numeric value for which the aggregate value will be returned.
-	 * @param {number | ApiRange} args - Up to 253 numeric values or a range of cells containing the values for which the aggregate value will be returned.
+	 * @param {number | ApiRange | number[]} arg3 - The first numeric value for which the aggregate value will be returned.
+	 * @param {number | ApiRange | number[]} args - Up to 253 numeric values or a range of cells containing the values for which the aggregate value will be returned.
+	 * Arguments can be numbers, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.AGGREGATE = function () {
@@ -5705,7 +5727,7 @@
 	 * Returns the double factorial of a number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {any} arg1 - The value for which to return the double factorial.
+	 * @param {number} arg1 - The value for which to return the double factorial.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.FACTDOUBLE = function (arg1) {
@@ -5929,7 +5951,8 @@
 	 * Multiplies all the numbers given as arguments.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | ApiRange} args - Up to 255 numeric values that will be multiplied. The first argument is required, subsequent arguments are optional.
+	 * @param {number | ApiRange | number[]} args - Up to 255 numeric values that will be multiplied. The first argument is required, subsequent arguments are optional.
+	 * Arguments can be numbers, ranges, or arrays of numbers.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.PRODUCT = function () {
@@ -6129,7 +6152,7 @@
 	 * @typeofeditors ["CSE"]
 	 * @param {FunctionNumber} arg1 - The number 1-11 or 101-111 that specifies the function to use for the subtotal. 1-11 includes manually-hidden rows, while 101-111 excludes them;
 	 * filtered-out cells are always excluded.
-	 * @param {ApiRange} args - Up to 255 ranges containing the values for which the subtotal will be returned. The first argument is required, subsequent arguments are optional.
+	 * @param {ApiRange | ApiName} args - Up to 255 ranges containing the values for which the subtotal will be returned. The first argument is required, subsequent arguments are optional.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SUBTOTAL = function () {
@@ -6139,7 +6162,8 @@
 	 * Adds all the numbers in a range of cells.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string | number | boolean} args - Up to 255 numeric values to add. The first argument is required, subsequent arguments are optional.
+	 * @param {ApiRange | string | number | boolean | array} args - Up to 255 numeric values to add. The first argument is required, subsequent arguments are optional.
+	 * Arguments can be numbers, logical values, text representations of numbers, ranges, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SUM = function () {
@@ -6186,8 +6210,9 @@
 	 * Returns the sum of the squares of the arguments.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | number | string} args - Up to 255 numeric values for which the sum of the squares will be calculated. The first argument is required, subsequent arguments are optional.
-	 * The arguments can be numbers, names, or ranges of cells that contain numbers.
+	 * @param {ApiRange | number | string | boolean | ApiName | array} args - Up to 255 numeric values for which the sum of the squares will be calculated.
+	 * The first argument is required, subsequent arguments are optional.
+	 * The arguments can be numbers, names, logical values or text representations of numbers, ranges of cells that contain numbers, or arrays.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.SUMSQ = function () {
@@ -6265,7 +6290,8 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number} arg1 - The position of the value in the list of values, a numeric value greater than or equal to 1 but less than the number of values in the list of values.
-	 * @param {number | string | ApiRange} args - Up to 254 values or the selected range of cells to analyze. The first argument is required, subsequent arguments are optional.
+	 * @param {number | string | ApiRange | ApiName} args - Up to 254 values or the selected range of cells to analyze.
+	 * The first argument is required, subsequent arguments are optional. Arguments can be numbers, ranges, names, or text strings.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.CHOOSE = function () {
@@ -6275,7 +6301,7 @@
 	 * Returns the number of columns in the cell range.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells for which the number of columns will be returned.
+	 * @param {ApiRange | number[]} arg1 - A range or array of cells for which the number of columns will be returned.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.COLUMNS = function (arg1) {
@@ -6286,8 +6312,8 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number | string | ApiRange} arg1 - The value to be found in the first row of the table and can be a value, a reference, or a text string.
-	 * @param {ApiRange} arg2 - A table of text, numbers, or logical values in which data is looked up. The data is sorted in ascending order.
-	 * This argument can be a range of cells.
+	 * @param {ApiRange | ApiName} arg2 - A table of text, numbers, or logical values in which data is looked up. The data is sorted in ascending order.
+	 * This argument can be a range of cells or a range name.
 	 * @param {number} arg3 - The row number in data table from which the matching value should be returned. The first row of values in the table is row 1.
 	 * @param {?boolean} arg4 - A logical value which specifies whether to find the closest match in the top row (sorted in ascending order) (<b>true</b> or omitted)
 	 * or find an exact match (<b>false</b>).
@@ -6301,7 +6327,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {string | ApiRange} arg1 - The text giving the path and file name to the document to be opened, a hard drive location, UNC address, or URL path.
-	 * @param {?string | ?ApiRange | ?number} arg2 - Text or a number that is displayed in the cell. If omitted, the cell displays the link location text.
+	 * @param {?string | ?ApiRange | ?number | ?ApiName} arg2 - Text or a number that is displayed in the cell. If omitted, the cell displays the link location text.
 	 * @returns {string}
 	 */
 	ApiWorksheetFunction.prototype.HYPERLINK = function (arg1, arg2) {
@@ -6311,7 +6337,7 @@
 	 * Returns a value or reference of the cell at the intersection of a particular row and column, in a given range.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells constant.
+	 * @param {ApiRange | array} arg1 - A range of cells or an array constant.
 	 * @param {number} arg2 - The row in the range from which to return a value. If omitted, the column number is required.
 	 * @param {?number} arg3 - The column in the range from which to return a value. If omitted, the row number is required.
 	 * @param {?number} arg4 - An area to use in case the range contains several ranges. If it is omitted, the function will assume argument to be 1.
@@ -6324,7 +6350,7 @@
 	 * Looks up a value either from a one-row or one-column range. Provided for backwards compatibility.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} arg1 - A value that is searched for in the first vector. It can be a number, text, a logical value, or a name or reference to a value.
+	 * @param {number | string | boolean | ApiRange | ApiName} arg1 - A value that is searched for in the first vector. It can be a number, text, a logical value, or a name or reference to a value.
 	 * @param {ApiRange} arg2 - A range that contains only one row or one column of text, numbers, or logical values, placed in ascending order.
 	 * @param {?ApiRange} arg3 - A range that contains only one row or column. It must be the same size as the first vector.
 	 * @returns {number | string | boolean}
@@ -6346,7 +6372,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number | string | boolean | ApiRange} arg1 - The value to be matched in the range. It can be a number, text, or logical value, or a reference to one of these.
-	 * @param {ApiRange} arg2 - A contiguous range of cells containing possible lookup values.
+	 * @param {ApiRange | array} arg2 - A contiguous range of cells or an array containing possible lookup values.
 	 * @param {?MatchType} arg3 - A number 1, 0, or -1 indicating which value to return.
 	 * @returns {number}
 	 */
@@ -6357,7 +6383,7 @@
 	 * Returns the number of rows in a range.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells for which the number of rows will be returned.
+	 * @param {ApiRange | array} arg1 - A range of cells or an array for which the number of rows will be returned.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.ROWS = function (arg1) {
@@ -6367,7 +6393,7 @@
 	 * Converts a vertical range of cells to a horizontal range, or vice versa.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange} arg1 - A range of cells on a worksheet that will be transposed.
+	 * @param {ApiRange | array} arg1 - A range of cells on a worksheet or an array that will be transposed.
 	 * @returns {ApiRange}
 	 */
 	ApiWorksheetFunction.prototype.TRANSPOSE = function (arg1) {
@@ -6378,7 +6404,7 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number | string | ApiRange} arg1 - The value to be found in the first column of the table. It can be a value, a reference, or a text string.
-	 * @param {ApiRange} arg2 - A table of text, numbers, or logical values, in which data is retrieved. It can be a range of cells.
+	 * @param {ApiRange | ApiName} arg2 - A table of text, numbers, or logical values, in which data is retrieved. It can be a range of cells.
 	 * @param {number} arg3 - The column number in the data table from which the matching value should be returned. The first column of values in the table is column 1.
 	 * @param {?boolean} arg4 - A logical value that specifies whether to find the closest match in the first column (sorted in ascending order) (<b>true</b> or omitted)
 	 * or find an exact match (<b>false</b>).
@@ -6416,7 +6442,8 @@
 	 * Checks whether a value is an error other than <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {number | string | boolean | ApiRange | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISERR = function (arg1) {
@@ -6426,7 +6453,8 @@
 	 * Checks whether a value is an error, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | ApiRange} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {number | string | boolean | ApiRange | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISERROR = function (arg1) {
@@ -6446,7 +6474,7 @@
 	 * Checks whether a reference to a cell contains a formula, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - A reference to the cell to test. Reference can be a cell reference, a formula, or name that refers to a cell.
+	 * @param {ApiRange | ApiName} arg1 - A cell range to test. This argument can be a range or a range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISFORMULA = function (arg1) {
@@ -6456,7 +6484,8 @@
 	 * Checks whether a value is a logical value (<b>true</b> or <b>false</b>), and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISLOGICAL = function (arg1) {
@@ -6466,7 +6495,8 @@
 	 * Checks whether a value is <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNA = function (arg1) {
@@ -6476,7 +6506,8 @@
 	 * Checks whether a value is not text (blank cells are not text), and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNONTEXT = function (arg1) {
@@ -6486,7 +6517,8 @@
 	 * Checks whether a value is a number, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISNUMBER = function (arg1) {
@@ -6506,7 +6538,8 @@
 	 * Checks whether a value is a reference, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISREF = function (arg1) {
@@ -6516,7 +6549,8 @@
 	 * Checks whether a value is text, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | string} arg1 - The value to test. Value can refer to a cell, a formula, or a name that refers to a cell, formula, or value.
+	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
+	 * The value can be an empty cell, error, logical value, text, number, range, or range name.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.ISTEXT = function (arg1) {
@@ -6526,7 +6560,7 @@
 	 * Converts a value to a number, dates to serial numbers, <b>true</b> to 1, error to {@link global#ErrorValue ErrorValue}, anything else to 0 (zero).
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean} arg1 - The value to be converted.
+	 * @param {number | string | boolean} arg1 - The value to be converted. The value can be a logical value, text, or number.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.N = function (arg1) {
@@ -6565,7 +6599,7 @@
 	 * Returns an integer representing the data type of a value: number = 1; text = 2; logical value = 4; error value = 16; array = 64; compound data = 128.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | boolean | array} arg1 - A value to test.
+	 * @param {number | string | boolean | array | ApiRange} arg1 - A value to test.
 	 * @returns {number}
 	 */
 	ApiWorksheetFunction.prototype.TYPE = function (arg1) {
@@ -6595,8 +6629,8 @@
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number | string | ApiRange | boolean} arg1 - Any value or expression that can be evaluated to <b>true</b> or <b>false</b>.
-	 * @param {any} arg2 - The value that is returned if the condition is <b>true</b>. If omitted, <b>true</b> is returned. You can nest up to seven IF functions.
-	 * @param {?any} arg3 - The value that is returned if the condition is <b>false</b>. If omitted, <b>false</b> is returned.
+	 * @param {number | string | ApiRange | boolean} arg2 - The value that is returned if the condition is <b>true</b>. If omitted, <b>true</b> is returned. You can nest up to seven IF functions.
+	 * @param {?number | ?string | ?boolean} arg3 - The value that is returned if the condition is <b>false</b>. If omitted, <b>false</b> is returned.
 	 * @returns {number | string | boolean}
 	 */
 	ApiWorksheetFunction.prototype.IF = function (arg1, arg2, arg3) {
@@ -6657,7 +6691,7 @@
 	 * Returns the logical <b>Exclusive Or</b> value of all arguments. The function returns <b>true</b> when the number of <b>true</b> inputs is odd and <b>false</b> when the number of <b>true</b> inputs is even.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {number | string | ApiRange | boolean} args - A condition to check.
+	 * @param {ApiRange | boolean | array} args - The conditions to check.
 	 * @returns {boolean}
 	 */
 	ApiWorksheetFunction.prototype.XOR = function () {
