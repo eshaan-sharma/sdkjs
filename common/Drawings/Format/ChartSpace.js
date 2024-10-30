@@ -4601,6 +4601,7 @@ function(window, undefined) {
 			const nDefaultPosition = seria.dataLabels.pos ? seria.dataLabels.pos : AscFormat.DATA_LABEL_POS_OUT_END;
 			default_lbl.initDefault(nDefaultPosition);
 			cachedData.compiledDlbs = [];
+
 			for (let i in results) {
 				const compiled_dlb = new AscFormat.CDLbl();
 				const pt = {};
