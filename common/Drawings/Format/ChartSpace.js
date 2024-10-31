@@ -6219,7 +6219,13 @@ function(window, undefined) {
 					aOrderedSeries = aOrderedSeries.concat(aChartSeries);
 				}
 			}
+
 			series = aOrderedSeries;
+			for(let nS = series.length - 1; nS > -1; --nS) {
+				if(series[nS].hidden) {
+					series.splice(nS, 1);
+				}
+			}
 			let calc_entry, union_marker, entry;
 			let max_width = 0, cur_width, max_font_size = 0, cur_font_size, ser, b_line_series;
 			let b_no_line_series = false;

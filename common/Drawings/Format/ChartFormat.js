@@ -3901,6 +3901,9 @@
                 return "";
             }
         }
+        if(this.tx &&  this.tx.txData && this.tx.txData.v) {
+            return this.tx.txData.v;
+        }
         return AscCommon.translateManager.getValue('Series') + " " + (this.idx + 1);
     };
     CSeriesBase.prototype.handleUpdateFill = function() {
