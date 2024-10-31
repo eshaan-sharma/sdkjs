@@ -3285,6 +3285,9 @@ function (window, undefined) {
 		const numLit = this.getValLit();
 		return numLit ? numLit.pts : [];
 	};
+	CSeries.prototype.getNumPts = function() {
+		return this.getValPts();
+	};
 	CSeries.prototype.getCatLit = function (type) {
 		let oSeriesData = this.getData();
 		if (!oSeriesData) {
@@ -3314,18 +3317,27 @@ function (window, undefined) {
 		}
 		return null;
 	};
+	CSeries.prototype.getPtByIdx = function (idx) {
+		let aPts = this.getNumPts();
+		for (let nIdx = 0; nIdx < aPts.length; ++nIdx) {
+			if (aPts[nIdx].idx === idx) {
+				return aPts[nIdx];
+			}
+		}
+		return null;
+	};
 	CSeries.prototype.getPtPen = function (nIdx) {
-		let oDpt = this.getDptByIdx(nIdx);
-		if (oDpt && oDpt.pen) {
-			return oDpt.pen;
+		let oPt = this.getPtByIdx(nIdx);
+		if (oPt && oPt.pen) {
+			return oPt.pen;
 		}
 		return this.compiledSeriesPen;
 	};
 
 	CSeries.prototype.getPtBrush = function (nIdx) {
-		let oDpt = this.getDptByIdx(nIdx);
-		if (oDpt && oDpt.brush) {
-			return oDpt.brush;
+		let oPt = this.getPtByIdx(nIdx);
+		if (oPt && oPt.brush) {
+			return oPt.brush;
 		}
 		return this.compiledSeriesBrush;
 	};

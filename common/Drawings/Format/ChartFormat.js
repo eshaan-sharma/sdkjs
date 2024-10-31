@@ -2973,6 +2973,7 @@
                     style.TextPr.Merge(chart_text_pr);
                 }
             }
+            let bChartEx = this.isChartEx && this.isChartEx();
             if(this instanceof CTitle || this.parent instanceof CTitle) {
                 style.TextPr.Bold = true;
                 if(this.parent instanceof CChart || (this.parent && (this.parent.parent instanceof CChart))) {
@@ -2981,6 +2982,25 @@
                     else
                         style.TextPr.FontSize = 18;
                 }
+
+
+                if(bChartEx) {
+                    if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                        let oTxPr;
+                        if(this.parent instanceof CChart ) {
+                            if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                                 oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.title, oChartSpace.chartColors.generateColors(1), 0);
+                            }
+                        }
+                        else if(this.parent instanceof AscFormat.CAxis) {
+                            oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.axisTitle, oChartSpace.chartColors.generateColors(1), 0);
+                        }
+                        if(oTxPr) {
+                            let oParaPr = oTxPr.content.Content[0].Pr;
+                            style.TextPr.Merge(oParaPr.DefaultRunPr);
+                        }
+                    }
+                }
             }
             if(this instanceof CalcLegendEntry && this.legend) {
                 oParaPr = this.legend.getTxPrParaPr();
@@ -2988,6 +3008,16 @@
                     style.ParaPr.Merge(oParaPr);
                     if(oParaPr.DefaultRunPr)
                         style.TextPr.Merge(oParaPr.DefaultRunPr);
+                }
+                if(bChartEx) {
+                    if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                        let oTxPr;
+                        oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.legend, oChartSpace.chartColors.generateColors(1), 0);
+                        if(oTxPr) {
+                            let oParaPr = oTxPr.content.Content[0].Pr;
+                            style.TextPr.Merge(oParaPr.DefaultRunPr);
+                        }
+                    }
                 }
                 if(AscFormat.isRealNumber(this.idx)) {
                     var aLegendEntries = this.legend.legendEntryes;
@@ -3005,6 +3035,16 @@
                     }
                 }
 
+            }
+            if(this.parent && this.parent instanceof AscFormat.CAxis) {
+                if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                    let oTxPr;
+                    oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.categoryAxis, oChartSpace.chartColors.generateColors(1), 0);
+                    if(oTxPr) {
+                        let oParaPr = oTxPr.content.Content[0].Pr;
+                        style.TextPr.Merge(oParaPr.DefaultRunPr);
+                    }
+                }
             }
             if(!(this instanceof CTitle)) {
                 if(this.parent) {
@@ -16191,6 +16231,13 @@
     };
     CalcLegendEntry.prototype.GetParaDrawing = function() {
         return null;
+    };
+    CalcLegendEntry.prototype.isChartEx = function() {
+        let oCS = this.getChartSpace();
+        if(oCS) {
+            return oCS.isChartEx();
+        }
+        return false;
     };
 
     function CompiledMarker() {

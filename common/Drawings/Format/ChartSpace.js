@@ -7597,6 +7597,14 @@ function(window, undefined) {
 						default_brush = CreateUnifillSolidFillSchemeColor(8, 0.95000);
 				}
 			}
+			if(this.isChartEx()) {
+				if (this.chartStyle && this.chartColors) {
+					let oSpPr = this.getSpPrFormStyleEntry(this.chartStyle.plotArea, this.chartColors.generateColors(1), 0);
+					if(oSpPr && oSpPr.Fill) {
+						default_brush.merge(oSpPr.Fill);
+					}
+				}
+			}
 			if (plot_area.spPr && plot_area.spPr.Fill) {
 				default_brush.merge(plot_area.spPr.Fill);
 			}
@@ -7636,6 +7644,14 @@ function(window, undefined) {
 			B: 0,
 			A: 255
 		}, this.clrMapOvr);
+		if(this.isChartEx()) {
+			if (this.chartStyle && this.chartColors) {
+				let oSpPr = this.getSpPrFormStyleEntry(this.chartStyle.chartArea, this.chartColors.generateColors(1), 0);
+				if(oSpPr && oSpPr.ln) {
+					default_line.merge(oSpPr.ln);
+				}
+			}
+		}
 		this.pen = default_line;
 		checkBlackUnifill(this.pen.Fill, true);
 	};
@@ -7648,6 +7664,14 @@ function(window, undefined) {
 		else
 			default_brush = CreateUnifillSolidFillSchemeColor(8, 0);
 
+		if(this.isChartEx()) {
+			if (this.chartStyle && this.chartColors) {
+				let oSpPr = this.getSpPrFormStyleEntry(this.chartStyle.chartArea, this.chartColors.generateColors(1), 0);
+				if(oSpPr && oSpPr.Fill) {
+					default_brush.merge(oSpPr.Fill);
+				}
+			}
+		}
 		if (this.spPr && this.spPr.Fill) {
 			default_brush.merge(this.spPr.Fill);
 		}
@@ -7879,10 +7903,20 @@ function(window, undefined) {
 				let base_line_fills = null;
 				if (style.line1 === EFFECT_SUBTLE && oChartSpace.style === 34)
 					base_line_fills = getArrayFillsFromBase(style.line2, nColorsCount);
+
+
 				for (let nSer = 0; nSer < aSeries.length; ++nSer) {
 					let oSeries = aSeries[nSer];
 					var compiled_brush = new AscFormat.CUniFill();
 					compiled_brush.merge(base_fills[oSeries.getIdx()]);
+					if(oSeries.isChartEx()) {
+						if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+							let oSpPr = oChartSpace.getSpPrFormStyleEntry(oChartSpace.chartStyle.dataPoint, oChartSpace.chartColors.generateColors(aSeries.length), oSeries.idx);
+							if(oSpPr && oSpPr.Fill) {
+								compiled_brush.merge(oSpPr.Fill);
+							}
+						}
+					}
 					if (oSeries.spPr && oSeries.spPr.Fill) {
 						compiled_brush.merge(oSeries.spPr.Fill);
 					}
@@ -7913,6 +7947,14 @@ function(window, undefined) {
 						compiled_line.Fill.merge(style.line2[0]);
 					else if (base_line_fills)
 						compiled_line.Fill.merge(base_line_fills[oSeries.idx]);
+					if(oSeries.isChartEx()) {
+						if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+							let oSpPr = oChartSpace.getSpPrFormStyleEntry(oChartSpace.chartStyle.dataPoint, oChartSpace.chartColors.generateColors(aSeries.length), oSeries.idx);
+							if(oSpPr && oSpPr.ln) {
+								compiled_line.merge(oSpPr.ln);
+							}
+						}
+					}
 					if (oSeries.spPr && oSeries.spPr.ln) {
 						compiled_line.merge(oSeries.spPr.ln);
 					}
