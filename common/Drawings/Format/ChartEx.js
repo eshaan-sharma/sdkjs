@@ -2987,6 +2987,11 @@ function (window, undefined) {
 	CPlotAreaRegion.prototype.getAllSeries = function () {
 		return [].concat(this.series);
 	};
+	CPlotAreaRegion.prototype.getAllRasterImages = function (images) {
+		for(let nIdx = 0; nIdx < this.series.length; ++nIdx) {
+			this.series[nIdx].getAllRasterImages(images);
+		}
+	};
 
 	// PlotSurface
 	drawingsChangesMap[AscDFH.historyitem_PlotSurface_SetSpPr] = function (oClass, value) {
@@ -3280,6 +3285,14 @@ function (window, undefined) {
 			}
 		}
 		return null;
+	};
+	CSeries.prototype.getAllRasterImages = function (images) {
+		for (let nDpt = 0; nDpt < this.dPt.length; ++nDpt) {
+			let oDPt = this.dPt[nDpt];
+			if(oDPt && oDPt.spPr) {
+				oDPt.spPr.checkBlipFillRasterImage(images);
+			}
+		}
 	};
 	CSeries.prototype.getValPts = function () {
 		const numLit = this.getValLit();

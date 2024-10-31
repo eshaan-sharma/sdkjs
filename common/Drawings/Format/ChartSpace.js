@@ -3998,6 +3998,10 @@ function(window, undefined) {
 				for (i = 0; i < plot_area.charts.length; ++i) {
 					plot_area.charts[i].getAllRasterImages(images);
 				}
+
+				if(plot_area.plotAreaRegion) {
+					plot_area.plotAreaRegion.getAllRasterImages(images);
+				}
 			}
 		}
 		for (var i = 0; i < this.userShapes.length; ++i) {
