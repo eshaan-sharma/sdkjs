@@ -7394,6 +7394,44 @@ function RangeDataManagerElem(bbox, data)
 	this.bbox = bbox;
 	this.data = data;
 }
+	function RangeDataManagerSimple() {
+		this.cols = [];
+	}
+	RangeDataManagerSimple.prototype.add = function (bbox, elem) {
+		for (let i = bbox.c1;i <= bbox.c2; ++i) {
+			if(!this.cols[i]) {
+				this.cols[i] = [];
+			}
+			this.cols[i].push({bbox, elem});
+		}
+	}
+	RangeDataManagerSimple.prototype.get = function (row, col) {
+		let res = [];
+		let elems = this.cols[col];
+		if (!elems) {
+			return res;
+		}
+		for (let i = 0; i < elems.length; ++i) {
+			if (elems[i].bbox.r1 <= row && row <= elems[i].bbox.r2) {
+				res.push(elems[i].elem);
+			}
+		}
+		return res;
+	}
+	RangeDataManagerSimple.prototype.getRange = function (bbox) {
+		let res = [];
+		for (let i = bbox.c1;i <= bbox.c2; ++i) {
+			let elems = this.cols[i];
+			if (elems) {
+				for (let i = 0; i < elems.length; ++i) {
+					if (elems[i].bbox.isIntersect(bbox)) {
+						res.push(elems[i].elem);
+					}
+				}
+			}
+		}
+		return res;
+	}
 
 	function RangeDataManager(fChange) {
 		this.tree = new AscCommon.DataIntervalTree2D();
@@ -18677,6 +18715,7 @@ function RangeDataManagerElem(bbox, data)
 	window['AscCommonExcel'].CMultiTextElem = CMultiTextElem;
 	window['AscCommonExcel'].CCellValue = CCellValue;
 	window['AscCommonExcel'].RangeDataManager = RangeDataManager;
+	window['AscCommonExcel'].RangeDataManagerSimple = RangeDataManagerSimple;
 	window['AscCommonExcel'].CSharedStrings = CSharedStrings;
 	window['AscCommonExcel'].CWorkbookFormulas = CWorkbookFormulas;
 	window["Asc"]["sparklineGroup"] = window['AscCommonExcel'].sparklineGroup = sparklineGroup;

@@ -3039,15 +3039,25 @@ function (window, undefined) {
 
 		var cacheElem = this.cacheId[sRangeName];
 		if (!cacheElem) {
-			cacheElem = {elements: [], results: {}};
-			this.generateElements(range, cacheElem);
-			this.cacheId[sRangeName] = cacheElem;
 			var cacheRange = this.cacheRanges[wsId];
-			if (!cacheRange) {
-				cacheRange = new AscCommonExcel.RangeDataManager(null);
-				this.cacheRanges[wsId] = cacheRange;
+			let getRange = cacheRange && cacheRange.getRange(range.bbox)
+			if (getRange && getRange.length > 0) {
+				cacheElem = getRange[0];
+				this.cacheId[sRangeName] = cacheElem;
+			} else {
+				cacheElem = {elements: [], results: {}};
+				this.generateElements(range, cacheElem);
+				this.cacheId[sRangeName] = cacheElem;
+				var cacheRange = this.cacheRanges[wsId];
+				if (!cacheRange) {
+					cacheRange = new AscCommonExcel.RangeDataManagerSimple();
+					// cacheRange = new AscCommonExcel.RangeDataManager(null);
+					this.cacheRanges[wsId] = cacheRange;
+				}
+				cacheRange.add(range.getBBox0(), cacheElem);
 			}
-			cacheRange.add(range.getBBox0(), cacheElem);
+
+
 		}
 
 		var sInputKey;
@@ -3234,11 +3244,15 @@ function (window, undefined) {
 		var wsId = cell.ws.getId();
 		var cacheRange = this.cacheRanges[wsId];
 		if (cacheRange) {
-			var oGetRes = cacheRange.get(new Asc.Range(cell.nCol, cell.nRow, cell.nCol, cell.nRow));
-			for (var i = 0, length = oGetRes.all.length; i < length; ++i) {
-				var elem = oGetRes.all[i];
-				elem.data.results = {};
+			var oGetRes = cacheRange.get(cell.nRow, cell.nCol);
+			for (let i = 0; i < oGetRes.length; ++i) {
+				oGetRes[i].results = {};
 			}
+			// var oGetRes = cacheRange.get(new Asc.Range(cell.nCol, cell.nRow, cell.nCol, cell.nRow));
+			// for (var i = 0, length = oGetRes.all.length; i < length; ++i) {
+			// 	var elem = oGetRes.all[i];
+			// 	elem.data.results = {};
+			// }
 		}
 	};
 	VHLOOKUPCache.prototype.clean = function () {
