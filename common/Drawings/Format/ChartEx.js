@@ -2668,6 +2668,7 @@ function (window, undefined) {
 			oPt.setIdx(nPtIdx);
 			oPt.setVal(dVal);
 			oLvl.addPt(oPt);
+			oPt.setFormatCode(oCell.getNumFormatStr());
 		}
 	};
 

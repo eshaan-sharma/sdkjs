@@ -3192,7 +3192,7 @@
         if (this.showChartExVal) {
             //TODO: format the passed number
             const val = this.pt;
-            compiled_string = "" + val;
+            compiled_string += this.getValueString();
         }
         return compiled_string;
     };
