@@ -6289,6 +6289,7 @@ function(window, undefined) {
 						nSerType === AscDFH.historyitem_type_BubbleSeries ||
 						nSerType === AscDFH.historyitem_type_AreaSeries ||
 						nSerType === AscDFH.historyitem_type_PieSeries ||
+						nSerType === AscDFH.historyitem_type_Series ||
 						(nSerType === AscDFH.historyitem_type_RadarSeries &&
 							ser.parent && ser.parent.isFilled())) {
 
