@@ -678,6 +678,14 @@
 		
 		return textObj.Text;
 	};
+	PDFEditorApi.prototype.GetPageText = function(pageIndex) {
+		let oDoc = this.getPDFDoc();
+		let oFile = oDoc.Viewer.file;
+
+		if (oFile.pages[pageIndex] && true !== oFile.pages[pageIndex].isConvertedToShapes) {
+			return oFile.getPageText(pageIndex);
+		}
+	};
 	PDFEditorApi.prototype.asc_AddMath2 = function(Type) {
 		let oDoc	= this.getPDFDoc();
 		let oTextPr	= oDoc.GetDirectTextPr();

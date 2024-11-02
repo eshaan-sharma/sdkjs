@@ -37,7 +37,8 @@
 			"word/Editor/Table/TableLook.js",
 			"cell/utils/utils.js",
 			"pdf/src/defines.js",
-			"pdf/api.js"
+			"pdf/api.js",
+			"pdf/api_plugins.js"
 		],
 		"common": [
 			"common/api/actionOnTimer.js",

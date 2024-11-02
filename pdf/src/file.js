@@ -2023,6 +2023,180 @@ void main() {\n\
         }
         return ret;
     };
+    CFile.prototype.getPageText = function(pageIndex)
+    {
+        var stream = this.getPageTextStream(pageIndex);
+        if (!stream)
+            return "";
+
+        var ret = "";
+
+        var bIsFillToEnd = true;
+
+        var lineSpans = [];
+        var curSpan = new CSpan();
+        var isChangeSpan = false;
+
+        var _lineCharCount = 0;
+        var _lineGidExist = false;
+
+        var _numLine = -1;
+
+        while (stream.pos < stream.size)
+        {
+            var command = stream.GetUChar();
+
+            switch (command)
+            {
+                case 41:
+                {
+                    curSpan.fontName = stream.GetULong();
+                    stream.Skip(4);
+                    curSpan.fontSize = stream.GetDouble();
+                    isChangeSpan = true;
+                    break;
+                }
+                case 22:
+                {
+                    curSpan.colorR = stream.GetUChar();
+                    curSpan.colorG = stream.GetUChar();
+                    curSpan.colorB = stream.GetUChar();
+                    stream.Skip(1);
+                    isChangeSpan = true;
+                    break;
+                }
+                case 80:
+                {
+                    if (0 != _lineCharCount)
+                        stream.Skip(2);
+
+                    _lineCharCount++;
+                    if (isChangeSpan)
+                    {
+                        lineSpans[lineSpans.length] = curSpan.CreateDublicate();
+                    }
+                    var sp = lineSpans[lineSpans.length - 1];
+
+                    var _char = stream.GetUShort();
+                    if (0xFFFF == _char)
+                        sp.inner += " ";
+                    else
+                        sp.inner += String.fromCharCode(_char);
+
+                    if (_lineGidExist)
+                        stream.Skip(2);
+
+                    stream.Skip(2);
+
+                    isChangeSpan = false;
+                    break;
+                }
+                case 160:
+                {
+                    // textline
+                    isChangeSpan = true;
+                    lineSpans.splice(0, lineSpans.length);
+                    _lineCharCount = 0;
+                    ++_numLine;
+
+                    var mask = stream.GetUChar();
+                    stream.Skip(8);
+
+                    if ((mask & 0x01) == 0)
+                    {
+                        stream.Skip(8);
+                    }
+
+                    stream.Skip(8);
+
+                    if ((mask & 0x04) != 0)
+                        stream.Skip(4);
+
+                    if ((mask & 0x02) != 0)
+                        _lineGidExist = true;
+                    else
+                        _lineGidExist = false;
+
+                    break;
+                }
+                case 162:
+                {
+                    // textline end
+                    // спаны набиты. теперь нужно сформировать линию и сгенерировать нужную строку.
+                    if (((!bIsFillToEnd) || bIsFillToEnd))
+                    {
+                        var _g1 = -2;
+                        var _g2 = -1;
+                        
+                        if (bIsFillToEnd)
+                        {
+                            _g2 = -1;
+                        }
+
+                        if (_g1 != -1 && _g2 != -2)
+                        {
+                            var textLine = "<p>";
+
+                            if (-2 == _g1 && -1 == _g2)
+                            {
+                                var countSpans = lineSpans.length;
+                                for (var i = 0; i < countSpans; i++)
+                                {
+                                    textLine += "<span>";
+                                    textLine += lineSpans[i].inner;
+                                    textLine += "</span>";
+                                }
+                            }
+                            else
+                            {
+                                var curIndex = 0;
+                                var countSpans = lineSpans.length;
+                                for (var i = 0; i < countSpans; i++)
+                                {
+                                    var old = curIndex;
+                                    var start = curIndex;
+                                    var end = start + lineSpans[i].inner.length;
+                                    curIndex = end;
+
+                                    if (_g1 > start)
+                                        start = _g1;
+                                    if (_g2 != -1 && _g2 < end)
+                                        end = _g2;
+
+                                    if (start > end)
+                                        continue;
+
+                                    start -= old;
+                                    end -= old;
+
+                                    textLine += "<span>";
+                                    textLine += lineSpans[i].inner.substring(start, end);
+                                    textLine += "</span>";
+                                }
+                            }
+
+                            textLine += "</p>";
+
+                            ret += textLine;
+                        }
+                    }
+
+                    break;
+                }
+                case 161:
+                {
+                    // text transform
+                    stream.Skip(16);
+                    break;
+                }
+                default:
+                {
+                    stream.pos = stream.size;
+                }
+            }
+        }
+        return ret;
+    };
 
     CFile.prototype.copy = function(_text_format)
     {
