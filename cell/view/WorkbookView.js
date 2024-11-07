@@ -3140,7 +3140,25 @@
 
 	WorkbookView.prototype.insertArgumentsInFormula = function (args, argNum, argType, name) {
 		if (this.getCellEditMode()) {
-			var sArguments = args.join(AscCommon.FormulaSeparators.functionArgumentSeparator);
+
+			if (name === "IMPORTRANGE") {
+				let defNames = this.getDefinedNames(Asc.c_oAscGetDefinedNamesList.All);
+				let parserHelper = AscCommon.parserHelp;
+
+				for (let i = 0; i < args.length; i++) {
+					let arg = args[i];
+
+					if (defNames && defNames.length > 0 && defNames.includes(arg) 
+						|| parserHelper.isRef(arg, 0) || parserHelper.is3DRef(arg, 0)[0] 
+						|| parserHelper.isArea(arg, 0) || parserHelper.isNumber(arg, 0)) {
+						continue;
+					} else {
+						args[i] = '"' + arg + '"';
+					}
+				}
+			}
+
+			let sArguments = args.join(AscCommon.FormulaSeparators.functionArgumentSeparator);
 			this.cellEditor.changeCellText(sArguments);
 
 			if (name) {
