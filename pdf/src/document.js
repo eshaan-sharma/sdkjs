@@ -2334,6 +2334,15 @@ var CPresentation = CPresentation || function(){};
 
         oViewer.paint();
     };
+    CPDFDoc.prototype.RemovePages = function(aIndexes) {
+        aIndexes.sort(function(a, b) {
+            return a - b;
+        });
+    
+        for (var i = 0; i < aIndexes.length; i++) {
+            this.RemovePage(aIndexes[i] - i);
+        }
+    };
     CPDFDoc.prototype.SetPageRotate = function(nPage, nAngle) {
 		let oViewer     = this.Viewer;
 		let oFile       = oViewer.file;
@@ -2351,6 +2360,18 @@ var CPresentation = CPresentation || function(){};
         
 		oViewer.resize(true);
         oViewer.paint();
+    };
+    CPDFDoc.prototype.RotatePages = function(aIndexes, nAngle) {
+        let oViewer = this.Viewer;
+
+        for (let i = 0; i < aIndexes.length; i++) {
+            let nNewPageAngle = (oViewer.getPageRotate(aIndexes[i]) + nAngle) % 360;
+            if (nNewPageAngle < 0) {
+                nNewPageAngle += 360;
+            }
+
+            this.SetPageRotate(aIndexes[i], nNewPageAngle);
+        }
     };
     /**
 	 * Adds an interactive field to document.
