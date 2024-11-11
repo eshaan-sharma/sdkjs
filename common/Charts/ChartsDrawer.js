@@ -2991,144 +2991,315 @@ CChartsDrawer.prototype =
 			cachedData.sunburst = [];
         }
 
-		const _getTotalValue = function (arr) {
+		// Find index of last layer
+		const getLastLayer = function (strCache) {
+			if (!strCache || strCache.length <= 1) {
+				return null;
+			}
+
+			for (let i = strCache.length - 1; i >= 0; i--) {
+				if (strCache[i].pts.length > 0) {
+					return i;
+				}
+			}
+			return null
+		}
+
+		// Normalize all elements that either negative or have no corresponding label to zero
+		const normalizeNumArr = function (numArr, strCache, lastLayer) {
+			// turn all elements that have no corresponding label into zero
+			const verifiedIdxs = {};
+
+			// Populate `verifiedIdxs` if there are labels in `strCache`
+			if (lastLayer !== null) {
+				for (let i = 0; i < strCache.length; i++) {
+					for (let j = 0; j < strCache[i].pts.length; j++) {
+						verifiedIdxs[strCache[i].pts[j].idx] = true;
+					}
+				}
+			}
+
+			// Normalize `numArr` values
+			const arr = [];
+			for (let k = 0; k < numArr.length; k++) {
+				if (numArr[k].val < 0 || (lastLayer !== null && !verifiedIdxs[numArr[k].idx])) {
+					continue;
+				}
+				arr.push({idx: numArr[k].idx, val: numArr[k].val});
+			}
+			return arr;
+		}
+
+		// Calculate total value of all elements in numArr
+		const getTotalValue = function (numArr) {
 			let sum = 0;
-			for (let i = 0; i < arr.length; i++) {
-				if (arr[i].val >= 0) {
-					sum += arr[i].val;
+			for (let i = 0; i < numArr.length; i++) {
+				if (numArr[i].val >= 0) {
+					sum += numArr[i].val;
 				}
 			}
 			return sum;
 		}
 
-		const total = _getTotalValue(numArr);
+		// function to find number of layers before constructing the sunburst.data
+		// const getLayersCount = function (strCache, lastLayer) {
+		// 	if (lastLayer === null) {
+		// 		return 1;
+		// 	}
+		// 	const indexes = [];
+		// 	for (let i = 0; i < strCache.length; i++) {
+		// 		indexes.push(0);
+		// 	}
+		// 	let maxLayer = 0;
+		// 	for (let i = 0; i < strCache[lastLayer].ptCount; i++) {
+		// 		let layersCount = 0;
+		// 		for (let j = 0; j <= lastLayer; j++) {
+		// 			if (indexes[j] < strCache[j].pts.length && strCache[j].pts[indexes[j]].idx === i) {
+		// 				layersCount += 1;
+		// 				indexes[j] += 1;
+		// 			}
+		// 		}
+		// 		maxLayer = Math.max(maxLayer, layersCount);
+		// 	}
+		// 	return maxLayer;
+		//
+		// }
 
-
-		// two situations
-		if (!strCache) {
-			for (let i = 0; i < numArr.length; i++) {
-				cachedData.sunburst.push({next: [], name : numArr[i].val,  pVal: numArr[i].val / total, parent : null});
-			}
-		} else {
-			const resultingArr = [];
-			let col= 0;
-			let currentCol = 0;
-			let row = 0;
-			let numIndex = 0;
-			let start = 0;
-			const lastLayer = strCache.length - 1;
-			// first layer is a one element group
+		// Transform strCache and numArr into a sunburst
+		const createSunburst = function (numArr, strCache, totalValue, lastLayer) {
+			const resultingArr = [[]];
 			let layersCount = 0;
 
-			const getPVal = function (end, isLastLayer) {
-				let sum = 0;
-				let i = numIndex;
-				for (; i < numArr.length; i ++) {
-					const cond = isLastLayer ? numArr[i].idx === end - 1 : numArr[i].idx < end;
-					if (cond) {
-						sum += numArr[i].val;
-					}
-					if (numArr[i].idx >= end) {
-						break;
-					}
+			if (lastLayer !== null) {
+				let numIndex = 0;
+				let col = 0;
+				let currentCol = 0;
+				let currentRow = 0;
+				let nullSkip = 0;
+				let start = 0;
+				let prevVal = null;
+				const ptCount = strCache[lastLayer].ptCount;
+				let layerReady = true;
+
+				const createCell = function (name, start, end, cellPos) {
+					const pVal = getPVal(end);
+					return {name: name, pVal: pVal, start: start, end: end, pos: cellPos}
 				}
-				numIndex = i;
-				return sum / total;
-			}
 
-			const createCell = function (name, start, end, cellPos, isLastLayer) {
-				const pVal = getPVal(end, isLastLayer);
-				return {name : name, pVal : pVal, start : start, end: end, pos : cellPos}
-			}
-			for (let i = 0; i < strCache.length; i++) {
-				const strArr = strCache[i].pts;
-				const ptCount = strCache[i].ptCount;
-				let prevVal = strArr[0].idx === 0 ? strArr[0].val : null;
-				let cellPos = 0;
-				resultingArr.push([]);
-				let j = (prevVal === null) ? 0 : 1;
-				for (; j <= strArr.length; j++) {
-					const condition1 = (j === strArr.length);
-					const condition2 = condition1 || prevVal !== strArr[j].val;
-					const condition3 = (!condition1 && col > 0 && row < resultingArr[currentCol].length) ? strArr[j].idx >= resultingArr[currentCol][row].end : false;
-					const isLastLayer = i === lastLayer;
-
-					if (condition2 || condition3 || isLastLayer) {
-						const index = j === strArr.length ? ptCount : strArr[j].idx;
-						const cell = createCell(prevVal, start, index, cellPos, isLastLayer);
-						resultingArr[col].push(cell);
-						cellPos+=1;
-						start = index;
-						prevVal = j === strArr.length ? null : strArr[j].val;
-					}
-
-					if (j < strArr.length && (col > 0 && strArr[j].idx >= resultingArr[currentCol][row].end)) {
-						if (resultingArr[resultingArr.length - 1].length > 0) {
-							resultingArr.push([]);
-							col += 1;
+				const getPVal = function (end) {
+					let sum = 0;
+					for (let i = numIndex; i < numArr.length; i++) {
+						const item = numArr[i];
+						if (item.idx < end) {
+							sum += item.val;
+						} else {
+							numIndex = i;
+							break;
 						}
-						row += 1;
+					}
+					return sum / totalValue;
+				}
+
+				const copyAndRenameCell = function (cell) {
+					return {name: null, pVal: cell.pVal, start: cell.start, end: cell.end, pos: cell.pos}
+				}
+
+				const isParentExist = function (val) {
+					val = val ? val : 0;
+					return col > 0 && currentCol < resultingArr.length && (currentRow + val) < resultingArr[currentCol].length
+				}
+
+				const handleNextIndex = function (j, arr, ptCount, isLastLayer) {
+					if (j === arr.length) {
+						return isLastLayer ? arr[arr.length - 1].idx + 1 : ptCount;
+					}
+					if (isParentExist() && arr[j].idx > resultingArr[currentCol][currentRow].end) {
+						prevVal = null;
+						return resultingArr[currentCol][currentRow].end;
+					}
+					prevVal = arr[j].val;
+					return arr[j].idx;
+				}
+
+				const updateGroupPositions = function (arr, start, val) {
+					for (let i = start; i < arr.length; i++) {
+						arr[i].pos = val + i;
 					}
 				}
-				numIndex = 0;
-				currentCol = col > 0 ? currentCol + 1 : currentCol;
-				col += 1;
-				layersCount += 1;
-				row = 0;
-				start = 0;
+
+				for (let i = 0; i <= lastLayer; i++) {
+					const strArr = strCache[i].pts;
+					prevVal = strArr.length > 0 && strArr[0].idx === 0 ? strArr[0].val : null;
+					let j = (prevVal === null) ? 0 : 1;
+					const isLastLayer = i === lastLayer;
+					let cellPos = 0;
+					for (; j <= strArr.length; j++) {
+						let isLastElem = (j === strArr.length);
+						const isNewLabel = isLastElem || prevVal !== strArr[j].val;
+						const isOutOfCurrentGroup = isParentExist() && (isLastElem || strArr[j].idx >= resultingArr[currentCol][currentRow].end);
+
+						if (isNewLabel || isOutOfCurrentGroup || isLastLayer) {
+							// find the ending index, it should be either the end of the current group or the end of the parent layer
+							const name = prevVal;
+							let end = handleNextIndex(j, strArr, ptCount, isLastLayer);
+
+
+							const cell = createCell(name, start, start < end ? end : end + 1, cellPos, isLastLayer);
+
+							if (isParentExist() && resultingArr[currentCol][currentRow].name === null && !(resultingArr[currentCol][currentRow].end === cell.end && resultingArr[currentCol][currentRow].start === cell.start)) {
+								nullSkip += 1;
+								resultingArr[currentCol].splice(currentRow + nullSkip, 0, cell);
+								resultingArr[col].push(copyAndRenameCell(cell));
+							} else {
+								// new Layer is starting
+								if (layerReady) {
+									layersCount += 1;
+									layerReady = false;
+								}
+
+								if (isLastElem && isLastLayer && strArr[j - 1].idx < ptCount - 1) {
+									const fakeCell = {idx: ptCount - 1, val: null, fake: true};
+									prevVal = null;
+									strArr.push(fakeCell);
+									isLastElem = false;
+								}
+
+								if (start === ptCount - 1 && strArr[strArr.length - 1].fake) {
+									strArr.pop();
+									isLastElem = true;
+								}
+								resultingArr[col].push(cell);
+							}
+
+							cellPos+=1;
+							start = end;
+						}
+
+						if (nullSkip && isOutOfCurrentGroup) {
+							const lastPos = resultingArr[currentCol][currentRow].pos;
+							resultingArr[currentCol].splice(currentRow, 1);
+							updateGroupPositions(resultingArr[currentCol], currentRow, lastPos - currentRow);
+							currentRow += nullSkip - 1;
+							nullSkip = 0;
+						}
+
+						if (isLastElem || (isParentExist(nullSkip) && strArr[j].idx >= resultingArr[currentCol][currentRow + nullSkip].end)) {
+							// underConsideration
+							if (resultingArr[resultingArr.length - 1].length > 0) {
+								resultingArr.push([]);
+								col += 1;
+							}
+							if (currentRow === resultingArr[currentCol].length - 1) {
+								currentCol += 1;
+								currentRow = 0;
+							} else if (!nullSkip) {
+								currentRow += 1;
+							}
+						}
+
+						// start loop again from the same position, as prevVal changed
+						if (!isLastElem && prevVal === null) {
+							j--;
+						}
+
+					}
+					numIndex = 0;
+					layerReady = true;
+					currentRow = 0;
+					start = 0;
+				}
+				if (resultingArr[resultingArr.length - 1].length === 0) {
+					resultingArr.pop();
+				}
+			} else {
+				const isStrCache = strCache.length > 0;
+				layersCount = 1;
+				let labelCounter = 0;
+				for (let i = 0; i < numArr.length; i++) {
+					// search label in strCache if found get name, and increase labelCounter
+					let name = isStrCache && numArr[i].idx === strCache[0].pts[j].idx ? strCache[0].pts[0].val : null;
+					labelCounter = name !== null ? labelCounter + 1 : labelCounter;
+					cachedData.sunburst.data[0].push({name: name, pVal: numArr[i].val / totalValue, start: i, end: i + 1, pos: i});
+				}
 			}
 
-			console.log(layersCount);
+			return {data : resultingArr, layersCount : layersCount};
 
+		}
+
+		const sortSunburst = function (arr) {
 			// sort group inside each layer
-            for (let i = 0; i < resultingArr.length; i++) {
-				resultingArr[i].sort(function (a, b) {
+			for (let i = 0; i < arr.length; i++) {
+				arr[i].sort(function(a, b) {
+					// Move items with null names to the end
+					if (a.name === null && b.name !== null) return 1;
+					if (a.name !== null && b.name === null) return -1;
+
+					// If both names are non-null, or both are null, sort by pVal
 					return a.pVal - b.pVal;
 				});
 			}
-
-			// find starting layer for each group
-			let startingAngle = Math.PI / 2.0;
-			const angles = [startingAngle];
-			for (let i = 0; i < resultingArr.length; i++) {
-				for (let j = 0; j < resultingArr[i].length; j++) {
-					if (angles.length < resultingArr.length) {
-						angles.push(startingAngle);
-						startingAngle += (resultingArr[i][j].pVal * Math.PI * 2);
-					}
-				}
-			}
-
-			let currIndex = 0;
-			for (let i = 0; i < resultingArr.length; i++) {
-				for (let j = 0; j < resultingArr[i].length; j++) {
-					const pos = resultingArr[i][j].pos;
-					const nextIndex = currIndex + 1;
-					const targetIndex = currIndex + 1 + pos - j;
-
-					// change to indexes
-					if (nextIndex < resultingArr.length && targetIndex < resultingArr.length && nextIndex < targetIndex) {
-						const temp = resultingArr[nextIndex];
-						resultingArr[nextIndex] = resultingArr[targetIndex];
-						resultingArr[targetIndex] = temp;
-					}
-
-					currIndex +=1;
-				}
-			}
-
-			cachedData.sunburst = {
-				data : resultingArr,
-				stAngles : angles,
-				layersCount : layersCount
-			};
-			// cachedData.sunburst = {
-			// 	data : [{name: 'a', pVal: 0.3}, {name: 'b', pVal: 0.7}
-			// 		, {name: 'a', pVal: 0.1}, {name: 'a', pVal: 0.2}, {name: 'b', pVal: 0.3}
-			// 		, {name: 'b', pVal: 0.4}],
-			// 	layersCount : [2, 6]
-			// }
 		}
+
+		const normalizeSunburst = function (data, layerCount) {
+			if (layerCount === 1) {
+				return;
+			}
+			// switch groups to the correct position
+			let currIndex = 0;
+			let elems = 0;
+			let nextLayer = 1;
+			// positions of some indexes were changed after swapping
+			const positionsStore = [];
+			let layersCounter = 1;
+
+			for (let i = 0; i < data.length; i++) {
+				positionsStore.push(data[i]);
+			}
+
+			for (let i = 0; i < data.length; i++) {
+				for (let j = 0; j < data[i].length; j++) {
+					const pos = data[i][j].pos;
+					const nextIndex = currIndex + 1 + elems;
+					let targetIndex = currIndex + 1 + pos;
+
+
+
+					// change two indexes
+					if (nextIndex !== targetIndex) {
+						data[nextIndex] = positionsStore[targetIndex];
+					}
+					elems += 1;
+				}
+				nextLayer -= 1;
+				if (nextLayer === 0) {
+					layersCounter += 1;
+					if (layersCounter === layerCount) {
+						return;
+					}
+					nextLayer = elems;
+					currIndex += elems;
+					elems = 0;
+				}
+			}
+		}
+
+		const lastLayer = getLastLayer(strCache);
+		const newNumArr = normalizeNumArr(numArr, strCache, lastLayer);
+		const totalValue = getTotalValue(newNumArr);
+		// const layersCount = getLayersCount(strCache, lastLayer);
+		const sunburst = createSunburst(newNumArr, strCache, totalValue, lastLayer);
+		sortSunburst(sunburst.data);
+		normalizeSunburst(sunburst.data, sunburst.layersCount);
+		console.log(sunburst);
+		cachedData.sunburst = sunburst;
+		// cachedData.sunburst = {
+		// 		data : [[{name: 'a', pVal: 0.3}, {name: 'b', pVal: 0.7}]
+		// 			, [{name: 'a', pVal: 0.1}, {name: 'a', pVal: 0.2}, {name: 'b', pVal: 0.3}
+		// 			, {name: 'b', pVal: 0.4}]],
+		// 		layersCount : 2,
+		// 		stAngles : [Math.PI / 2, Math.PI / 2]
+		// 	}
 	},
 
 	_prepChartExData: function (chartSpace) {
@@ -8374,23 +8545,28 @@ drawSunburstChart.prototype = {
 			const ringWidth = diagramRadius / (sunburst.layersCount + 1);
 			let innerRadius = ringWidth;
 			let outerRadius = ringWidth * 2;
-			let startingAngle;
+			let startingAngle = Math.PI / 2;
 			let elems = 0;
 			let nextLayer = 1;
+			let layersCounter = 0;
 			for (let i = 0; i < sunburst.data.length; i++) {
-				startingAngle = sunburst.stAngles[i];
 				if (!this.paths[i]) {
 					this.paths[i] = [];
 				}
 				for (let j = 0; j < sunburst.data[i].length; j++) {
 					const angle = sunburst.data[i][j].pVal * Math.PI * 2;
-					this.paths[i].push(this._calculateSegment(startingAngle, angle, outerRadius, innerRadius, coords));
+					if (sunburst.data[i][j].name !== null) {
+						this.paths[i].push(this._calculateSegment(startingAngle, angle, outerRadius, innerRadius, coords));
+					}
 					startingAngle += angle;
 					elems += 1;
-
 				}
 				nextLayer -= 1;
 				if (nextLayer === 0) {
+					layersCounter += 1;
+					if (layersCounter === sunburst.layersCount) {
+						break;
+					}
 					nextLayer = elems;
 					elems = 0;
 					innerRadius = outerRadius;
