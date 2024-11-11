@@ -5173,8 +5173,9 @@
 				prefixFile = checkPrefix;
 				lastSlash = "\\";
 			}
-			for (var i = res.length - 1; i >= 0; i--) {
-				if (res[i] === lastSlash || res[i] === ":") {
+
+			for (let i = res.length - 1; i >= 0; i--) {
+				if (res[i] === lastSlash || res[i] === ":" || (res[i] === "\\" && res.indexOf(":") !== -1)) {
 					return {path: prefixFile + res.substring(0, i + 1), name: res.substring(i + 1, res.length)};
 				}
 			}
