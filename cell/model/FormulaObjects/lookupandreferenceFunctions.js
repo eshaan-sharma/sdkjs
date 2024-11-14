@@ -3124,6 +3124,7 @@ function (window, undefined) {
 		};
 
 		const simpleSearch = function (revert) {
+			return cacheMap[valueForSearching.getValue() + g_cCharDelimiter + valueForSearching.type];
 			if (revert) {
 				for (i = length - 1; i >= 0; i--) {
 					elem = cacheArray[i];
