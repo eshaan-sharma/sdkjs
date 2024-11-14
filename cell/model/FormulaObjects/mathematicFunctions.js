@@ -5090,12 +5090,12 @@ function (window, undefined) {
 				this.cacheId[sInputKey] = cacheElem;
 			}
 
-			var cacheRange = this.cacheRanges[wsId];
+			/*var cacheRange = this.cacheRanges[wsId];
 			if (!cacheRange) {
 				cacheRange = new AscCommonExcel.RangeDataManager(null);
 				this.cacheRanges[wsId] = cacheRange;
 			}
-			cacheRange.add(range.getBBox0(), cacheElem);
+			cacheRange.add(range.getBBox0(), cacheElem);*/
 		}
 
 		return cacheElem;
@@ -5167,7 +5167,7 @@ function (window, undefined) {
 		let getElems = function (a1, a2, p, calcSum) {
 			let matchingInfo = AscCommonExcel.matchingValue(a2);
 
-			let arg1Matrix = a1.getMatrix(), enterMatrix;
+			let arg1Matrix = a1.getMatrixNoEmpty(), enterMatrix;
 			if (p && p.length) {
 				enterMatrix = p;
 			} else {

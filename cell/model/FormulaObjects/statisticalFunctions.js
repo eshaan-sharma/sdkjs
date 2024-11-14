@@ -5206,46 +5206,23 @@ function (window, undefined) {
 			argNextDimension = arg0.getDimensions();
 			matchingInfo = AscCommonExcel.matchingValue(arg1);
 
-			if (arg1.value === "") {
-				arg1Matrix = arg0.getMatrix();
-			} else {
-				arg1Matrix = arg0.getMatrixNoEmpty ? arg0.getMatrixNoEmpty() : arg0.getMatrix();
-			}
-			if (cElementType.cellsRange3D === arg0.type) {
-				arg1Matrix = arg1Matrix[0];
-			}
 			if (!arg0Matrix) {
-				arg0Matrix = matrixClone(arg1Matrix);
+				arg0Matrix = [];
 				argBaseDimension = argNextDimension;
-				resArrayLength = arg0Matrix.length;
 			}
 			if (argNextDimension.row !== argBaseDimension.row || argNextDimension.col !== argBaseDimension.col) {
 				return new cError(cErrorType.wrong_value_type);
 			}
-			resArrayLength = resArrayLength > arg1Matrix.length ? arg1Matrix.length : resArrayLength;
-			for (i = 0; i < arg1Matrix.length; ++i) {
-				if (!arg1Matrix[i]) {
-					if (arg0Matrix[i]) {
-						arg0Matrix[i] = null;
+			//resArrayLength = resArrayLength > arg1Matrix.length ? arg1Matrix.length : resArrayLength;
+			//starts with arg0Matrix all undefined elements. undefined -> matching true, null - matching false
+			arg0.forEachNoEmpty(function (row, col, cell) {
+				if ((!arg0Matrix[row] || arg0Matrix[row][col] === undefined)&& !matching(AscCommonExcel.checkTypeCell(cell), matchingInfo, true, true)) {
+					if (!arg0Matrix[row]) {
+						arg0Matrix[row] = [];
 					}
-					continue;
+					arg0Matrix[row][col] = null;
 				}
-				for (j = 0; j < arg1Matrix[i].length; ++j) {
-					if (arg0Matrix[i] && arg0Matrix[i][j] && arg1Matrix[i] && arg1Matrix[i][j] && !matching(arg1Matrix[i][j], matchingInfo, true, true)) {
-						arg0Matrix[i][j] = null;
-					}
-				}
-			}
-		}
-		for (i = 0; i < resArrayLength; ++i) {
-			if (!arg0Matrix[i]) {
-				continue;
-			}
-			for (j = 0; j < arg0Matrix[i].length; ++j) {
-				if (arg0Matrix[i] && arg0Matrix[i][j]) {
-					++_count;
-				}
-			}
+			})
 		}
 		return new cNumber(_count);
 	};

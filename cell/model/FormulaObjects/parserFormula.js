@@ -1375,6 +1375,13 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		});
 		return arr;
 	};
+	cArea.prototype.forEachNoEmpty = function (callback) {
+		var arr = [], r = this.getRange(), res;
+		r._foreachNoEmpty(function (cell, i, j, r1, c1) {
+			callback(i - r1, j - c1, cell);
+		});
+		return arr;
+	};
 	cArea.prototype.getValuesNoEmpty = function (checkExclude, excludeHiddenRows, excludeErrorsVal, excludeNestedStAg) {
 		var arr = [], r = this.getRange();
 
@@ -1804,6 +1811,21 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		}
 
 		return arr;
+	};
+	cArea3D.prototype.forEachNoEmpty = function (callback) {
+		var r = this.getRanges(), res;
+
+		var ws = r[0] ? r[0].worksheet : null;
+		var oldExcludeHiddenRows = ws ? ws.bExcludeHiddenRows : null;
+
+		for (var k = 0; k < r.length; k++) {
+			r[k]._foreachNoEmpty(function (cell, i, j, r1, c1) {
+				callback(i - r1, j - c1, cell);
+			});
+		}
+		if (ws) {
+			ws.bExcludeHiddenRows = oldExcludeHiddenRows;
+		}
 	};
 	cArea3D.prototype.foreach2 = function (action) {
 		var _wsA = this.wsRange();

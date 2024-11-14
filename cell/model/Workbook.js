@@ -3592,6 +3592,7 @@
 	};
 	Workbook.prototype.calculate = function (type, sheetId) {
 		let formulas;
+		console.time("test")
 		if (type === Asc.c_oAscCalculateType.All) {
 			formulas = this.getAllFormulas();
 			AscCommonExcel.executeInR1C1Mode(false, function () {
@@ -3620,6 +3621,7 @@
 		AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_Calculate, sheetId,
 			null, new AscCommonExcel.UndoRedoData_SingleProperty(type));
 		AscCommon.History.EndTransaction();
+		console.timeEnd("test")
 	};
 	Workbook.prototype.checkDefName = function (checkName, scope) {
 		return this.dependencyFormulas.checkDefName(checkName, scope);
@@ -6362,6 +6364,7 @@
 		return res;
 	};
 	Worksheet.prototype._isConditionalFormattingIntersect = function(range, ranges) {
+
 		for (var i = 0; i < ranges.length; ++i) {
 			if (range.isIntersect(ranges[i])) {
 				return true;

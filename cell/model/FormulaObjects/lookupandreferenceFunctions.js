@@ -3058,15 +3058,15 @@ function (window, undefined) {
 
 		var cacheElem = this.cacheId[sRangeName];
 		if (!cacheElem) {
-			cacheElem = {elements: [], results: {}};
+			cacheElem = {elements: [], results: {}, map: {}};
 			this.generateElements(range, cacheElem);
 			this.cacheId[sRangeName] = cacheElem;
-			var cacheRange = this.cacheRanges[wsId];
+			/*var cacheRange = this.cacheRanges[wsId];
 			if (!cacheRange) {
 				cacheRange = new AscCommonExcel.RangeDataManager(null);
 				this.cacheRanges[wsId] = cacheRange;
 			}
-			cacheRange.add(range.getBBox0(), cacheElem);
+			cacheRange.add(range.getBBox0(), cacheElem);*/
 		}
 
 		var sInputKey;
@@ -3080,12 +3080,14 @@ function (window, undefined) {
 		res = cacheElem.results[sInputKey];
 		if (!res) {
 			cacheElem.results[sInputKey] =
-				res = this._calculate(cacheElem.elements, valueForSearching, arg3Value, opt_arg4, opt_arg5);
+				res = this._calculate(cacheElem, valueForSearching, arg3Value, opt_arg4, opt_arg5);
 		}
 
 		return res;
 	};
-	VHLOOKUPCache.prototype._calculate = function (cacheArray, valueForSearching, lookup, opt_arg4, opt_arg5) {
+	VHLOOKUPCache.prototype._calculate = function (cacheElem, valueForSearching, lookup, opt_arg4, opt_arg5) {
+		let cacheArray = cacheElem.elements;
+		let cacheMap = cacheElem.map;
 		let res = -1, i = 0, j, length = cacheArray.length, k, elem, val, nextVal;
 		let xlookup = opt_arg4 !== undefined && opt_arg5 !== undefined;
 
@@ -3269,167 +3271,24 @@ function (window, undefined) {
 
 		//сильного прироста не получил, пока оставляю прежнюю обработку, подумать на счёт разбития диапазонов
 		range._foreachNoEmpty(function (cell, r, c) {
-			cacheElem.elements.push({v: checkTypeCell(cell, true), i: (_this.bHor ? c : r)});
-		});
-		return;
-
-		//попытка оптимизации фукнции. если находим диапазон, который полностью перекрывает текущий или пересекаемся с текущим - тогда данные из кэша берём и не обращаемся к модели
-		//флаг - получаем из кэша только первый элемент
-		var bFast = true;
-		if (range && cacheElem) {
-			//ищем пересечения с уже имеющимися диапазонами
-			var elementsIntervals = [];
-			var addByIntervals = function (_elem, isIntersection) {
-				if (elementsIntervals && elementsIntervals.length) {
-					for (var k = 0; k < elementsIntervals.length; k++) {
-						if (elementsIntervals[k].bbox.containsRange(_elem)) {
-							return;
-						} else if (_elem.bbox.containsRange(elementsIntervals[k].bbox)) {
-							elementsIntervals.splice(k, 1);
-							elementsIntervals.push(_elem);
-							return;
-						}
-					}
+			let _val = checkTypeCell(cell, true);
+			let _index = (_this.bHor ? c : r);
+			cacheElem.elements.push({v: _val, i: _index});
+			let key = _val.getValue() + g_cCharDelimiter + _val.type;
+			if (cacheElem.map[key]) {
+				let start, end;
+				if (cacheElem.map[key].start != null) {
+					start = Math.min(cacheElem.map[key].start, cacheElem.map[key].end, _index);
+					end = Math.max(cacheElem.map[key].start, cacheElem.map[key].end, _index);
+				} else {
+					start = Math.min(cacheElem.map[key], _index);
+					end = Math.max(cacheElem.map[key], _index);
 				}
-
-				elementsIntervals.push(_elem);
-			};
-
-			var ws = range.getWorksheet();
-			if (ws) {
-				var rangeData = this.getRangeDataBySheetId(ws.Id);
-				if (rangeData) {
-					var interval, elem, intersection;
-					if (bFast) {
-						interval = rangeData.getFirst(range.bbox);
-						if (interval) {
-							elem = interval;
-							if (elem.bbox.containsRange(range.bbox)) {
-								//диапазон в кэшэ полностью перекрывает новый
-								//формируем новый массив из того, которые в кэше
-								if (elem.data && elem.data.elements) {
-									cacheElem.elements = elem.data.slice(_this.bHor ? range.bbox.c1 - elem.bbox.c1 : range.bbox.r1 - elem.bbox.r1, _this.bHor ? elem.bbox.c2 - range.bbox.c2 : elem.bbox.r2 - range.bbox.r2);
-									return;
-								}
-							} else /*if (range.bbox.containsRange(elem.bbox))*/{
-								//ищем пересечение
-								intersection = elem.bbox.intersection(range.bbox);
-								addByIntervals({bbox: intersection, elements: elem.data.elements.slice(_this.bHor ? intersection.c1 - elem.bbox.c1 : intersection.r1 - elem.bbox.r1, _this.bHor ? elem.bbox.c2 - intersection.c1 : elem.bbox.r2 - intersection.r1)});
-							}
-						}
-					} else {
-						var intervals = rangeData.tree && rangeData.tree.searchNodes(range.bbox);
-						if (intervals && intervals.length) {
-							for (var i = 0; i < intervals.length; i++) {
-								interval = intervals[i];
-								elem = interval.data;
-								if (elem.bbox.isIntersect(range.bbox)) {
-									if (elem.bbox.containsRange(range.bbox)) {
-										//диапазон в кэшэ полностью перекрывает новый
-										//формируем новый массив из того, которые в кэше
-										if (elem.data && elem.data.elements) {
-											cacheElem.elements = elem.data.slice(_this.bHor ? range.bbox.c1 - elem.bbox.c1 : range.bbox.r1 - elem.bbox.r1,
-												_this.bHor ? elem.bbox.c2 - range.bbox.c2 : elem.bbox.r2 - range.bbox.r2);
-											return;
-										}
-									} else /*if (range.bbox.containsRange(elem.bbox))*/{
-										//ищем пересечение
-										intersection = elem.bbox.intersection(range.bbox);
-										addByIntervals({
-											bbox: intersection,
-											elements: elem.data.elements.slice(_this.bHor ? intersection.c1 - elem.bbox.c1 : intersection.r1 - elem.bbox.r1,
-												_this.bHor ? elem.bbox.c2 - intersection.c1 : elem.bbox.r2 - intersection.r1)
-										});
-									}
-								}
-							}
-						}
-
-					}
-				}
-			}
-
-			var addElemsFromWs = function (_range) {
-				_range._foreachNoEmpty(function (cell, r, c) {
-					cacheElem.elements.push({v: checkTypeCell(cell, true), i: (_this.bHor ? c : r)});
-				});
-			};
-
-			if (elementsIntervals && elementsIntervals.length) {
-				//сортируем по порядку
-				elementsIntervals.sort(function (a, b) {
-					return _this.bHor ? b.c1 - a.c1 : b.r1 - a.r1;
-				});
-
-				//проходимся по всем диапазонам, заполняем "окна"
-				for (var j = 0; j < elementsIntervals.length; j++) {
-					var lastCacheElem = cacheElem.elements[cacheElem.elements.length - 1];
-					var elemIndex = elementsIntervals[j].elements[0].i;
-
-					//если в cacheElem ещё ничего не добавлено или индекс следующего элемента из интервала не соответвует индексу + 1 элемента из кэша
-					var cacheIndex = lastCacheElem && lastCacheElem.i;
-					if (!lastCacheElem || elemIndex !== lastCacheElem.i + 1) {
-						var r1, c1, r2, c2;
-						if (!lastCacheElem) {
-							if (!_this.bHor && range.bbox.r1 === elemIndex || _this.bHor && range.bbox.c1 === elemIndex) {
-								//начало диапазонов совпадает
-								cacheElem.elements = cacheElem.elements.concat(elementsIntervals[j].elements);
-								if (j === elementsIntervals.length - 1) {
-									lastCacheElem = cacheElem.elements[cacheElem.elements.length - 1];
-									cacheIndex = lastCacheElem && lastCacheElem.i;
-
-									if (!(!_this.bHor && range.bbox.r1 === cacheIndex || _this.bHor && range.bbox.c1 === cacheIndex)) {
-										//берём последние элементы
-										r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-										c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-										r2 = range.bbox.r2;
-										c2 =  range.bbox.c2;
-
-										addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-									}
-								}
-							} else {
-								//берём от начала range до начала первого интервала
-								r1 = range.bbox.r1;
-								c1 = range.bbox.c1;
-
-								r2 = !_this.bHor ? elemIndex - 1: range.bbox.r2;
-								c2 = _this.bHor ? elemIndex - 1 : range.bbox.c2;
-
-								addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-								j--;
-							}
-
-						} else {
-							//берём от конца последнего элемента из кэша до начала интервала
-							r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-							c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-							r2 = !_this.bHor ? elemIndex - 1: range.bbox.r2;
-							c2 = _this.bHor ? elemIndex - 1 : range.bbox.c2;
-
-							addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-							j--;
-						}
-					} else {
-						cacheElem.elements = cacheElem.elements.concat(elementsIntervals[j].elements);
-						if (j === elementsIntervals.length - 1) {
-							//берём последние элементы
-							r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-							c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-							r2 = range.bbox.r2;
-							c2 =  range.bbox.c2;
-
-							addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-						}
-					}
-				}
+				cacheElem.map[key] = {start: start, end: end};
 			} else {
-				addElemsFromWs(range);
+				cacheElem.map[key] = _index;
 			}
-		}
+		});
 	};
 	VHLOOKUPCache.prototype.getRangeDataBySheetId = function (id) {
 		return this.cacheRanges[id];
