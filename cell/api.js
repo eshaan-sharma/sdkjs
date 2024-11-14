@@ -6080,8 +6080,8 @@ var editor;
       this.wb.restoreFocus();
     }
 
-		let test = this.getEyedropperImgData();
-	  window._blob = test;
+		//let test = this.getEyedropperImgData();
+	  //window._blob = test;
 
 
 	  const oWSViewerCanvas = document.getElementById("ws-canvas");
