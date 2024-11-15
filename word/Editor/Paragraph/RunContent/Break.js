@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -80,6 +80,10 @@
 		if (false === this.Flags.Use)
 			return;
 
+		if(Context.m_bIsTextDrawer)
+		{
+			Context.CheckSpaceDraw();
+		}
 		if (undefined !== editor && editor.ShowParaMarks)
 		{
 			// Цвет и шрифт можно не запоминать и не выставлять старый, т.к. на данном элемента всегда заканчивается

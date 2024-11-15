@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -43,11 +43,10 @@ function XYAdjustmentTrack(originalShape, adjIndex, bTextWarp)
         var oPen, oBrush;
         if(bTextWarp !== true)
         {
-            if(originalShape.spPr && originalShape.spPr.geometry){
-                this.geometry = originalShape.spPr.geometry.createDuplicate();
-            }
-            else if(originalShape.calcGeometry){
-                this.geometry = originalShape.calcGeometry.createDuplicate();
+            const oGeometry = originalShape.getGeometry();
+            if(oGeometry)
+            {
+                this.geometry = oGeometry.createDuplicate();
             }
             this.shapeWidth = originalShape.extX;
             this.shapeHeight = originalShape.extY;
@@ -309,6 +308,7 @@ XYAdjustmentTrack.prototype.trackEnd = function()
 
     }
 };
+XYAdjustmentTrack.prototype.checkDrawingPartWithHistory = function () {};
 
 function PolarAdjustmentTrack(originalShape, adjIndex, bTextWarp)
 {
@@ -321,11 +321,10 @@ function PolarAdjustmentTrack(originalShape, adjIndex, bTextWarp)
         var oPen, oBrush;
         if(bTextWarp !== true)
         {
-            if(originalShape.spPr && originalShape.spPr.geometry){
-                this.geometry = originalShape.spPr.geometry.createDuplicate();
-            }
-            else if(originalShape.calcGeometry){
-                this.geometry = originalShape.calcGeometry.createDuplicate();
+            const oGeometry = originalShape.getGeometry();
+            if(oGeometry)
+            {
+                this.geometry = oGeometry.createDuplicate();
             }
             this.shapeWidth = originalShape.extX;
             this.shapeHeight = originalShape.extY;
@@ -529,6 +528,7 @@ function PolarAdjustmentTrack(originalShape, adjIndex, bTextWarp)
 
         }
     };
+	this.checkDrawingPartWithHistory = function () {};
 }
 PolarAdjustmentTrack.prototype.getBounds = XYAdjustmentTrack.prototype.getBounds;
 

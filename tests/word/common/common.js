@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -47,6 +47,14 @@ var AscTest = AscTest || {};
 
 	AscCommon.g_oTableId = {
 		map : {},
+		GetId : function()
+		{
+			return "-1";
+		},
+		Get_Id : function()
+		{
+			return this.GetId();
+		},
 		Add : function(c, id)
 		{
 			this.map[id] = c;
@@ -63,7 +71,11 @@ var AscTest = AscTest || {};
 			return this.Get_ById(id);
 		},
 		TurnOff : function(){},
-		TurnOn : function(){}
+		TurnOn : function(){},
+		IsOn : function()
+		{
+			return true
+		}
 	};
 
 	AscCommon.g_oIdCounter.m_bLoad = false;
@@ -94,3 +106,19 @@ var AscTest = AscTest || {};
 	AscTest.GetBinaryReader    = GetBinaryReader;
 
 })(window);
+
+if (QUnit && !QUnit.assert.close)
+{
+	QUnit.assert.close = function(number, expected, maxDifference, message)
+	{
+		if (undefined === maxDifference || null === maxDifference || 0 === maxDifference)
+			maxDifference = 0.00001;
+		
+		QUnit.assert.pushResult({
+			result : Math.abs(number - expected) < maxDifference,
+			actual : number,
+			expected : expected,
+			message : message
+		});
+	}
+}

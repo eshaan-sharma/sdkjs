@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -98,9 +98,9 @@ CDrawingsController.prototype.AddNewParagraph = function(bRecalculate, bForceAdd
 {
 	return this.DrawingObjects.addNewParagraph(bRecalculate, bForceAdd);
 };
-CDrawingsController.prototype.AddInlineImage = function(nW, nH, oImage, oChart, bFlow)
+CDrawingsController.prototype.AddInlineImage = function(nW, nH, oImage, oGraphicObject, bFlow)
 {
-	return this.DrawingObjects.addInlineImage(nW, nH, oImage, oChart, bFlow);
+	return this.DrawingObjects.addInlineImage(nW, nH, oImage, oGraphicObject, bFlow);
 };
 CDrawingsController.prototype.AddImages = function(aImages)
 {
@@ -119,7 +119,7 @@ CDrawingsController.prototype.AddTextArt = function(nStyle)
 	var ParaDrawing = this.DrawingObjects.getMajorParaDrawing();
 	if (ParaDrawing)
 	{
-		ParaDrawing.GoTo_Text(undefined, false);
+		ParaDrawing.GoToText(undefined, false);
 		this.LogicDocument.AddTextArt(nStyle);
 	}
 };
@@ -380,7 +380,7 @@ CDrawingsController.prototype.RemoveSelection = function(bNoCheckDrawing)
 				oParaDrawing = arrDrawings[0];
 		}
 
-		oParaDrawing.GoTo_Text(undefined, false);
+		oParaDrawing.GoToText(undefined, false);
 	}
 };
 CDrawingsController.prototype.IsSelectionEmpty = function(bCheckHidden)
@@ -697,13 +697,26 @@ CDrawingsController.prototype.IsTableCellSelection = function()
 
 	return false;
 };
-CDrawingsController.prototype.IsSelectionLocked = function(nCheckType)
+CDrawingsController.prototype.IsSelectionLocked = function(checkType)
 {
-	this.DrawingObjects.documentIsSelectionLocked(nCheckType);
+	this.DrawingObjects.documentIsSelectionLocked(checkType);
 
-	var oContentControl = this.private_GetParentContentControl();
-	if (oContentControl)
-		oContentControl.Document_Is_SelectionLocked(nCheckType);
+	let contentControl = this.private_GetParentContentControl();
+	if (contentControl)
+	{
+		if (contentControl.IsPicture()
+			&& (AscCommon.changestype_Remove === checkType
+				|| AscCommon.changestype_Delete === checkType))
+		{
+			contentControl.SkipSpecialContentControlLock(true);
+			contentControl.Document_Is_SelectionLocked(checkType);
+			contentControl.SkipSpecialContentControlLock(false);
+		}
+		else
+		{
+			contentControl.Document_Is_SelectionLocked(checkType);
+		}
+	}
 };
 CDrawingsController.prototype.CollectSelectedReviewChanges = function(oTrackManager)
 {

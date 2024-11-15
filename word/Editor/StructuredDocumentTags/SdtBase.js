@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -31,11 +31,6 @@
  */
 
 "use strict";
-/**
- * User: Ilja.Kirillov
- * Date: 02.04.2020
- * Time: 15:50
- */
 
 /**
  * Базовый класс для контент контролов
@@ -332,6 +327,9 @@ CSdtBase.prototype.IsFixedForm = function()
  */
 CSdtBase.prototype.IsFormRequired = function()
 {
+	if (this.IsSignatureForm())
+		return true;
+	
 	return (this.Pr.FormPr ? this.Pr.FormPr.GetRequired() : false);
 };
 /**
@@ -632,6 +630,10 @@ CSdtBase.prototype.IsPictureForm = function()
 {
 	return false;
 };
+CSdtBase.prototype.IsSignatureForm = function()
+{
+	return false;
+};
 /**
  * Функция обновления картиночной формы
  */
@@ -905,6 +907,10 @@ CSdtBase.prototype.IsBuiltInUnique = function()
 {
 	return (this.Pr && this.Pr.DocPartObj && true === this.Pr.DocPartObj.Unique);
 };
+CSdtBase.prototype.GetBuiltInGallery = function()
+{
+	return (this.Pr && this.Pr.DocPartObj && this.Pr.DocPartObj.Gallery ? this.Pr.DocPartObj.Gallery : undefined)
+};
 CSdtBase.prototype.GetInnerText = function()
 {
 	return "";
@@ -942,6 +948,64 @@ CSdtBase.prototype.GetFormValue = function()
 	}
 
 	return this.GetInnerText();
+};
+CSdtBase.prototype.SetInnerText = function(value)
+{
+	// Must be overridden
+};
+CSdtBase.prototype.SetFormValue = function(value)
+{
+	if (!this.IsForm())
+		return;
+	
+	if (this.IsTextForm() || this.IsComboBox())
+	{
+		this.SetInnerText(AscBuilder.GetStringParameter(value, ""));
+	}
+	else if (this.IsDropDownList())
+	{
+		let dropDownPr = this.GetDropDownListPr();
+		let listIndex = dropDownPr.FindByText(AscBuilder.GetStringParameter(value, ""));
+		if (-1 !== listIndex)
+			this.SelectListItem(dropDownPr.GetItemValue(listIndex));
+	}
+	else if (this.IsCheckBox())
+	{
+		let isChecked = value === "true" ? true : value === "false" ? false : AscBuilder.GetBoolParameter(value, false);
+		this.SetCheckBoxChecked(isChecked);
+	}
+	else if (this.IsPictureForm())
+	{
+		let imageId = AscBuilder.GetStringParameter(value, "");
+		if (!imageId)
+			return;
+		
+		let image = null;
+		let allDrawings = this.GetAllDrawingObjects();
+		for (let nDrawing = 0; nDrawing < allDrawings.length; ++nDrawing)
+		{
+			if (allDrawings[nDrawing].IsPicture())
+			{
+				image = allDrawings[nDrawing].GraphicObj;
+				break;
+			}
+		}
+		
+		if (image)
+		{
+			this.SetShowingPlcHdr(false);
+			image.setBlipFill(AscFormat.CreateBlipFillRasterImageId(imageId));
+		}
+	}
+	else if (this.IsDatePicker())
+	{
+		this.SetInnerText(AscBuilder.GetStringParameter(value, ""));
+		
+		// TODO: Надо FullDate попытаться выставить по заданному значение. Сейчас мы всегда сбрасываем на текущую дату
+		let datePickerPr = this.GetDatePickerPr().Copy();
+		datePickerPr.SetFullDate(null);
+		this.SetDatePickerPr(datePickerPr);
+	}
 };
 CSdtBase.prototype.MoveCursorOutsideForm = function(isBefore)
 {
@@ -1051,3 +1115,28 @@ CSdtBase.prototype.CanPlaceCursorInside = function()
 CSdtBase.prototype.SkipFillingFormModeCheck = function(isSkip)
 {
 };
+/**
+ * Нужно ли рисовать рамку вокруг контрола
+ * @returns {boolean}
+ */
+CSdtBase.prototype.IsHideContentControlTrack = function()
+{
+	let logicDocument = this.GetLogicDocument();
+	if (logicDocument && logicDocument.IsForceHideContentControlTrack())
+		return true;
+	
+	if (this.GetBuiltInGallery()
+		&& !this.IsBuiltInTableOfContents())
+		return true;
+	
+	return Asc.c_oAscSdtAppearance.Hidden === this.GetAppearance();
+};
+
+// TODO: Temporary for building purpose. Remove when actual class is added
+(function()
+{
+	function DataBinding()
+	{
+	}
+	AscWord.DataBinding = DataBinding;
+})();

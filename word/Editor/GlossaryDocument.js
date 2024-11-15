@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -31,21 +31,17 @@
  */
 
 "use strict";
-/**
- * User: Ilja.Kirillov
- * Date: 25.03.2020
- * Time: 16:06
- */
 
 var c_oAscDefaultPlaceholderName = {
-	Text      : "DefaultPlaceholder_TEXT",
-	List      : "DefaultPlaceholder_LIST",
-	DateTime  : "DefaultPlaceholder_DATE",
-	Equation  : "DefaultPlaceholder_EQUATION",
-	TextForm  : "DefaultPlaceholder_TEXTFORM",
-	TextOform : "DefaultPlaceholder_TEXT_OFORM",
-	ListOform : "DefaultPlaceholder_LIST_OFORM",
-	DateOform : "DefaultPlaceholder_DATE_OFORM"
+	Text           : "DefaultPlaceholder_TEXT",
+	List           : "DefaultPlaceholder_LIST",
+	DateTime       : "DefaultPlaceholder_DATE",
+	Equation       : "DefaultPlaceholder_EQUATION",
+	TextForm       : "DefaultPlaceholder_TEXTFORM",
+	TextOform      : "DefaultPlaceholder_TEXT_OFORM",
+	ListOform      : "DefaultPlaceholder_LIST_OFORM",
+	DateOform      : "DefaultPlaceholder_DATE_OFORM",
+	SignatureOform : "DefaultPlaceholder_SIGNATURE_OFORM",
 };
 
 /**
@@ -65,19 +61,20 @@ function CGlossaryDocument(oLogicDocument)
 
 	// Инициализировать нужно сразу, чтобы не было проблем с совместным редактированием
 	this.DefaultPlaceholder = {
-		Text      : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.Text, AscCommon.translateManager.getValue("Your text here")),
-		List      : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.List, AscCommon.translateManager.getValue("Choose an item")),
-		DateTime  : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.DateTime, AscCommon.translateManager.getValue("Enter a date")),
-		Equation  : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.Equation, AscCommon.translateManager.getValue("Type equation here")),
-		TextForm  : this.private_CreateDefaultTextFormPlaceholder(),
-		TextOform : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.TextOform, AscCommon.translateManager.getValue("Your text here")),
-		ListOform : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.ListOform, AscCommon.translateManager.getValue("Choose an item")),
-		DateOform : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.DateOform, AscCommon.translateManager.getValue("Enter a date")),
+		Text           : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.Text, AscCommon.translateManager.getValue("Your text here")),
+		List           : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.List, AscCommon.translateManager.getValue("Choose an item")),
+		DateTime       : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.DateTime, AscCommon.translateManager.getValue("Enter a date")),
+		Equation       : this.private_CreateDefaultPlaceholder(c_oAscDefaultPlaceholderName.Equation, AscCommon.translateManager.getValue("Type equation here")),
+		TextForm       : this.private_CreateDefaultTextFormPlaceholder(),
+		TextOform      : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.TextOform, AscCommon.translateManager.getValue("Your text here")),
+		ListOform      : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.ListOform, AscCommon.translateManager.getValue("Choose an item")),
+		DateOform      : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.DateOform, AscCommon.translateManager.getValue("Enter a date")),
+		SignatureOform : this.private_CreateDefaultOformPlaceholder(c_oAscDefaultPlaceholderName.SignatureOform, AscCommon.translateManager.getValue("Signature"))
 	};
 
 	// TODO: Реализовать работу нумерации, стилей, сносок, заданных в контентах по-нормальному
 	this.Numbering = new AscWord.CNumbering();
-	this.Styles    = new CStyles();
+	this.CreateStyles();
 	this.Footnotes = new CFootnotesController(oLogicDocument);
 	this.Endnotes  = new CEndnotesController(oLogicDocument);
 
@@ -108,6 +105,11 @@ CGlossaryDocument.prototype.Get_Id = function()
 CGlossaryDocument.prototype.GetNumbering = function()
 {
 	return this.Numbering;
+};
+
+CGlossaryDocument.prototype.CreateStyles = function()
+{
+	this.Styles = new CStyles();
 };
 /**
  * @return {CStyles}
@@ -231,6 +233,13 @@ CGlossaryDocument.prototype.GetDefaultPlaceholderDateOform = function()
 	return this.DefaultPlaceholder.DateOform;
 };
 /**
+ * @returns {CDocPart}
+ */
+CGlossaryDocument.prototype.GetDefaultPlaceholderSignatureOform = function()
+{
+	return this.DefaultPlaceholder.SignatureOform;
+};
+/**
  * @param sName
  * @param sText
  * @returns {CDocPart}
@@ -321,7 +330,8 @@ CGlossaryDocument.prototype.IsDefaultDocPart = function(oDocPart)
 		|| oDocPart === this.DefaultPlaceholder.TextForm
 		|| oDocPart === this.DefaultPlaceholder.TextOform
 		|| oDocPart === this.DefaultPlaceholder.ListOform
-		|| oDocPart === this.DefaultPlaceholder.DateOform);
+		|| oDocPart === this.DefaultPlaceholder.DateOform
+		|| oDocPart === this.DefaultPlaceholder.SignatureOform);
 };
 CGlossaryDocument.prototype.Refresh_RecalcData = function(Data)
 {
@@ -358,6 +368,10 @@ CGlossaryDocument.prototype.GetDefaultPlaceholderListOformDocPartId = function()
 CGlossaryDocument.prototype.GetDefaultPlaceholderDateOformDocPartId = function()
 {
 	return c_oAscDefaultPlaceholderName.DateOform;
+};
+CGlossaryDocument.prototype.GetDefaultPlaceholderSignatureOformDocPartId = function()
+{
+	return c_oAscDefaultPlaceholderName.SignatureOform;
 };
 
 /**
@@ -552,6 +566,14 @@ CDocPart.prototype.AddDocPartBehavior = function(nType)
 CDocPart.prototype.CheckDocPartBehavior = function(nType)
 {
 	return !!(this.Pr.Behavior & nType);
+};
+CDocPart.prototype.IsTableCellContent = function()
+{
+	return false;
+};
+CDocPart.prototype.Is_DrawingShape = function(returnShape)
+{
+	return returnShape ? null : false;
 };
 
 /** @enum {number} */

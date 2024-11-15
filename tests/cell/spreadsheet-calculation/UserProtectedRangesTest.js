@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -12,7 +12,7 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * You can contact Ascensio System SIA at 20A-6 Ernesta Birznieka-Upish
  * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
@@ -144,11 +144,21 @@ $(function () {
 	}
 
 	function create(ref, name, users) {
+		let oUsers;
+		for (let i = 0; i < users.length; i++) {
+			if (!oUsers) {
+				oUsers = [];
+			}
+			let oUser = new Asc.CUserProtectedRangeUserInfo();
+			oUser.id = users[i].id;
+			oUsers.push(oUser);
+		}
+
 		let obj = new Asc.CUserProtectedRange(ws);
 		obj.asc_setRef(ref);
 		obj.asc_setName(name);
-		if (users) {
-			obj.asc_setUsers(users);
+		if (oUsers) {
+			obj.asc_setUsers(oUsers);
 		}
 		api.asc_addUserProtectedRange(obj);
 		return obj;
@@ -157,7 +167,7 @@ $(function () {
 	function testCreate() {
 		QUnit.test("Test: create", function (assert) {
 			//ADD
-			create("B2:B5", "test", ["user3"]);
+			create("B2:B5", "test", [{id: "user3"}]);
 
 			AscCommon.History.Undo();
 			assert.strictEqual(ws.userProtectedRanges.length, 0, "undo add test");
@@ -165,7 +175,7 @@ $(function () {
 			assert.strictEqual(ws.userProtectedRanges[0].asc_getName(), "test", "name compare");
 			assert.strictEqual(ws.userProtectedRanges[0].asc_getRef(), "=Sheet1!$B$2:$B$5", "ref compare");
 
-			create("D2:E5", "test2", ["user3"]);
+			create("D2:E5", "test2", [{id: "user3"}]);
 			assert.strictEqual(ws.userProtectedRanges.length, 2, "add test");
 			assert.strictEqual(ws.userProtectedRanges[1].asc_getName(), "test2", "name compare");
 			assert.strictEqual(ws.userProtectedRanges[1].asc_getRef(), "=Sheet1!$D$2:$E$5", "ref compare");
@@ -199,7 +209,7 @@ $(function () {
 
 	function testChange() {
 		QUnit.test("Test: change", function (assert) {
-			create("B2:B5", "test1", ["user3"]);
+			create("B2:B5", "test1", [{id: "user3"}]);
 
 			let obj = ws.userProtectedRanges[0].clone(ws);
 			obj.asc_setRef("B2:B10");
@@ -236,8 +246,8 @@ $(function () {
 
 	function testManipulationRange() {
 		QUnit.test("Test: change", function (assert) {
-			create("B2:B5", "test1", ["user3"]);
-			create("D2:E5", "test2", ["user3"]);
+			create("B2:B5", "test1", [{id: "user3"}]);
+			create("D2:E5", "test2", [{id: "user3"}]);
 
 			let beforeFunc = function(desc) {
 				assert.strictEqual(ws.userProtectedRanges[0].asc_getRef(), "=Sheet1!$B$2:$B$5", desc + "_val_1");

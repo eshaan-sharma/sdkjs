@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -35,7 +35,6 @@
     const CNode = AscCommonWord.CNode;
     const CTextElement = AscCommonWord.CTextElement;
 
-
     function getPriorityReviewType(arrOfTypes) {
         const bRemove = arrOfTypes.some(function (reviewType) {
             return reviewType === reviewtype_Remove;
@@ -49,98 +48,6 @@
         return reviewtype_Common;
     }
 
-    function checkArrayForReviewType(arr) {
-        for (let i = 0; i < 0; i += 1) {
-            if (arr[i].GetReviewType && (arr[i].GetReviewType() !== reviewtype_Common)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function getChangeReviewTypesInformation(arrReviewTypesOfMainElement, arrReviewTypesOfRevisedElement) {
-        if (arrReviewTypesOfMainElement.length !== arrReviewTypesOfRevisedElement.length) return [];
-        const arrChangeReviewTypesInfo = [
-            {
-/*                nPriorityReviewType: reviewtype_Common,
-                nPriorityMoveReviewType: Asc.c_oAscRevisionsMove.NoMove,*/
-                nStartChangeReviewIndex: -1,
-                nEndChangeReviewIndex: 0,
-                oReviewInfo: null
-            }
-        ];
-        for (let i = 0; i < arrReviewTypesOfRevisedElement.length; i += 1) {
-            const nRevisedReviewType = arrReviewTypesOfRevisedElement[i].reviewType;
-            const nRevisedMoveReviewType = arrReviewTypesOfRevisedElement[i].moveReviewType;
-            const sRevisedNameMoveMark = arrReviewTypesOfRevisedElement[i].moveName;
-            const oRevisedReviewInfo = arrReviewTypesOfRevisedElement[i].reviewInfo;
-            const oRevisedPrevAdded = arrReviewTypesOfRevisedElement[i].prevAdded;
-
-            const nMainReviewType = arrReviewTypesOfMainElement[i].reviewType;
-            const oMainPrevAdded = arrReviewTypesOfMainElement[i].prevAdded;
-            const nMainMoveReviewType = arrReviewTypesOfMainElement[i].moveReviewType;
-
-            let nPriorityReviewType;
-            let oPriorityReviewInfo;
-            let nPriorityMoveReviewType;
-            let bIsMove = false;
-            if (nRevisedReviewType !== reviewtype_Common && !(oMainPrevAdded && nMainReviewType === reviewtype_Remove)) {
-                if (nMainReviewType !== nRevisedReviewType) {
-                    nPriorityReviewType = nRevisedReviewType;
-                    oPriorityReviewInfo = oRevisedReviewInfo;
-                } else if (nMainReviewType === reviewtype_Remove && oRevisedPrevAdded) {
-                    nPriorityReviewType = reviewtype_Add;
-                    oPriorityReviewInfo = oRevisedPrevAdded;
-                }
-            }
-            if (nMainMoveReviewType === Asc.c_oAscRevisionsMove.NoMove && nRevisedMoveReviewType !== Asc.c_oAscRevisionsMove.NoMove) {
-                nPriorityMoveReviewType = nRevisedMoveReviewType;
-                oPriorityReviewInfo = oRevisedReviewInfo;
-                bIsMove = true;
-            }
-
-            if ((AscFormat.isRealNumber(nPriorityReviewType) || AscFormat.isRealNumber(nPriorityMoveReviewType)) && oPriorityReviewInfo) {
-                const sReviewUserName = oPriorityReviewInfo.GetUserName();
-                const nReviewDate = oPriorityReviewInfo.GetDateTime();
-                const lastChangeReviewInfo = arrChangeReviewTypesInfo[arrChangeReviewTypesInfo.length - 1];
-                if (lastChangeReviewInfo.nStartChangeReviewIndex === -1) {
-                    lastChangeReviewInfo.nStartChangeReviewIndex = i;
-                    lastChangeReviewInfo.nEndChangeReviewIndex = i - 1;
-                    if (bIsMove) {
-                        lastChangeReviewInfo.nPriorityMoveReviewType = nPriorityMoveReviewType;
-                        lastChangeReviewInfo.sMoveReviewMarkName = sRevisedNameMoveMark;
-                    } else {
-                        lastChangeReviewInfo.nPriorityReviewType = nPriorityReviewType;
-                    }
-                    lastChangeReviewInfo.oReviewInfo = oPriorityReviewInfo.Copy();
-                }
-
-                const bCheckReviewType = bIsMove ? nPriorityMoveReviewType === lastChangeReviewInfo.nPriorityMoveReviewType : nPriorityReviewType === lastChangeReviewInfo.nPriorityReviewType;
-                if (i - 1 === lastChangeReviewInfo.nEndChangeReviewIndex 
-                    && bCheckReviewType
-                    && lastChangeReviewInfo.oReviewInfo
-                    && (lastChangeReviewInfo.oReviewInfo.GetUserName() === sReviewUserName )
-                    && lastChangeReviewInfo.oReviewInfo.GetDateTime() === nReviewDate) {
-                    lastChangeReviewInfo.nEndChangeReviewIndex = i;
-                } else {
-                    const oNewChangeReviewInfo = {
-                        nStartChangeReviewIndex: i,
-                        nEndChangeReviewIndex: i,
-                        oReviewInfo: oPriorityReviewInfo.Copy()
-                    };
-                    if (bIsMove) {
-                        oNewChangeReviewInfo.nPriorityMoveReviewType = nPriorityMoveReviewType;
-                        oNewChangeReviewInfo.sMoveReviewMarkName = sRevisedNameMoveMark;
-                    } else {
-                        oNewChangeReviewInfo.nPriorityReviewType = nPriorityReviewType;
-                    }
-                    arrChangeReviewTypesInfo.push(oNewChangeReviewInfo);
-                }
-            }
-        }
-        return arrChangeReviewTypesInfo;
-    }
-
     function CMergeComparisonNode(oElement, oParent) {
         CNode.call(this, oElement, oParent);
         this.bHaveMoveMarks = false;
@@ -148,7 +55,6 @@
 
     CMergeComparisonNode.prototype = Object.create(CNode.prototype);
     CMergeComparisonNode.prototype.constructor = CMergeComparisonNode;
-
     CMergeComparisonNode.prototype.privateCompareElements = function (oNode, bCheckNeighbors) {
         const oElement1 = this.element;
         const oElement2 = oNode.element;
@@ -185,12 +91,40 @@
         }
     }
 
-    CMergeComparisonNode.prototype.insertContentAfterRemoveChanges = function (aContentToInsert, nInsertPosition, comparison) {
-        const oElement = this.getApplyParagraph(comparison);
+    CMergeComparisonNode.prototype.insertContentAfterRemoveChanges = function (aContentToInsert, nInsertPosition, comparison, options) {
+			const oElement = this.getApplyParagraph(comparison);
+	    let t = 0;
+			const arrSkippedComments = [];
+			if (options && AscFormat.isRealNumber(options.nCommentInsertIndex))
+			{
+				for (t;t < aContentToInsert.length; t += 1)
+				{
+					if (aContentToInsert[t] instanceof AscCommon.ParaComment)
+					{
+						const sCommentId = aContentToInsert[t].GetCommentId();
+						if (comparison.oCommentManager.mapLink[sCommentId])
+						{
+							oElement.AddToContent(options.nCommentInsertIndex, aContentToInsert[t]);
+						}
+						else
+						{
+							arrSkippedComments.push(aContentToInsert[t]);
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
         if(nInsertPosition > -1)
         {
-            for (let t = 0; t < aContentToInsert.length; t += 1) {
-                if(this.isElementForAdd(aContentToInsert[t]))
+	        for (let i = 0; i < arrSkippedComments.length; i++)
+	        {
+		        oElement.AddToContent(nInsertPosition, arrSkippedComments[i]);
+	        }
+            for (t; t < aContentToInsert.length; t += 1) {
+                if(comparison.isElementForAdd(aContentToInsert[t]))
                 {
                     if (aContentToInsert[t] instanceof AscCommon.CParaRevisionMove) {
                         const oInsertBefore = oElement.Content[nInsertPosition];
@@ -266,7 +200,7 @@
 				}
 
         return true;
-    }
+    };
 
     function CResolveConflictTextElement() {
         CTextElement.call(this);
@@ -357,9 +291,11 @@
 
     function CDocumentResolveConflictComparison(oOriginalDocument, oRevisedDocument, oOptions) {
         CDocumentComparison.call(this, oOriginalDocument, oRevisedDocument, oOptions);
+	    this.needCopyForResolveEqualWords = false;
         this.parentParagraph = null;
         this.startPosition = 0;
         this.bSkipChangeMoveType = true;
+	      this.needCheckReview = true;
         this.copyPr = {
             CopyReviewPr: false,
             Comparison: this,
@@ -369,6 +305,10 @@
     CDocumentResolveConflictComparison.prototype = Object.create(CDocumentComparison.prototype);
     CDocumentResolveConflictComparison.prototype.constructor = CDocumentResolveConflictComparison;
 
+	CDocumentResolveConflictComparison.prototype.removeCommentsFromMap = function ()
+	{
+
+	};
     CDocumentResolveConflictComparison.prototype.getNodeConstructor = function () {
         return CConflictResolveNode;
     }
@@ -400,11 +340,11 @@
                 oNeedReviewObject.SetReviewTypeWithInfo(nType, oReviewInfo, false);
             }
         }
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.getTextElementConstructor = function () {
         return CResolveConflictTextElement;
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.getCompareReviewInfo = function (oRun) {
         const oReviewInfo = oRun.GetReviewInfo && oRun.GetReviewInfo();
@@ -423,7 +363,7 @@
             reviewInfo: oReviewInfo,
             prevAdded: prevAdded
         };
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.applyChangesToParagraph = function (oNode) {
         oNode.changes.sort(function (c1, c2) {
@@ -433,8 +373,10 @@
         for (let i = oNode.children.length - 1; i >= 0; i -= 1) {
             const oChildNode = oNode.children[i];
             if (i !== oNode.children.length - 1) {
-                oChildNode.tryUpdateNode(this);
-                oChildNode.resolveTypesWithPartner(this);
+							if (oChildNode.partner && oChildNode.element instanceof CTextElement) {
+								oChildNode.tryUpdateNode(this);
+								oChildNode.resolveTypesWithPartner(this);
+							}
             }
             if (currentChangeId < oNode.changes.length && oNode.changes[currentChangeId].anchor.index === i) {
                 const aContentToInsert = oNode.getArrOfInsertsFromChanges(currentChangeId, this);
@@ -449,13 +391,13 @@
 
         this.applyChangesToChildrenOfParagraphNode(oNode);
         this.applyChangesToSectPr(oNode);
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.getLCSEqualsMethod = function () {
         return function () {
             return true;
         }
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.setRemoveReviewType = function (element) {
         if (!(element.IsParaEndRun && element.IsParaEndRun())) {
@@ -463,7 +405,7 @@
                 this.setReviewInfoRecursive(element, this.nRemoveChangesType);
             }
         }
-    }
+    };
 
     CDocumentResolveConflictComparison.prototype.resolveCustomReviewTypesBetweenElements = function (oMainElement, nRevisedReviewType, oRevisedReviewInfo) {
         const nMainReviewType = oMainElement.GetReviewType();
@@ -480,7 +422,57 @@
                 oMainElement.SetReviewTypeWithInfo(reviewtype_Remove, oMainReviewInfo);
             }
         }
-    }
+    };
+	CDocumentResolveConflictComparison.prototype.applyResolveTypes = function (oNeedReviewWithUser)
+	{
+		for (let sReviewDate in oNeedReviewWithUser)
+		{
+			for (let sUserName in oNeedReviewWithUser[sReviewDate])
+			{
+				for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Add].length; i += 1)
+				{
+					const info = oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Add][i];
+					const element = info.element;
+					const reviewInfo = info.reviewInfo;
+					this.resolveCustomReviewTypesBetweenElements(element, reviewtype_Add, reviewInfo);
+
+				}
+				for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Remove].length; i += 1)
+				{
+					const info = oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Remove][i];
+					const element = info.element;
+					const reviewInfo = info.reviewInfo;
+					this.resolveCustomReviewTypesBetweenElements(element, reviewtype_Remove, reviewInfo);
+				}
+				for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveFrom].length; i += 1)
+				{
+					const info = oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveFrom][i];
+					const element = info.element;
+					const reviewInfo = info.reviewInfo;
+					const nOldReviewType = element.GetReviewType();
+					if (nOldReviewType !== reviewtype_Common)
+					{
+						const oOldReviewInfo = element.GetReviewInfo().Copy();
+						reviewInfo.SetPrevReviewTypeWithInfoRecursively(nOldReviewType, oOldReviewInfo);
+					}
+					element.SetReviewTypeWithInfo(reviewtype_Remove, reviewInfo);
+				}
+				for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveTo].length; i += 1)
+				{
+					const info = oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveTo][i];
+					const element = info.element;
+					const reviewInfo = info.reviewInfo;
+					const nOldReviewType = element.GetReviewType();
+					if (nOldReviewType !== reviewtype_Common)
+					{
+						const oOldReviewInfo = element.GetReviewInfo().Copy();
+						reviewInfo.SetPrevReviewTypeWithInfoRecursively(nOldReviewType, oOldReviewInfo);
+					}
+					element.SetReviewTypeWithInfo(reviewtype_Add, reviewInfo);
+				}
+			}
+		}
+	};
 
     function CConflictResolveNode(oElement, oParent) {
         CNode.call(this, oElement, oParent);
@@ -498,7 +490,7 @@
         this.setReviewTypeForRemoveChanges(comparison, idxOfChange, posLastRunInContent, nInsertPosition, arrSetRemoveReviewType);
 
         const nInsertPosition2 = arrSetRemoveReviewType[arrSetRemoveReviewType.length - 1].GetPosInParent();
-        this.applyInsert(aContentToInsert, arrSetRemoveReviewType, nInsertPosition2, comparison, {needReverse: true});
+        this.applyInsert(aContentToInsert, arrSetRemoveReviewType, nInsertPosition2, comparison, {needReverse: true, nCommentInsertIndex: nInsertPosition});
     };
 
     // обновим ноды в любом случае, для дальнейшего разрешения типов
@@ -506,6 +498,7 @@
         const oPartnerNode = this.partner;
         if (oPartnerNode)
         {
+					let oSplitRun;
             const oOriginalTextElement = this.element;
             const oPartnerTextElement = oPartnerNode.element;
             if (oPartnerTextElement.elements.length > oOriginalTextElement.elements.length) {
@@ -517,6 +510,7 @@
                 const bIsWordEndWithText = oPartnerTextElement.isWordEndWith(oOriginalTextElement);
 
                 const oParagraph = oOriginalTextElement.lastRun.Paragraph;
+								const oMainMockParagraph = this.par.element;
                 if (bIsWordBeginWithText) {
                     for (let i = 0; i < oOriginalTextElement.elements.length; i += 1) {
                         oNewOriginalTextElement.addToElements(oOriginalTextElement.elements[i], oOriginalTextElement.reviewElementTypes[i]);
@@ -545,42 +539,50 @@
                     } else {
                         nLastPartnerElementPosition = oCurrentRun.GetElementPosition(oPartnerTextElement.elements[oPartnerTextElement.elements.length - 1]);
                     }
-                    oCurrentRun.Split2(nLastPartnerElementPosition + 1);
+	                oSplitRun = oCurrentRun.Split2(nLastPartnerElementPosition + 1);
+										oMockParagraph.Add_ToContent(nCurrentRunPosition + 1, oSplitRun);
                     const arrContentForInsert = [];
                     while (nAmountOfAddingElements) {
                         const oReviewInfo = comparison.getCompareReviewInfo(oCurrentRun);
                         for (let i = oCurrentRun.Content.length - 1; i >= 0; i -= 1) {
                             nAmountOfAddingElements -= 1;
-                            if (nAmountOfAddingElements === 0) {
+                            if (nAmountOfAddingElements === 0 && i !== 0) {
                                 oCurrentRun = oCurrentRun.Split2(i);
+	                            oMockParagraph.Add_ToContent(nCurrentRunPosition + 1, oCurrentRun);
                                 break;
                             }
                         }
-                        for (let i = 0; i < oCurrentRun.Content.length; i += 1) {
-                            oNewOriginalTextElement.addToElements(oCurrentRun.Content[i], oReviewInfo);
+												const oCopyCurrentRun = oCurrentRun.Copy(false, {CopyReviewPr: true});
+                        for (let i = 0; i < oCopyCurrentRun.Content.length; i += 1) {
+                            oNewOriginalTextElement.addToElements(oCopyCurrentRun.Content[i], oReviewInfo);
                         }
-                        arrContentForInsert.push(oCurrentRun.Copy(false, {CopyReviewPr: true}));
+                        arrContentForInsert.push(oCopyCurrentRun);
                         nCurrentRunPosition -= 1;
                         oCurrentRun = oMockParagraph.Content[nCurrentRunPosition];
                     }
                     let nLastOriginalElementPosition;
                     let nLastRunPosition;
+										let nMockRunPosition;
                     if (bIsWordBeginWithText) {
                         nLastRunPosition = oOriginalTextElement.lastRun.GetPosInParent();
+	                    nMockRunPosition = oOriginalTextElement.lastRun.GetPosInParent(oMainMockParagraph);
                         oNewOriginalTextElement.lastRun = arrContentForInsert[0];
                         nLastOriginalElementPosition = oParagraph.Content[nLastRunPosition].GetElementPosition(oOriginalTextElement.elements[oOriginalTextElement.elements.length - 1]);
-                        oParagraph.Content[nLastRunPosition].Split2(nLastOriginalElementPosition + 1, oParagraph, nLastRunPosition)
+                        oSplitRun = oParagraph.Content[nLastRunPosition].Split2(nLastOriginalElementPosition + 1, oParagraph, nLastRunPosition)
+	                    oMainMockParagraph.Add_ToContent(nLastRunPosition + 1, oSplitRun);
                     } else {
                         nLastRunPosition = oOriginalTextElement.firstRun.GetPosInParent();
+	                    nMockRunPosition = oOriginalTextElement.firstRun.GetPosInParent(oMainMockParagraph);
                         nPreviousRunPosition = nLastRunPosition + arrContentForInsert.length;
                         nLastOriginalElementPosition = oParagraph.Content[nLastRunPosition].GetElementPosition(oOriginalTextElement.elements[0]);
-                        oParagraph.Content[nLastRunPosition].Split2(nLastOriginalElementPosition/* + 1*/, oParagraph, nLastRunPosition);
+	                    oSplitRun = oParagraph.Content[nLastRunPosition].Split2(nLastOriginalElementPosition, oParagraph, nLastRunPosition);
+	                    oMainMockParagraph.Add_ToContent(nMockRunPosition + 1, oSplitRun);
                         oNewOriginalTextElement.firstRun = arrContentForInsert[0];
                     }
 
-                    //oParagraph.Content[nLastRunPosition].Split2(nLastOriginalElementPosition + 1, oParagraph, nLastRunPosition)
                     for (let i = 0; i < arrContentForInsert.length; i += 1) {
                         oParagraph.Add_ToContent(nLastRunPosition + 1, arrContentForInsert[i]);
+												oMainMockParagraph.Add_ToContent(nMockRunPosition + 1, arrContentForInsert[i]);
                     }
                 }
 
@@ -630,142 +632,6 @@
         }
     };
 
-    CConflictResolveNode.prototype.resolveTypesWithPartner = function (comparison) {
-        this.forEachRight(function (oNode) {
-            const oPartnerNode = oNode.partner;
-            const oOriginalTextElement = oNode.element;
-            if (oOriginalTextElement instanceof CTextElement && oPartnerNode) {
-                const oOriginalTextParagraph = oOriginalTextElement.firstRun.Parent;
-                const oRevisedTextElement = oPartnerNode.element;
-                const arrOriginalContent = oOriginalTextParagraph.Content;
-
-                const arrChangeReviewTypesInfo = getChangeReviewTypesInformation(oOriginalTextElement.reviewElementTypes, oRevisedTextElement.reviewElementTypes);
-                let nCurrentOriginalRunIndex = oOriginalTextParagraph.Content.length - 1;
-                for (let i = oOriginalTextParagraph.Content.length - 1; i >= 0; i -= 1) {
-                    if (oOriginalTextParagraph.Content[i] === oOriginalTextElement.lastRun) {
-                        nCurrentOriginalRunIndex = i;
-                        break;
-                    }
-                }
-                const oNeedReviewWithUser = {};
-                while (arrChangeReviewTypesInfo.length) {
-                    const oChangeReviewInfoElement = arrChangeReviewTypesInfo.pop();
-                    if (oChangeReviewInfoElement.nStartChangeReviewIndex !== -1) {
-
-                        const nEndChangeReviewIndex = oChangeReviewInfoElement.nEndChangeReviewIndex;
-                        const nStartChangeReviewIndex = oChangeReviewInfoElement.nStartChangeReviewIndex;
-                        const nPriorityReviewType = oChangeReviewInfoElement.nPriorityReviewType;
-                        const nPriorityMoveReviewType = oChangeReviewInfoElement.nPriorityMoveReviewType;
-                        const sMoveReviewMarkName = oChangeReviewInfoElement.sMoveReviewMarkName;
-                        const oReviewInfo = oChangeReviewInfoElement.oReviewInfo;
-                        const sReviewUserName = oReviewInfo.GetUserName();
-                        const sReviewDate = oReviewInfo.GetDateTime();
-                        let bChangeFirstRun = false;
-                        if (nStartChangeReviewIndex === 0) {
-                            bChangeFirstRun = true;
-                        }
-                        const oFirstChangeElement = oOriginalTextElement.elements[nStartChangeReviewIndex];
-                        const oLastChangeElement = oOriginalTextElement.elements[nEndChangeReviewIndex];
-
-                        if (!oNeedReviewWithUser[sReviewDate]) {
-                            oNeedReviewWithUser[sReviewDate] = {};
-                        }
-
-                        if (!oNeedReviewWithUser[sReviewDate][sReviewUserName]) {
-                            const oNeedReview = {reviewTypes: {}, moveReviewTypes: {}};
-                            oNeedReview.reviewTypes[reviewtype_Add] = [];
-                            oNeedReview.reviewTypes[reviewtype_Remove] = [];
-                            oNeedReview.moveReviewTypes[Asc.c_oAscRevisionsMove.MoveTo] = [];
-                            oNeedReview.moveReviewTypes[Asc.c_oAscRevisionsMove.MoveFrom] = [];
-                            oNeedReviewWithUser[sReviewDate][sReviewUserName] = oNeedReview;
-                        }
-
-                        while (nCurrentOriginalRunIndex !== -1) {
-                            const oCurrentOrigRun = arrOriginalContent[nCurrentOriginalRunIndex];
-                            const nPositionOfElement = oCurrentOrigRun.GetElementPosition(oLastChangeElement);
-                            if (nPositionOfElement === -1) {
-                                nCurrentOriginalRunIndex -= 1;
-                            } else {
-                                oCurrentOrigRun.Split2(nPositionOfElement + 1, oOriginalTextParagraph, nCurrentOriginalRunIndex);
-                                break;
-                            }
-                        }
-
-                        while (nCurrentOriginalRunIndex !== -1) {
-                            const oCurrentOrigRun = arrOriginalContent[nCurrentOriginalRunIndex];
-                            const nPositionOfElement = oCurrentOrigRun.GetElementPosition(oFirstChangeElement);
-                            if (nPositionOfElement === -1) {
-                                nCurrentOriginalRunIndex -= 1;
-                                if (AscFormat.isRealNumber(nPriorityReviewType)) {
-                                    oNeedReviewWithUser[sReviewDate][sReviewUserName].reviewTypes[nPriorityReviewType].push({element: oCurrentOrigRun, reviewInfo: oReviewInfo});
-                                } else if (AscFormat.isRealNumber(nPriorityMoveReviewType)) {
-                                    comparison.oComparisonMoveMarkManager.addMoveMarkNameRunRelation(sMoveReviewMarkName, oCurrentOrigRun);
-                                    comparison.oComparisonMoveMarkManager.addRunMoveMarkNameRelation(sMoveReviewMarkName, oCurrentOrigRun);
-                                    oNeedReviewWithUser[sReviewDate][sReviewUserName].moveReviewTypes[nPriorityMoveReviewType].push({element: oCurrentOrigRun, reviewInfo: oReviewInfo});
-                                }
-                            } else {
-                                const oNewRun = oCurrentOrigRun.Split2(nPositionOfElement, oOriginalTextParagraph, nCurrentOriginalRunIndex);
-                                if (bChangeFirstRun) {
-                                    // мы меняем только первый ран и элемент, чтобы при вставке изменений мы нашли начало слова для вставки
-                                    oOriginalTextElement.firstRun = oNewRun;
-                                    oOriginalTextElement.elements[0] = oNewRun.Content[0];
-                                }
-                                if (AscFormat.isRealNumber(nPriorityReviewType)) {
-                                    oNeedReviewWithUser[sReviewDate][sReviewUserName].reviewTypes[nPriorityReviewType].push({element: oNewRun, reviewInfo: oReviewInfo});
-                                } else if (AscFormat.isRealNumber(nPriorityMoveReviewType)) {
-                                    comparison.oComparisonMoveMarkManager.addMoveMarkNameRunRelation(sMoveReviewMarkName, oNewRun);
-                                    comparison.oComparisonMoveMarkManager.addRunMoveMarkNameRelation(sMoveReviewMarkName, oNewRun);
-                                    oNeedReviewWithUser[sReviewDate][sReviewUserName].moveReviewTypes[nPriorityMoveReviewType].push({element: oNewRun, reviewInfo: oReviewInfo});
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                for (let sReviewDate in oNeedReviewWithUser) {
-                    for (let sUserName in oNeedReviewWithUser[sReviewDate]) {
-                        for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Add].length; i += 1) {
-                            const info = oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Add][i];
-                            const element = info.element;
-                            const reviewInfo = info.reviewInfo;
-                            comparison.resolveCustomReviewTypesBetweenElements(element, reviewtype_Add, reviewInfo);
-
-                        }
-                        for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Remove].length; i += 1) {
-                            const info = oNeedReviewWithUser[sReviewDate][sUserName].reviewTypes[reviewtype_Remove][i];
-                            const element = info.element;
-                            const reviewInfo = info.reviewInfo;
-                            comparison.resolveCustomReviewTypesBetweenElements(element, reviewtype_Remove, reviewInfo);
-                        }
-                        for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveFrom].length; i += 1) {
-                            const info = oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveFrom][i];
-                            const element = info.element;
-                            const reviewInfo = info.reviewInfo;
-                            const nOldReviewType = element.GetReviewType();
-                            if (nOldReviewType !== reviewtype_Common) {
-                                const oOldReviewInfo = element.GetReviewInfo().Copy();
-                                reviewInfo.SetPrevReviewTypeWithInfoRecursively(nOldReviewType, oOldReviewInfo);
-                            }
-                            element.SetReviewTypeWithInfo(reviewtype_Remove, reviewInfo);
-                        }
-                        for (let i = 0; i < oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveTo].length; i += 1) {
-                            const info = oNeedReviewWithUser[sReviewDate][sUserName].moveReviewTypes[Asc.c_oAscRevisionsMove.MoveTo][i];
-                            const element = info.element;
-                            const reviewInfo = info.reviewInfo;
-                            const nOldReviewType = element.GetReviewType();
-                            if (nOldReviewType !== reviewtype_Common) {
-                                const oOldReviewInfo = element.GetReviewInfo().Copy();
-                                reviewInfo.SetPrevReviewTypeWithInfoRecursively(nOldReviewType, oOldReviewInfo);
-                            }
-                            element.SetReviewTypeWithInfo(reviewtype_Add, reviewInfo);
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     CConflictResolveNode.prototype.applyInsertsToParagraphsWithoutRemove = function (comparison, aContentToInsert, idxOfChange) {
         const bRet = CNode.prototype.applyInsertsToParagraphsWithoutRemove.call(this, comparison, aContentToInsert, idxOfChange);
         if (!bRet) {
@@ -784,12 +650,12 @@
                 }
             }
         }
-    }
+    };
     CConflictResolveNode.prototype.insertContentAfterRemoveChanges = CMergeComparisonNode.prototype.insertContentAfterRemoveChanges;
 
     CConflictResolveNode.prototype.getApplyParagraph = function (comparison) {
         return comparison.parentParagraph;
-    }
+    };
 
     CConflictResolveNode.prototype.copyRunWithMockParagraph = function (oRun, mockParagraph, comparison) {
         comparison.copyPr.bSaveCustomReviewType = true;
@@ -802,15 +668,15 @@
             comparison.copyPr.bSaveCustomReviewType = true;
             CNode.prototype.pushToArrInsertContentWithCopy.call(this, aContentToInsert, elem, comparison);
             delete comparison.copyPr.bSaveCustomReviewType;
-    }
+    };
 
     CConflictResolveNode.prototype.setCommonReviewTypeWithInfo = function (element, info) {
         element.SetReviewTypeWithInfo((element.GetReviewType && element.GetReviewType()) || reviewtype_Common, info);
-    }
+    };
     
     CConflictResolveNode.prototype.getStartPosition = function (comparison) {
         return comparison.startPosition;
-    }
+    };
 
     function CMockDocument() {
         this.Content = [];
@@ -819,6 +685,9 @@
     function CMockParagraph() {
         this.Content = [];
     }
+	CMockParagraph.prototype.Add_ToContent = function (position, element) {
+		this.Content.splice(position, 0, element);
+	};
 
     function CMockMinHash() {
         this.count = 0;
@@ -827,11 +696,11 @@
 
     CMockMinHash.prototype.jaccard = function () {
         return 0.8;
-    }
+    };
 
     CMockMinHash.prototype.update = function () {
         this.count += 1;
-    }
+    };
 
     function CDocumentMergeComparison(oOriginalDocument, oRevisedDocument, oOptions) {
         CDocumentComparison.call(this, oOriginalDocument, oRevisedDocument, oOptions);
@@ -847,17 +716,26 @@
     CDocumentMergeComparison.prototype = Object.create(CDocumentComparison.prototype);
     CDocumentMergeComparison.prototype.constructor = CDocumentMergeComparison;
 
+	CDocumentMergeComparison.prototype.insertCopyTextBoxContent = function (oBaseShape, oTextBoxContent) {
+		this.executeDisableSkipUpdateInfo(function () {
+			CDocumentComparison.prototype.insertCopyTextBoxContent.call(this, oBaseShape, oTextBoxContent);
+		}.bind(this));
+	};
+	CDocumentMergeComparison.prototype.executeDisableSkipUpdateInfo = function (callback) {
+		const bOldSkipUpdateInfo = this.copyPr.SkipUpdateInfo;
+		const bSaveCustomReviewType = this.copyPr.bSaveCustomReviewType;
+		this.copyPr.SkipUpdateInfo = false;
+		this.copyPr.bSaveCustomReviewType = true;
+		callback();
+		this.copyPr.SkipUpdateInfo = bOldSkipUpdateInfo;
+		this.copyPr.bSaveCustomReviewType = bSaveCustomReviewType;
+	};
+
     CDocumentMergeComparison.prototype.executeWithCheckInsertAndRemove = function (callback, oChange) {
         if (!oChange.remove.length || !oChange.insert.length) {
-            const bOldSkipUpdateInfo = this.copyPr.SkipUpdateInfo;
-            const bSaveCustomReviewType = this.copyPr.bSaveCustomReviewType;
-            this.copyPr.SkipUpdateInfo = false;
-            this.copyPr.bSaveCustomReviewType = true;
-            callback();
-            this.copyPr.SkipUpdateInfo = bOldSkipUpdateInfo;
-            this.copyPr.bSaveCustomReviewType = bSaveCustomReviewType;
+					this.executeDisableSkipUpdateInfo(callback);
         } else {
-            callback();
+					callback();
         }
     };
 
@@ -868,7 +746,7 @@
         const oRet = CDocumentComparison.prototype.createNodeFromDocContent.call(this, oElement, oParentNode, oHashWords, isOriginalDocument);
         this.oComparisonMoveMarkManager.checkMoveMarksContentNode(oRet);
         return oRet;
-    }
+    };
     CDocumentMergeComparison.prototype.checkCopyParagraphElement = function (oOldItem, oNewItem, arrMoveMarks) {
         if (para_RevisionMove === oOldItem.Type) {
             arrMoveMarks.unshift({moveMark: oNewItem, parentElement: this});
@@ -883,7 +761,7 @@
             this.oComparisonMoveMarkManager.oRevisedMoveMarksInserts[oNewItem.Id] = arrMoveMarks;
         }
         return false;
-    }
+    };
     CDocumentMergeComparison.prototype.correctMoveMarks = function () {
         const oRemoveMoveTypeNames = {};
         const oTrackRevisionManager = this.api.WordControl.m_oLogicDocument.TrackRevisionsManager;
@@ -983,7 +861,7 @@
                 this.setReviewInfoRecursive(element, this.nRemoveChangesType);
             }
         }
-    }
+    };
     CDocumentMergeComparison.prototype.resolveCustomReviewTypesBetweenElements = CDocumentResolveConflictComparison.prototype.resolveCustomReviewTypesBetweenElements;
 
     CDocumentMergeComparison.prototype.checkParaEndReview = function (oNode) {
@@ -1010,12 +888,10 @@
     };
 
     CDocumentMergeComparison.prototype.applyChangesToTableSize = function(oNode) {
-        this.copyPr.SkipUpdateInfo = false;
-        this.copyPr.bSaveCustomReviewType = true;
-        CDocumentComparison.prototype.applyChangesToTableSize.call(this, oNode);
-        delete this.copyPr.bSaveCustomReviewType;
-        this.copyPr.SkipUpdateInfo = true;
-    }
+	    this.executeDisableSkipUpdateInfo(function () {
+		    CDocumentComparison.prototype.applyChangesToTableSize.call(this, oNode);
+	    }.bind(this));
+    };
 
     CDocumentMergeComparison.prototype.checkRowReview = function(oRowNode) {
         const oPartnerNode = oRowNode.partner;
@@ -1035,7 +911,17 @@
         arrToRemove[arrToRemove.length - 1].Content.push(new AscWord.CRunParagraphMark());
         arrToInserts[arrToInserts.length - 1].Content.push(new AscWord.CRunParagraphMark());
         const comparison = new CDocumentResolveConflictComparison(this.originalDocument, this.revisedDocument, this.options);
+
+				const oOldCommentsMeeting = this.oCommentManager.mapCommentMeeting;
+	    this.oCommentManager.mapCommentMeeting = {};
+	    comparison.oCommentManager = this.oCommentManager;
+
+				const oOldBookmarkMeeting = this.oBookmarkManager.mapBookmarkMeeting;
+	      this.oBookmarkManager.mapBookmarkMeeting = {};
+	      comparison.oBookmarkManager = this.oBookmarkManager;
         comparison.oComparisonMoveMarkManager = this.oComparisonMoveMarkManager;
+        comparison.CommentsMap = this.CommentsMap;
+				comparison.StylesMap = this.StylesMap;
         const originalDocument = new CMockDocument();
         const revisedDocument = new CMockDocument();
         const originalParagraph = new CMockParagraph();
@@ -1051,21 +937,20 @@
         comparison.oComparisonMoveMarkManager.executeResolveConflictMode(function () {
             comparison.compareRoots(originalDocument, revisedDocument);
         });
+	    this.oBookmarkManager.mapBookmarkMeeting = oOldBookmarkMeeting;
+	    this.oCommentManager.mapCommentMeeting = oOldCommentsMeeting;
         return originalParagraph.Content;
-    }
+    };
 
     CDocumentMergeComparison.prototype.getCompareReviewInfo = CDocumentResolveConflictComparison.prototype.getCompareReviewInfo;
 
     CDocumentMergeComparison.prototype.applyParagraphComparison = function (oOrigRoot, oRevisedRoot) {
-        this.copyPr.SkipUpdateInfo = false;
-        this.copyPr.bSaveCustomReviewType = true;
-        CDocumentComparison.prototype.applyParagraphComparison.call(this, oOrigRoot, oRevisedRoot);
-        for (let i = oOrigRoot.children.length - 1; i >= 0; i -= 1) {
-            this.checkParaEndReview(oOrigRoot.children[i]);
-        }
-
-        delete this.copyPr.bSaveCustomReviewType;
-        this.copyPr.SkipUpdateInfo = true;
+				this.executeDisableSkipUpdateInfo(function () {
+					CDocumentComparison.prototype.applyParagraphComparison.call(this, oOrigRoot, oRevisedRoot);
+					for (let i = oOrigRoot.children.length - 1; i >= 0; i -= 1) {
+						this.checkParaEndReview(oOrigRoot.children[i]);
+					}
+				}.bind(this));
     };
 
     CDocumentMergeComparison.prototype.getNodeConstructor = function () {
@@ -1083,7 +968,7 @@
             return oRun.GetReviewType();
         }
         return reviewtype_Common;
-    }
+    };
 
     CDocumentMergeComparison.prototype.compareDrawingObjects = function (oBaseDrawing, oCompareDrawing, bOrig) {
         if (oBaseDrawing && oCompareDrawing) {
@@ -1100,7 +985,7 @@
             this.setReviewInfoForArray([oBaseRun], priorityReviewType);
         }
         CDocumentComparison.prototype.compareDrawingObjects.call(this, oBaseDrawing, oCompareDrawing);
-    }
+    };
 
 
 
@@ -1110,6 +995,7 @@
         if (!oOriginalDocument || !oRevisedDocument) {
             return;
         }
+	    this.oBookmarkManager.init(oOriginalDocument, oRevisedDocument);
         const oThis = this;
         const aImages = AscCommon.pptx_content_loader.End_UseFullUrl();
         const oObjectsForDownload = AscCommon.GetObjectsForImageDownload(aImages);
@@ -1139,7 +1025,7 @@
             const aFonts = [];
             for (let i in oFonts) {
                 if (oFonts.hasOwnProperty(i)) {
-                    aFonts[aFonts.length] = new AscFonts.CFont(i, 0, "", 0, null);
+                    aFonts[aFonts.length] = new AscFonts.CFont(i);
                 }
             }
             oApi.pre_Paste(aFonts, oImageMap, function () {
@@ -1167,16 +1053,22 @@
         if (!(oApi && oOriginalDocument)) {
             return;
         }
+				this.comparison.removeCommentsFromMap();
         this.comparison.correctMoveMarks();
         oOriginalDocument.SetTrackRevisions(this.oldTrackRevisions);
         const oTrackRevisionManager = oOriginalDocument.TrackRevisionsManager;
         oTrackRevisionManager.SkipPreDeleteMoveMarks = this.oldSkipPreDeleteMoveMarks;
         oOriginalDocument.End_SilentMode(false);
+	    if (this.comparison.oBookmarkManager.needUpdateBookmarks)
+	    {
+		    oOriginalDocument.UpdateBookmarks();
+	    }
+	      this.comparison.updateCommentsQuoteText();
         oOriginalDocument.Recalculate();
         oOriginalDocument.UpdateInterface();
         oOriginalDocument.FinalizeAction();
         oApi.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.SlowOperation);
-    }
+    };
 
     CDocumentMerge.prototype.merge = function () {
         const oOriginalDocument = this.originalDocument;
@@ -1187,7 +1079,7 @@
         oOriginalDocument.StopRecalculate();
         oOriginalDocument.StartAction(AscDFH.historydescription_Document_MergeDocuments);
         oOriginalDocument.Start_SilentMode();
-        this.oldTrackRevisions = oOriginalDocument.IsTrackRevisions();
+        this.oldTrackRevisions = oOriginalDocument.GetLocalTrackRevisions();
         oOriginalDocument.SetTrackRevisions(false);
         const oTrackRevisionManager = oOriginalDocument.TrackRevisionsManager;
         this.oldSkipPreDeleteMoveMarks = oTrackRevisionManager.SkipPreDeleteMoveMarks;
@@ -1207,27 +1099,19 @@
         }
         oApi.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.SlowOperation);
 
+	    const oldTrackRevisions = oDoc1.GetLocalTrackRevisions();
+	    oDoc1.SetTrackRevisions(false);
         const oDoc2 = AscFormat.ExecuteNoHistory(function () {
             const openParams = {noSendComments: true};
-            let oDoc2 = new CDocument(oApi.WordControl.m_oDrawingDocument, true);
-            oApi.WordControl.m_oDrawingDocument.m_oLogicDocument = oDoc2;
-            oApi.WordControl.m_oLogicDocument = oDoc2;
-            const oBinaryFileReader = new AscCommonWord.BinaryFileReader(oDoc2, openParams);
+            const oTempDocument = new CDocument(oApi.WordControl.m_oDrawingDocument, false);
+            const oBinaryFileReader = new AscCommonWord.BinaryFileReader(oTempDocument, openParams);
             AscCommon.pptx_content_loader.Start_UseFullUrl(oApi.insertDocumentUrlsData);
             if (!oBinaryFileReader.Read(sBinary2)) {
-                oDoc2 = null;
+                return null;
             }
-            oApi.WordControl.m_oDrawingDocument.m_oLogicDocument = oDoc1;
-            oApi.WordControl.m_oLogicDocument = oDoc1;
-            if (oDoc1.History)
-                oDoc1.History.Set_LogicDocument(oDoc1);
-            if (oDoc1.CollaborativeEditing)
-                oDoc1.CollaborativeEditing.m_oLogicDocument = oDoc1;
-            return oDoc2;
+            return oTempDocument;
         }, this, []);
-
-        oDoc1.History.Document = oDoc1;
-
+	    oDoc1.SetTrackRevisions(oldTrackRevisions);
         if (oDoc2) {
             const oMerge = new AscCommonWord.CDocumentMerge(oDoc1, oDoc2, oOptions ? oOptions : new AscCommonWord.ComparisonOptions());
             oMerge.merge();
@@ -1254,4 +1138,4 @@
     window['AscCommonWord'].CMockParagraph = CMockParagraph;
     window['AscCommonWord']["mergeDocuments"] = window['AscCommonWord'].mergeDocuments = mergeDocuments;
 
-})()
+})();

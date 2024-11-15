@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -46,7 +46,7 @@ var SNAP_DISTANCE = 1.27;
 
 
 
-function StartAddNewShape(drawingObjects, preset)
+function StartAddNewShape(drawingObjects, preset, nPlaceholderType, bVertical)
 {
     this.drawingObjects = drawingObjects;
     this.preset = preset;
@@ -58,7 +58,8 @@ function StartAddNewShape(drawingObjects, preset)
     this.startY = null;
 
     this.oldConnector = null;
-
+    this.placeholderType = nPlaceholderType;
+    this.bVertical = bVertical;
 }
 
 StartAddNewShape.prototype =
@@ -93,7 +94,7 @@ StartAddNewShape.prototype =
                 }
             }
         }
-        this.drawingObjects.arrPreTrackObjects.push(new AscFormat.NewShapeTrack(this.preset, dStartX, dStartY, this.drawingObjects.getTheme(), master, layout, slide, 0, this.drawingObjects));
+        this.drawingObjects.arrPreTrackObjects.push(new AscFormat.NewShapeTrack(this.preset, dStartX, dStartY, this.drawingObjects.getTheme(), master, layout, slide, 0, this.drawingObjects, this.placeholderType, this.bVertical));
         this.bStart = true;
         this.drawingObjects.swapTrackObjects();
     },
@@ -198,7 +199,7 @@ StartAddNewShape.prototype =
                             oPresentation.StartAction(0);
                             let oTiming;
                             let aAddedEffects;
-                            aAddedEffects = oCurSlide.addAnimation(AscFormat.PRESET_CLASS_PATH, AscFormat.MOTION_SQUARE, 0, this.bReplace);
+                            aAddedEffects = oCurSlide.addAnimation(AscFormat.PRESET_CLASS_PATH, AscFormat.MOTION_SQUARE, 0, null, this.bReplace);
                             oTiming = oCurSlide.timing;
                             if(!oTiming) {
                                 oPresentation.FinalizeAction();
@@ -277,7 +278,7 @@ StartAddNewShape.prototype =
                                 }
                             }
                             else {
-                                oPresentation.DrawingDocument.OnRecalculatePage(oPresentation.CurPage, oCurSlide);
+                                oPresentation.DrawingDocument.OnRecalculateSlide(oPresentation.CurPage);
                             }
                         }
                     }
@@ -330,6 +331,46 @@ StartAddNewShape.prototype =
 					{
 						oThis.drawingObjects.drawingObjects.sendGraphicObjectProps();
 					}
+                    if(oThis.preset && oThis.preset.startsWith("actionButton"))
+                    {
+                        let sHyperText = "", sHyperValue, sHyperTooltip;
+                        switch (oThis.preset) {
+                            case "actionButtonBackPrevious": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=previousslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("Previous Slide");
+                                break;
+                            }
+                            case "actionButtonBeginning": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=firstslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("First Slide");
+                                break;
+                            }
+                            case "actionButtonEnd": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=lastslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("Last Slide");
+                                break;
+                            }
+                            case "actionButtonForwardNext": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=nextslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("Next Slide");
+                                break;
+                            }
+                            case "actionButtonHome": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=firstslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("First Slide");
+                                break;
+                            }
+                            case "actionButtonReturn": {
+                                sHyperValue = "ppaction://hlinkshowjump?jump=previousslide";
+                                sHyperTooltip = AscCommon.translateManager.getValue("Previous Slide");
+                                break;
+                            }
+                        }
+                        if(sHyperValue) {
+                            oAPI.sendEvent("asc_onDialogAddHyperlink", new Asc.CHyperlinkProperty({Text: sHyperText, Value: sHyperValue, ToolTip: sHyperTooltip}));
+                        }
+                    }
+
                 }
 	            oThis.drawingObjects.updateOverlay();
             };
@@ -624,6 +665,7 @@ NullState.prototype =
                 _x = -1000;
             }
         }
+        this.drawingObjects.checkShowMediaControlOnHover(this.lastMoveHandler);
     },
 
     onMouseUp: function(e, x, y, pageIndex)
@@ -989,7 +1031,7 @@ RotateState.prototype =
             var bIsChartFrame = Asc["editor"] && Asc["editor"].isChartEditor === true;
             var bIsTrackInChart = (tracks.length > 0 && (tracks[0] instanceof AscFormat.MoveChartObjectTrack));
             var bCopyOnMove = e.CtrlKey && bIsMoveState && !bIsChartFrame && !bIsTrackInChart;
-            var bCopyOnMoveInGroup = (e.CtrlKey && oThis instanceof MoveInGroupState);
+            var bCopyOnMoveInGroup = (e.CtrlKey && oThis instanceof MoveInGroupState && !oThis.hasObjectInSmartArt);
             var i, j;
             var copy;
             if(bCopyOnMove)
@@ -1002,6 +1044,7 @@ RotateState.prototype =
                 History.Create_NewPoint(AscDFH.historydescription_CommonDrawings_CopyCtrl);
                 for(i = 0; i < tracks.length; ++i)
                 {
+	                tracks[i].checkDrawingPartWithHistory();
                     copy = tracks[i].originalObject.copy(oCopyPr);
                     oIdMap[tracks[i].originalObject.Id] = copy.Id;
                     this.drawingObjects.drawingObjects.getWorksheetModel && copy.setWorksheet(this.drawingObjects.drawingObjects.getWorksheetModel());
@@ -1199,6 +1242,7 @@ RotateState.prototype =
                         this.drawingObjects.checkSelectedObjectsAndCallback(function () {
 
                                 for(i = 0; i < tracks.length; ++i){
+	                                tracks[i].checkDrawingPartWithHistory();
                                     tracks[i].trackEnd(false, bFlag);
                                 }
                                 if(tracks.length === 1 && tracks[0].chartSpace){
@@ -1736,20 +1780,26 @@ function MoveInGroupState(drawingObjects, majorObject, group, startX, startY)
     this.startX = startX;
     this.startY = startY;
     this.bSamePos = true;
+	this.hasObjectInSmartArt = false;
 
     var arr_x = [], arr_y = [];
     for(var i = 0; i < this.drawingObjects.arrTrackObjects.length; ++i)
     {
         var track = this.drawingObjects.arrTrackObjects[i];
-        var transform = track.originalObject.transform;
+	    const oOriginalObject = track.originalObject;
+	    var transform = oOriginalObject.transform;
         arr_x.push(transform.TransformPointX(0, 0));
         arr_y.push(transform.TransformPointY(0, 0));
-        arr_x.push(transform.TransformPointX(track.originalObject.extX, 0));
-        arr_y.push(transform.TransformPointY(track.originalObject.extX, 0));
-        arr_x.push(transform.TransformPointX(track.originalObject.extX, track.originalObject.extY));
-        arr_y.push(transform.TransformPointY(track.originalObject.extX, track.originalObject.extY));
-        arr_x.push(transform.TransformPointX(0, track.originalObject.extY));
-        arr_y.push(transform.TransformPointY(0, track.originalObject.extY));
+        arr_x.push(transform.TransformPointX(oOriginalObject.extX, 0));
+        arr_y.push(transform.TransformPointY(oOriginalObject.extX, 0));
+        arr_x.push(transform.TransformPointX(oOriginalObject.extX, oOriginalObject.extY));
+        arr_y.push(transform.TransformPointY(oOriginalObject.extX, oOriginalObject.extY));
+        arr_x.push(transform.TransformPointX(0, oOriginalObject.extY));
+        arr_y.push(transform.TransformPointY(0, oOriginalObject.extY));
+				if (!this.hasObjectInSmartArt)
+				{
+					this.hasObjectInSmartArt = oOriginalObject.isObjectInSmartArt();
+				}
     }
     this.rectX = Math.min.apply(Math, arr_x);
     this.rectY = Math.min.apply(Math, arr_y);
@@ -2051,7 +2101,7 @@ TextAddState.prototype =
                 if(oApi.isFormatPainterOn())
                 {
                     this.drawingObjects.paragraphFormatPaste2();
-                    if (oApi.isFormatPainterOn())
+                    if (oApi.canTurnOffFormatPainter())
                     {
                         oApi.sync_PaintFormatCallback(c_oAscFormatPainterState.kOff);
                         if(oPresentation)

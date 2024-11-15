@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -52,7 +52,11 @@ function (window, undefined) {
 	window['AscCH'].historyitem_Workbook_PivotWorksheetSource = 10;
 	window['AscCH'].historyitem_Workbook_Date1904 = 11;
 	window['AscCH'].historyitem_Workbook_ChangeExternalReference = 12;
-	window['AscCH'].historyitem_Workbook_ChangeExternalReferenceAutoUpdate = 13;
+	window['AscCH'].historyitem_Workbook_TimelineCacheDelete = 13;
+	window['AscCH'].historyitem_Workbook_CalcPr_iterate = 14;
+	window['AscCH'].historyitem_Workbook_CalcPr_iterateCount = 15;
+	window['AscCH'].historyitem_Workbook_CalcPr_iterateDelta = 16;
+	window['AscCH'].historyitem_Workbook_ChangeExternalReferenceAutoUpdate = 17;
 
 	window['AscCH'].historyitem_Worksheet_RemoveCell = 1;
 	window['AscCH'].historyitem_Worksheet_RemoveRows = 2;
@@ -76,6 +80,7 @@ function (window, undefined) {
 	window['AscCH'].historyitem_Worksheet_SetTabColor = 27;
 	window['AscCH'].historyitem_Worksheet_RowHide = 28;
 // Frozen cell
+	window['AscCH'].historyitem_Worksheet_SetRightToLeft = 29;
 	window['AscCH'].historyitem_Worksheet_ChangeFrozenCell = 30;
 	window['AscCH'].historyitem_Worksheet_SetDisplayGridlines = 31;
 	window['AscCH'].historyitem_Worksheet_SetDisplayHeadings = 32;
@@ -114,6 +119,15 @@ function (window, undefined) {
 	window['AscCH'].historyitem_Worksheet_ChangeUserProtectedRange = 60;
 
 	window['AscCH'].historyitem_Worksheet_SetSheetViewType = 61;
+
+	window['AscCH'].historyitem_Worksheet_SetShowFormulas = 62;
+
+	window['AscCH'].historyitem_Worksheet_ChangeRowColBreaks = 63;
+
+	window['AscCH'].historyitem_Worksheet_ChangeLegacyDrawingHFDrawing = 64;
+
+	window['AscCH'].historyitem_Worksheet_TimelineDelete = 65;
+
 
 	window['AscCH'].historyitem_RowCol_Fontname = 1;
 	window['AscCH'].historyitem_RowCol_Fontsize = 2;
@@ -251,7 +265,18 @@ function (window, undefined) {
 	window['AscCH'].historyitem_PivotTable_DataFieldSetBaseItem = 59;
 	window['AscCH'].historyitem_PivotTable_DataFieldSetNumFormat = 60;
 	window['AscCH'].historyitem_PivotTable_PivotFieldSetNumFormat = 61;
-
+	window['AscCH'].historyitem_PivotTable_FormatsReindex = 62;
+	window['AscCH'].historyitem_PivotTable_FormatsRemoveField = 63;
+	window['AscCH'].historyitem_PivotTable_FormatsAddRowField = 64;
+	window['AscCH'].historyitem_PivotTable_FormatsAddColField = 65;
+	window['AscCH'].historyitem_PivotTable_SetGrandTotalCaption = 66;
+	window['AscCH'].historyitem_PivotTable_PivotFieldSetSubtotalCaption = 67;
+	window['AscCH'].historyitem_PivotTable_SetRowHeaderCaption = 68;
+	window['AscCH'].historyitem_PivotTable_SetColHeaderCaption = 69;
+	window['AscCH'].historyitem_PivotTable_SetDataCaption = 70;
+	window['AscCH'].historyitem_PivotTable_PivotFieldItemSetName = 71;
+	window['AscCH'].historyitem_PivotTable_PivotFieldMoveItem = 72;
+	
 	window['AscCH'].historyitem_SharedFormula_ChangeFormula = 1;
 	window['AscCH'].historyitem_SharedFormula_ChangeShared = 2;
 
@@ -268,6 +293,9 @@ function (window, undefined) {
 	window['AscCH'].historyitem_Layout_Orientation = 11;
 	window['AscCH'].historyitem_Layout_Scale = 12;
 	window['AscCH'].historyitem_Layout_FirstPageNumber = 13;
+	window['AscCH'].historyitem_Layout_HorizontalCentered = 14;
+	window['AscCH'].historyitem_Layout_VerticalCentered = 15;
+
 	
 	window['AscCH'].historyitem_ArrayFromula_AddFormula = 1;
 	window['AscCH'].historyitem_ArrayFromula_DeleteFormula = 2;
@@ -554,9 +582,13 @@ CHistory.prototype.RedoAdd = function(oRedoObjectParam, Class, Type, sheetid, ra
 					if(changedObject){
 						var fChangesClass = AscDFH.changesFactory[nChangesType];
 						if (fChangesClass){
+							let color = null;
+							if (AscCommon.CollaborativeEditing.isCollaboration())
+								color = new CDocumentColor(255, 255, 255);
+							
 							var oChange = new fChangesClass(changedObject);
 							oChange.ReadFromBinary(Data.oBinaryReader);
-							oChange.Load(new CDocumentColor(255, 255, 255));
+							oChange.Load(color);
 						}
 					}
 				}
@@ -1170,10 +1202,11 @@ CHistory.prototype.StartTransaction = function()
 {
 	if (this.IsEndTransaction() && this.workbook) {
 		this.workbook.dependencyFormulas.lockRecal();
+		this.workbook.oApi.sendEvent("asc_onUserActionStart");
 	}
 	this.Transaction++;
 };
-CHistory.prototype.EndTransaction = function()
+CHistory.prototype.EndTransaction = function(checkLockLastAction)
 {
 	if (1 === this.Transaction && !this.Is_LastPointEmpty()) {
 		var api = this.workbook && this.workbook.oApi;
@@ -1189,9 +1222,12 @@ CHistory.prototype.EndTransaction = function()
 	if (this.IsEndTransaction() && this.workbook) {
 		this.workbook.dependencyFormulas.unlockRecal();
 		this.workbook.handlers.trigger("updateCellWatches");
+		this.workbook.oApi.sendEvent("asc_onUserActionEnd");
 
 		if (this.Is_LastPointEmpty()) {
 			this.Remove_LastPoint();
+		} else if (checkLockLastAction && this.isActionLock()) {
+			this.Undo();
 		}
 	}
 };
@@ -1376,6 +1412,14 @@ CHistory.prototype.GetSerializeArray = function()
 		if (!this.Points[this.Index] || this.Points[this.Index].Items.length <= 0)
 			return true;
 
+		return false;
+	};
+	CHistory.prototype.isActionLock = function()
+	{
+		let wb = this.workbook && this.workbook.oApi && this.workbook.oApi.wb;
+		if (wb && !wb.canEdit()) {
+			return true;
+		}
 		return false;
 	};
 	//------------------------------------------------------------export--------------------------------------------------

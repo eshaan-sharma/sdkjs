@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -64,23 +64,37 @@
 			e.stopPropagation();
 	};
 
-	// для мозиллы пока отключаем, так как браузер не распознает это как "юзерское действие". (window.open, input[file].click)
-	var isUsePointerEvents = (AscBrowser.isChrome && (AscBrowser.chromeVersion > 70)/* || AscBrowser.isMozilla*/) ? true : false;
+	var isUsePointerEvents = true;
+	if (AscBrowser.isChrome && (AscBrowser.chromeVersion <= 70)) // xp
+		isUsePointerEvents = false;
+	else if (AscBrowser.isSafari && (AscBrowser.safariVersion < 17004001))
+		isUsePointerEvents = false;
+	else if (AscBrowser.isIE)
+		isUsePointerEvents = false;
+
+	AscCommon.getPtrEvtName = function (sType)
+	{
+		return (isUsePointerEvents ? "pointer" : "mouse") + sType;
+	};
+	AscCommon.getPtrEvtType = function (sType)
+	{
+		return "on" + AscCommon.getPtrEvtName(sType);
+	};
 
 	AscCommon.addMouseEvent = function(elem, type, handler)
 	{
-		var _type = (isUsePointerEvents ? "onpointer" : "onmouse") + type;
+		var _type = AscCommon.getPtrEvtType(type);
 		elem[_type] = handler;
 	};
     AscCommon.removeMouseEvent = function(elem, type)
     {
-        var _type = (isUsePointerEvents ? "onpointer" : "onmouse") + type;
+        var _type = AscCommon.getPtrEvtType(type);
         if (elem[_type])
         	delete elem[_type];
     };
 	AscCommon.getMouseEvent = function(elem, type)
 	{
-		var _type = (isUsePointerEvents ? "onpointer" : "onmouse") + type;
+		var _type = AscCommon.getPtrEvtType(type);
 		return elem[_type];
 	};
 
@@ -90,6 +104,7 @@
 		this.Y = 0;                            // позиция курсора Y
 
 		this.Button = g_mouse_button_left;          // кнопка мыши
+		this.ButtonOverride = -1;
 		this.Type   = g_mouse_event_type_move;      // тип евента
 
 		this.AltKey   = false;                        // нажата ли кнопка alt
@@ -319,6 +334,8 @@
 
 	function getMouseButton(e)
 	{
+		if (-1 !== global_mouseEvent.ButtonOverride)
+			return global_mouseEvent.ButtonOverride;
 		var res = e.button;
 		return (res && -1 !== res) ? res : 0;
 	}

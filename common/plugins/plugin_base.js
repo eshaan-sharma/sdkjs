@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -431,12 +431,28 @@
 	CPluginWindow.prototype.show = function(settings)
 	{
 		var url = settings.url;
+
+		if ((0 !== url.indexOf("http://")) &&
+			(0 !== url.indexOf("https://")) &&
+			(0 !== url.indexOf("file://")) &&
+			(0 !== url.indexOf("www.")))
+		{
+			let location  = window.location;
+			let start = location.pathname.lastIndexOf('/') + 1;
+			let file = location.pathname.substring(start);
+			url = location.href.replace(file, url);
+		}
+
 		if (-1 === url.indexOf(".html?"))
 			url += "?windowID=";
 		else
 			url += "&windowID=";
 		settings.url = url + this.id;
 		window.Asc.plugin.executeMethod("ShowWindow", [this.id, settings]);
+	};
+	CPluginWindow.prototype.activate = function()
+	{
+		window.Asc.plugin.executeMethod("ActivateWindow", [this.id]);
 	};
 	CPluginWindow.prototype.close = function()
 	{
@@ -618,8 +634,11 @@
 				}
 			}
 
-			if (type == "init")
+			if (type === "init")
 				window.Asc.plugin.info = pluginData;
+
+			if (type === "updateOptions" && pluginData.options)
+				window.Asc.plugin.info.options = pluginData.options;
 
 			if (undefined !== pluginData.theme)
 			{
@@ -828,8 +847,35 @@
 				case "onWindowEvent":
 				{
 					if (window.Asc.plugin._windows && pluginData.windowID && window.Asc.plugin._windows[pluginData.windowID])
-						window.Asc.plugin._windows[pluginData.windowID]._oncommand(pluginData.eventName, pluginData.eventData);
+					{
+						if ("private_window_method" === pluginData.eventName)
+						{
+							var _windowID = pluginData.windowID;
+							window.Asc.plugin.executeMethod(pluginData.eventData.name, pluginData.eventData.params, function(retValue){
+								if (window.Asc.plugin._windows && window.Asc.plugin._windows[_windowID])
+									window.Asc.plugin._windows[_windowID].command("on_private_window_method", retValue);
+							});
+						}
+						else if ("private_window_command" === pluginData.eventName)
+						{
+							var _windowID = pluginData.windowID;
+							window.Asc.plugin.info.recalculate = (false === pluginData.eventData.isCalc) ? false : true;
+							window.Asc.plugin.executeCommand("command", pluginData.eventData.code, function(retValue){
+								if (window.Asc.plugin._windows && window.Asc.plugin._windows[_windowID])
+									window.Asc.plugin._windows[_windowID].command("on_private_window_command", retValue);
+							});
+						}
+						else
+						{
+							window.Asc.plugin._windows[pluginData.windowID]._oncommand(pluginData.eventName, pluginData.eventData);
+						}
+					}
 					break;
+				}
+				case "updateOptions":
+				{
+					if (window.Asc.plugin.onUpdateOptions)
+						window.Asc.plugin.onUpdateOptions();
 				}
 				default:
 					break;

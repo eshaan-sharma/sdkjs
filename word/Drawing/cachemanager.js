@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -73,11 +73,13 @@ CCacheManager.prototype.UnLock = function(_cache_image)
 
 CCacheManager.prototype.Lock = function (_w, _h, _drDocument)
 {
+	if (_w <= 0) _w = 1;
+	if (_h <= 0) _h = 1;
 	var backgroundColor = this.isSlides ? "#B0B0B0" : "#FFFFFF";
 	if (_drDocument)
 	{
 		var backColor = _drDocument.m_oWordControl.m_oApi.getPageBackgroundColor();
-		backgroundColor = "#" + backColor[0].toString(16) + backColor[1].toString(16) + backColor[2].toString(16);
+		backgroundColor = "#" + backColor.R.toString(16) + backColor.G.toString(16) + backColor.B.toString(16);
 	}
 
 	for (var i = 0; i < this.arrayCount; ++i)

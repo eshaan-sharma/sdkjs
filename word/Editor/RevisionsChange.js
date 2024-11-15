@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -31,11 +31,6 @@
  */
 
 "use strict";
-/**
- * User: Ilja.Kirillov
- * Date: 05.04.2017
- * Time: 14:41
- */
 
 /**
  * Класс для отображения изменения сделанного в режиме рецензирования
@@ -103,7 +98,7 @@ CRevisionsChange.prototype.get_LockUserId = function()
 		var Lock = this.Element.GetLock();
 		var LockType = Lock.Get_Type();
 
-		if (AscCommon.locktype_Mine !== LockType && AscCommon.locktype_None !== LockType)
+		if (AscCommon.c_oAscLockTypes.kLockTypeMine !== LockType && AscCommon.c_oAscLockTypes.kLockTypeNone !== LockType)
 			return Lock.Get_UserId();
 	}
 
@@ -370,6 +365,10 @@ CRevisionsChange.prototype.GetWeight = function()
 	}
 
 	return 0;
+};
+CRevisionsChange.prototype.IsValid = function()
+{
+	return !!(this.Element && this.Element.IsUseInDocument());
 };
 
 //--------------------------------------------------------export--------------------------------------------------------

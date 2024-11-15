@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -739,9 +739,9 @@ CHeaderFooter.prototype =
 		this.Content.AddNewParagraph();
 	},
 
-	AddInlineImage : function(W, H, Img, Chart, bFlow)
+	AddInlineImage : function(W, H, Img, GraphicObject, bFlow)
     {
-        this.Content.AddInlineImage(W,H,Img, Chart, bFlow);
+        this.Content.AddInlineImage(W,H,Img, GraphicObject, bFlow);
     },
 	AddImages : function(aImages)
     {
@@ -975,7 +975,7 @@ CHeaderFooter.prototype =
 
 	GetCalculatedTextPr : function()
 	{
-		return this.Content.GetCalculatedTextPr();
+		return this.Content.GetCalculatedTextPr(true);
 	},
 
 	GetDirectTextPr : function()
@@ -1017,14 +1017,14 @@ CHeaderFooter.prototype =
 	{
 		return this.Content.RemoveSelection(bNoCheckDrawing);
 	},
-
+	
 	DrawSelectionOnPage : function(CurPage)
-    {
-    	if (CurPage !== this.GetPage())
-    		return;
-
-        return this.Content.DrawSelectionOnPage(0, true, true);
-    },
+	{
+		if (CurPage !== this.GetPage())
+			return;
+		
+		return this.Content.DrawSelectionOnPage(0);
+	},
 
     Selection_SetStart : function(X,Y, PageIndex, MouseEvent)
     {
@@ -1396,7 +1396,7 @@ CHeaderFooter.prototype.Update_PageCountElements = function(nPageCount)
 {
 	for (var nIndex = 0, nCount = this.PageCountElements.length; nIndex < nCount; ++nIndex)
 	{
-		this.PageCountElements[nIndex].SetNumValue(nPageCount);
+		this.PageCountElements[nIndex].UpdatePageCount(nPageCount);
 	}
 };
 CHeaderFooter.prototype.ForceRecalculate = function(nPageAbs)
@@ -1623,7 +1623,8 @@ CHeaderFooterController.prototype =
 
             Pr.Locked = this.Lock.Is_Locked();
 
-			Pr.StartPageNumber = SectPr.Get_PageNum_Start();
+			Pr.StartPageNumber = SectPr.GetPageNumStart();
+			Pr.NumFormat = SectPr.GetPageNumFormat();
 
             return Pr;
         }
@@ -1655,15 +1656,17 @@ CHeaderFooterController.prototype =
 
     Recalculate : function(PageIndex)
     {
+		let logicDocument = this.LogicDocument;
+		
         // Определим четность страницы и является ли она первой в данной секции. Заметим, что четность страницы 
         // отсчитывается от начала текущей секции и не зависит от настроек нумерации страниц для данной секции.
-        var SectionPageInfo = this.LogicDocument.Get_SectionPageNumInfo( PageIndex );
+        var SectionPageInfo = logicDocument.Get_SectionPageNumInfo( PageIndex );
         
         var bFirst = SectionPageInfo.bFirst;
         var bEven  = SectionPageInfo.bEven;
         
         // Запросим нужный нам колонтитул 
-        var HdrFtr = this.LogicDocument.Get_SectionHdrFtr( PageIndex, bFirst, bEven );
+        var HdrFtr = logicDocument.Get_SectionHdrFtr( PageIndex, bFirst, bEven );
         
         var Header = HdrFtr.Header;
         var Footer = HdrFtr.Footer;
@@ -1676,8 +1679,12 @@ CHeaderFooterController.prototype =
         var oFrame = SectPr.GetContentFrame(PageIndex);
         var X      = oFrame.Left;
         var XLimit = oFrame.Right;
-
-        var bRecalcHeader = false;
+		
+		let maxContentH = SectPr.GetPageHeight() / 2;
+		if (logicDocument.GetCompatibilityMode() >= AscCommon.document_compatibility_mode_Word15)
+			maxContentH = AscWord.MAX_MM_VALUE;
+		
+		var bRecalcHeader = false;
 
         var HeaderDrawings, HeaderTables, FooterDrawings, FooterTables;
         // Рассчитываем верхний колонтитул
@@ -1686,7 +1693,7 @@ CHeaderFooterController.prototype =
             if ( true === Header.Is_NeedRecalculate( PageIndex ) )
             {
                 var Y      = SectPr.GetPageMarginHeader();
-                var YLimit = SectPr.GetPageHeight() / 2;
+                var YLimit = Y + maxContentH;
 
                 Header.Reset( X, Y, XLimit, YLimit );
                 bRecalcHeader = Header.Recalculate(PageIndex, SectPr);
@@ -1710,16 +1717,13 @@ CHeaderFooterController.prototype =
                 // Нижний колонтитул рассчитываем 2 раза. Сначала, с 0 позиции, чтобы рассчитать суммарную высоту колонитула.
                 // Исходя из уже известной высоты располагаем и рассчитываем колонтитул.
 
-                var Y      = 0;
-                var YLimit = SectPr.GetPageHeight();
-
-                Footer.Reset( X, Y, XLimit, YLimit );
+                Footer.Reset( X, 0, XLimit, maxContentH );
                 Footer.RecalculateContent(PageIndex);
 
-                var SummaryHeight = Footer.Content.GetSummaryHeight();
-                Y = Math.max( 2 * YLimit / 3, YLimit - SectPr.GetPageMarginFooter() - SummaryHeight );
+				let contentBounds = Footer.Content.GetPageBounds(0);
+                let Y = Math.max(0, SectPr.GetPageHeight() - SectPr.GetPageMarginFooter() - (contentBounds.Bottom - contentBounds.Top));
 
-                Footer.Reset( X, Y, XLimit, YLimit );
+                Footer.Reset( X, Y, XLimit, Y + maxContentH );
                 bRecalcFooter = Footer.Recalculate(PageIndex, SectPr);
             }
             else
@@ -2032,10 +2036,10 @@ CHeaderFooterController.prototype =
 			return this.CurHdrFtr.AddNewParagraph();
 	},
 
-	AddInlineImage : function(W, H, Img, Chart, bFlow)
+	AddInlineImage : function(W, H, Img, GraphicObject, bFlow)
     {
         if ( null != this.CurHdrFtr )
-            return this.CurHdrFtr.AddInlineImage(W,H,Img, Chart, bFlow);
+            return this.CurHdrFtr.AddInlineImage(W,H,Img, GraphicObject, bFlow);
     },
 	AddImages : function(aImages)
     {

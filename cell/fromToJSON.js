@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -113,7 +113,9 @@
             {id:Asc.EPageSize.pagesizeISOB5ExtraPaper, w_mm: 201, h_mm: 276},
             {id:Asc.EPageSize.pagesizeA2Paper, w_mm: 420, h_mm: 594},
             {id:Asc.EPageSize.pagesizeA3TransversePaper, w_mm: 297, h_mm: 420},
-            {id:Asc.EPageSize.pagesizeA3ExtraTransversePaper, w_mm: 322, h_mm: 445}
+            {id:Asc.EPageSize.pagesizeA3ExtraTransversePaper, w_mm: 322, h_mm: 445},
+            {id:Asc.EPageSize.pagesizeEnvelopeChoukei3, w_mm: 120, h_mm: 235},
+            {id:Asc.EPageSize.pagesizeROC16K, w_mm: 196.8, h_mm: 273}
         ];
         this.getSizeByWH = function(widthMm, heightMm)
         {
@@ -9972,8 +9974,6 @@
 		var res = "";
 		if (Asc.c_oAscPivotAreaType.None === val) {
 			res = "none";
-		} else if (Asc.c_oAscPivotAreaType.Normal === val) {
-			res = "normal";
 		} else if (Asc.c_oAscPivotAreaType.Data === val) {
 			res = "data";
 		} else if (Asc.c_oAscPivotAreaType.All === val) {
@@ -9988,11 +9988,10 @@
 		return res;
 	}
 	function FromXml_ST_PivotAreaType(val) {
-		var res = -1;
+		// Normal is default.
+		var res = Asc.c_oAscPivotAreaType.Normal;
 		if ("none" === val) {
 			res = Asc.c_oAscPivotAreaType.None;
-		} else if ("normal" === val) {
-			res = Asc.c_oAscPivotAreaType.Normal;
 		} else if ("data" === val) {
 			res = Asc.c_oAscPivotAreaType.Data;
 		} else if ("all" === val) {
