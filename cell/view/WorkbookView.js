@@ -5636,7 +5636,6 @@
 		this.doUpdateExternalReference(arr, callback);
 	};
 
-
 	//*****user range protect*****
 	WorkbookView.prototype.changeUserProtectedRanges = function(oldObj, newObj) {
 		//ToDo проверка defName.ref на знак "=" в начале ссылки. знака нет тогда это либо число либо строка, так делает Excel.
