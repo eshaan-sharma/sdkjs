@@ -16123,9 +16123,7 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	function CExternalLinksPr() {
-		this.autoRefresh = null;
-	}	function CRowColBreaks(/*ws*/) {
+	function CRowColBreaks(/*ws*/) {
 		this.count = null;
 		this.manualBreakCount = null;
 		this.breaks = [];
@@ -16346,6 +16344,10 @@ function RangeDataManagerElem(bbox, data)
 		}
 		return isChanged ? this : null;
 	};
+
+	function CExternalLinksPr() {
+		this.autoRefresh = null;
+	}
 
 	/**
 	 * Class representing a Series settings for fills data of context menu and dialog window - "Series"
