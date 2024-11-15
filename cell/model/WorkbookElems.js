@@ -17430,6 +17430,115 @@ function RangeDataManagerElem(bbox, data)
 	};
 
 	/**
+	 * This element defines a collection of workbook properties
+	 * @constructor
+	 */
+	function CWorkbookPr() {
+		this.Date1904 = null;
+		this.DateCompatibility = null;
+		this.HidePivotFieldList = null;
+		this.ShowPivotChartFilter = null;
+		this.UpdateLinks = null;
+	}
+	/**
+	 * Method clones calculation options
+	 * @memberof CWorkbookPr
+	 * @returns {CWorkbookPr}
+	 */
+	CWorkbookPr.prototype.clone = function () {
+		let res = new CWorkbookPr();
+
+		res.Date1904 = this.Date1904;
+		res.DateCompatibility = this.DateCompatibility;
+		res.HidePivotFieldList = this.HidePivotFieldList;
+		res.ShowPivotChartFilter = this.ShowPivotChartFilter;
+		res.UpdateLinks = this.UpdateLinks;
+
+		return res;
+	};
+	/**
+	 * Method returns "1904" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getDate1904 = function () {
+		return this.Date1904;
+	};
+	/**
+	 * Method set "1904" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setDate1904 = function (val) {
+		this.Date1904 = val;
+	};
+	/**
+	 * Method returns "DateCompatibility" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getDateCompatibility = function () {
+		return this.DateCompatibility;
+	};
+	/**
+	 * Method set "DateCompatibility" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setDateCompatibility = function (val) {
+		this.DateCompatibility = val;
+	};
+	/**
+	 * Method returns "HidePivotFieldList" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getHidePivotFieldList = function () {
+		return this.HidePivotFieldList;
+	};
+	/**
+	 * Method set "HidePivotFieldList" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setHidePivotFieldList = function (val) {
+		this.HidePivotFieldList = val;
+	};
+	/**
+	 * Method returns "ShowPivotChartFilter" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getShowPivotChartFilter = function () {
+		return this.ShowPivotChartFilter;
+	};
+	/**
+	 * Method set "ShowPivotChartFilter" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setShowPivotChartFilter = function (val) {
+		this.ShowPivotChartFilter = val;
+	};
+	/**
+	 * Method returns "UpdateLinks" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getUpdateLinks = function () {
+		return this.UpdateLinks;
+	};
+	/**
+	 * Method set "UpdateLinks" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setUpdateLinks = function (val) {
+		this.UpdateLinks = val;
+	};
+
+
+	/**
 	 * Class representing calculation settings for UI interface
 	 * @constructor
 	 */
@@ -19108,6 +19217,8 @@ function RangeDataManagerElem(bbox, data)
 	prot["asc_setMaxChange"] = prot.asc_setMaxChange;
 	prot["asc_initSettings"] = prot.asc_initSettings;
 
+	window["AscCommonExcel"].CWorkbookPr = CWorkbookPr;
+	
 	window["AscCommonExcel"].CMetadata = CMetadata;
 	window["AscCommonExcel"].CMetadataType = CMetadataType;
 	window["AscCommonExcel"].CMetadataString = CMetadataString;
