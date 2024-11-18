@@ -2968,7 +2968,6 @@
 		this.TimelineStyles = null;
 
 		this.metadata = null;
-		this.externalLinksPr = null;
 	}
 	Workbook.prototype.init=function(tableCustomFunc, tableIds, sheetIds, bNoBuildDep, bSnapshot){
 		if(this.nActive < 0)
@@ -5473,24 +5472,21 @@
 		this.addExternalReferences(newExternalReferences);
 	};
 
-	Workbook.prototype.setExternalReferenceAutoUpdate = function (val, addToHistory) {
-		var from = !!(this.externalLinksPr && this.externalLinksPr.autoRefresh);
+	Workbook.prototype.setUpdateLinks = function (val, addToHistory) {
+		var from = !!(this.workbookPr.UpdateLinks && this.workbookPr.UpdateLinks);
 		if (val !== from) {
-			if (!this.externalLinksPr) {
-				this.externalLinksPr = new AscCommonExcel.CExternalLinksPr();
-			}
-			this.externalLinksPr.autoRefresh = val;
+			this.workbookPr.UpdateLinks = val;
 			if (addToHistory) {
 				History.Create_NewPoint();
-				History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_ChangeExternalReferenceAutoUpdate,
+				History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_UpdateLinks,
 					null, null, new UndoRedoData_FromTo(from, val));
 			}
-			this.handlers && this.handlers.trigger("changeExternalReferenceAutoUpdate");
+			this.handlers && this.handlers.trigger("changeUpdateLinks");
 		}
 	};
 
-	Workbook.prototype.getExternalReferenceAutoUpdate = function () {
-		return !!(this.externalLinksPr && this.externalLinksPr.autoRefresh);
+	Workbook.prototype.getUpdateLinks = function () {
+		return !!(this.workbookPr && this.workbookPr.workbookPr);
 	};
 
 	Workbook.prototype.unlockUserProtectedRanges = function(){

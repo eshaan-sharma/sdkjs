@@ -1117,8 +1117,8 @@
 	this.Api.asc_registerCallback("EndTransactionCheckSize", function() {
 		self.Api.checkChangesSize();
 	});
-	this.model.handlers.add("changeExternalReferenceAutoUpdate", function(val) {
-		self.changeExternalReferenceAutoUpdate(val);
+	this.model.handlers.add("changeUpdateLinks", function(val) {
+		self.changeUpdateLinks(val);
 	});
     this.cellCommentator = new AscCommonExcel.CCellCommentator({
       model: new WorkbookCommentsModel(this.handlers, this.model.aComments),
@@ -5221,8 +5221,8 @@
 		return this.model.getExternalReferences();
 	};
 
-	WorkbookView.prototype.changeExternalReferenceAutoUpdate = function () {
-		let val = this.model.externalLinksPr && this.model.externalLinksPr.autoRefresh;
+	WorkbookView.prototype.changeUpdateLinks = function () {
+		let val = this.model.workbookPr && this.model.workbookPr.UpdateLinks;
 		if (!val) {
 			this.clearExternalReferenceUpdateTimer();
 		} else {
@@ -5231,7 +5231,7 @@
 	};
 
 	WorkbookView.prototype.initExternalReferenceUpdateTimer = function (clear) {
-		let val = this.model.externalLinksPr && this.model.externalLinksPr.autoRefresh;
+		let val = this.model.workbookPr && this.model.workbookPr.UpdateLinks;
 		let oThis = this;
 		if (clear) {
 			this.clearExternalReferenceUpdateTimer();
@@ -5614,7 +5614,7 @@
 
 				//if update all, reinit timer
 				if (t.model.externalReferences && t.model.externalReferences.length === updatedReferences.length) {
-					t.changeExternalReferenceAutoUpdate();
+					t.changeUpdateLinks();
 				}
 
 				//t.model.dependencyFormulas.calcTree();

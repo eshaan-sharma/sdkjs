@@ -56,7 +56,7 @@ function (window, undefined) {
 	window['AscCH'].historyitem_Workbook_CalcPr_iterate = 14;
 	window['AscCH'].historyitem_Workbook_CalcPr_iterateCount = 15;
 	window['AscCH'].historyitem_Workbook_CalcPr_iterateDelta = 16;
-	window['AscCH'].historyitem_Workbook_ChangeExternalReferenceAutoUpdate = 17;
+	window['AscCH'].historyitem_Workbook_UpdateLinks = 17;
 
 	window['AscCH'].historyitem_Worksheet_RemoveCell = 1;
 	window['AscCH'].historyitem_Worksheet_RemoveRows = 2;

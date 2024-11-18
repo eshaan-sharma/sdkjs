@@ -2632,8 +2632,8 @@ function (window, undefined) {
 			wb.calcPr.setIterateDelta(bUndo ? Data.from : Data.to);
 			AscCommonExcel.g_cCalcRecursion.initCalcProperties(wb.calcPr);
 
-		} else if(AscCH.historyitem_Workbook_ChangeExternalReferenceAutoUpdate === Type) {
-			wb.setExternalReferenceAutoUpdate(bUndo ? Data.from : Data.to);
+		} else if(AscCH.historyitem_Workbook_UpdateLinks === Type) {
+			wb.setUpdateLinks(bUndo ? Data.from : Data.to);
 		}
 	};
 	UndoRedoWorkbook.prototype.forwardTransformationIsAffect = function (Type) {
