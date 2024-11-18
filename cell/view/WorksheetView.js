@@ -15817,7 +15817,12 @@
                         switch (val) {
                             case c_oAscMergeOptions.MergeCenter:
                             case c_oAscMergeOptions.Merge:
-                                range.merge(val);
+                                let mergeRes = range.merge(val);
+								/* call an error if it returns from merge */
+								if (mergeRes && mergeRes.errorType) {
+									t.handlers.trigger("onErrorEvent", mergeRes.errorType, c_oAscError.Level.NoCritical);
+									break;
+								}
                                 t.cellCommentator.mergeComments(range.getBBox0());
                                 break;
                             case c_oAscMergeOptions.None:
