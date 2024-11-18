@@ -14581,8 +14581,7 @@
 			parser.ca = caProps.ca;
 		}
 		if(formulaRef) {
-			// todo при merge formulaRef берется со старыми данными, нужно сдвигать её на topLeftCell
-
+			/* when merging, the formulaRef is taken with the old data, we need to shift ref to topLeftCell */
 			// parser.setArrayFormulaRef(formulaRef);
 			// this.ws.getRange3(formulaRef.r1, formulaRef.c1, formulaRef.r2, formulaRef.c2)._foreachNoEmpty(function(cell){
 			// 	cell.setFormulaParsed(parser, bHistoryUndo);
