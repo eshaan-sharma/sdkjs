@@ -15830,7 +15830,12 @@
                                 break;
                             case c_oAscMergeOptions.MergeAcross:
                                 for (res = range.bbox.r1; res <= range.bbox.r2; ++res) {
-                                    t.model.getRange3(res, range.bbox.c1, res, range.bbox.c2).merge(val);
+									let mergeRes = t.model.getRange3(res, range.bbox.c1, res, range.bbox.c2).merge(val);
+                                    /* call an error if it returns from merge */
+									if (mergeRes && mergeRes.errorType) {
+										t.handlers.trigger("onErrorEvent", mergeRes.errorType, c_oAscError.Level.NoCritical);
+										break;
+									}
                                     cell = new asc_Range(range.bbox.c1, res, range.bbox.c2, res);
                                     t.cellCommentator.mergeComments(cell);
                                 }

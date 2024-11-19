@@ -18709,8 +18709,6 @@
 			}
 		}
 
-		this.worksheet.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.mergeRange, true, this.bbox, this.worksheet.getId());
-
 		//пробегаемся по границе диапазона, чтобы посмотреть какие границы нужно оставлять
 		var oLeftBorder = null;
 		var oTopBorder = null;
@@ -18801,7 +18799,7 @@
 
 					if (bFirst && false == cell.isNullText()) {
 						if (formulaRef && !formulaRef.isOneCell()) {
-							// если встречается массив размером больше 1 ячейки, то никакое значение не записывается в мс 
+							/* if an array larger than 1x1 cell is encountered, then no value is written in ms */
 							bFirst = false;
 							oFirstCellValue = null;
 						} else {
@@ -18813,7 +18811,7 @@
 						}
 					}
 
-					// проверка входит ли ref в выделенную область мерджа(если нет, то возвращаем ошибку)
+					/* checking whether the ref is included in the selected merge area (if not, then we return an error) */
 					if (formulaRef && !t.bbox.containsRange(formulaRef)) {
 						error = c_oAscError.ID.CannotChangeFormulaArray;
 					} else if (nRow0 == nRowStart && nCol0 == nColStart) {
@@ -18823,6 +18821,8 @@
 							oLeftTopCellStyle = cell.getStyle();
 						}
 					}
+				} else {
+					return false;
 				}
 			});
 
@@ -18832,6 +18832,7 @@
 			return {errorType: error}
 		}
 
+		this.worksheet.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.mergeRange, true, this.bbox, this.worksheet.getId());
 		//правила работы с гиперссылками во время merge(отличются от Excel в случаем областей, например hyperlink: C3:D3 мержим C2:C3)
 		// 1)оставляем все ссылки, которые не полностью лежат в merge области
 		// 2)оставляем многоклеточные ссылки, top граница которых совпадает с top границей merge области, а высота merge > 1 или совпадает с высотой области merge
