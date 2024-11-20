@@ -26910,79 +26910,79 @@
 	};
 
 	WorksheetView.prototype._lineHor = function (ctx, x1, y, x2) {
-		ctx.lineHor(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		ctx.lineHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
 		return ctx;
 	};
 
 	WorksheetView.prototype._lineVer = function (ctx, x, y1, y2) {
-		ctx.lineVer(this.getRightToLeft() ? (ctx.getWidth() - x) :  x, y1, y2)
+		ctx.lineVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) :  x, y1, y2)
 		return ctx;
 	};
 
 	WorksheetView.prototype._lineDiag = function (ctx, x1, y1, x2, y2) {
-		ctx.lineDiag(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y1, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2, y2);
+		ctx.lineDiag(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y1, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2, y2);
 		return ctx;
 	};
 
 	WorksheetView.prototype._lineVerPrevPx = function (ctx, x, y1, y2) {
-		ctx.lineVerPrevPx(this.getRightToLeft() ? (ctx.getWidth() - x) :  x, y1, y2)
+		ctx.lineVerPrevPx(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) :  x, y1, y2)
 		return ctx;
 	};
 
 	WorksheetView.prototype._lineHorPrevPx = function (ctx, x1, y, x2) {
-		ctx.lineHorPrevPx(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		ctx.lineHorPrevPx(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
 		return ctx;
 	};
 
 	WorksheetView.prototype._dashLineCleverHor = function (ctx, x, y1, y2) {
-		ctx.dashLineCleverHor(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y1, y2)
+		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2)
 		return ctx;
 	};
 
 	WorksheetView.prototype._dashLineCleverVer = function (ctx, x1, y, x2) {
-		ctx.dashLineCleverVer(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
 		return ctx;
 	};
 
 
 	WorksheetView.prototype._AddClipRect = function (ctx, x, y, w, h) {
-		ctx.AddClipRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h)
+		ctx.AddClipRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h)
 		return ctx;
 	};
 	WorksheetView.prototype._moveTo = function (ctx, x, y) {
-		ctx.moveTo(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y);
+		ctx.moveTo(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y);
 		return ctx;
 	};
 	WorksheetView.prototype._lineTo = function (ctx, x, y) {
-		ctx.lineTo(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y);
+		ctx.lineTo(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y);
 		return ctx;
 	};
 	WorksheetView.prototype._fillRect = function (ctx, x, y, w, h) {
-		ctx.fillRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.fillRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 	WorksheetView.prototype._clearRect = function (ctx, x, y, w, h) {
-		ctx.clearRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.clearRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 	WorksheetView.prototype._rect = function (ctx, x, y, w, h) {
-		ctx.rect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.rect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 	WorksheetView.prototype._clearRectByY = function (ctx, x, y, w, h) {
-		ctx.clearRectByY(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.clearRectByY(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 	WorksheetView.prototype._clearRectByX = function (ctx, x, y, w, h) {
-		ctx.clearRectByX(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.clearRectByX(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
-		stringRender.render(ctx, this.getRightToLeft() ? (ctx.getWidth() - textX - textW) : textX, textY, textW, color);
+		stringRender.render(ctx, this.getRightToLeft() ? (this.getCtxWidth(ctx) - textX - textW) : textX, textY, textW, color);
 		return stringRender;
 	};
 	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
-		ctx.fillText( text, this.getRightToLeft() ? (ctx.getWidth() - x) : x, y, maxWidth, charWidths, angle)
+		ctx.fillText( text, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y, maxWidth, charWidths, angle)
 		return ctx;
 	};
 	// WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
@@ -26995,7 +26995,7 @@
 
 	};*/
 	WorksheetView.prototype._strokeRect = function (ctx, x, y, w, h) {
-		ctx.strokeRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		ctx.strokeRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
 		return ctx;
 	};
 
