@@ -4660,15 +4660,6 @@
           .setFillStyle(activeNamedSheetView ? this.settings.header.cornerColorSheetView : this.settings.header.cornerColor)
           .fill();
     };
-	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
-		stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
-		return stringRender;
-	};
-	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
-		ctx.fillText(text, x, y, maxWidth, charWidths, angle);
-		return ctx;
-
-	};
 
     /** Рисует заголовки видимых колонок */
     WorksheetView.prototype._drawColumnHeaders = function (drawingCtx, start, end, style, offsetXForDraw, offsetYForDraw) {
@@ -4867,13 +4858,13 @@
 		let drawTopBorder = function (_selected) {
 			if (style !== kHeaderDefault && !isColHeader && !window["IS_NATIVE_EDITOR"]) {
 				// Select row (top border)
-				ctx.lineHorPrevPx(x, y, x2);
+				t._lineHorPrevPx(ctx, x, y, x2);
 			}
 		};
 		let drawLeftBorder = function (_selected) {
 			if ((style !== kHeaderDefault || t.getRightToLeft()) && isColHeader) {
 				// Select col (left border)
-				ctx.lineVerPrevPx(x, y, y2);
+				t._lineVerPrevPx(ctx, x, y, y2);
 			}
 		};
 
@@ -4909,7 +4900,7 @@
 					y1Diff = (isFirstColSelection ? (_toRetina(1) + 1) : 1);
 					y2Diff = (isFirstColSelection ? _toRetina(1) : 0);
 				}
-				ctx.lineVerPrevPx(x2, y - y1Diff, y2 + y2Diff);
+				t._lineVerPrevPx(ctx, x2, y - y1Diff, y2 + y2Diff);
 			}
 		};
 		let drawBottomBorder = function (_selected) {
@@ -4920,7 +4911,7 @@
 					x1Diff = (isFirstRowSelection ? (_toRetina(1) + 1) : (1 - t.getRightToLeftOffset()));
 					x2Diff = (isFirstRowSelection ? _toRetina(1) : 0);
 				}
-				ctx.lineHorPrevPx(x - x1Diff, y2, x2 + x2Diff);
+				t._lineHorPrevPx(ctx, x - x1Diff, y2, x2 + x2Diff);
 			}
 		};
 
@@ -5402,29 +5393,29 @@
 
 		let i, d, l;
 		if (ctx.isPreviewOleObjectContext) {
-			ctx.lineVerPrevPx(1, y1, y2);
+			this._lineVerPrevPx(ctx, 1, y1, y2);
 		}
 		if (needDrawFirstVLine) {
-			ctx.lineVerPrevPx(x1, y1, y2);
+			this._lineVerPrevPx(ctx, x1, y1, y2);
 		}
 		for (i = range.c1, d = x1; i <= range.c2 && d <= x2; ++i) {
 			l = this._getColumnWidth(i);
 			d += l;
 			if (0 < l) {
-				ctx.lineVerPrevPx(d, y1, y2);
+				this._lineVerPrevPx(ctx, d, y1, y2);
 			}
 		}
 		if (ctx.isPreviewOleObjectContext) {
-			ctx.lineHorPrevPx(x1, 1, x2);
+			this._lineHorPrevPx(ctx, x1, 1, x2);
 		}
 		if (needDrawFirstHLine) {
-			ctx.lineHorPrevPx(x1, y1, x2);
+			this._lineHorPrevPx(ctx, x1, y1, x2);
 		}
 		for (i = range.r1, d = y1; i <= range.r2 && d <= y2; ++i) {
 			l = this._getRowHeight(i);
 			d += l;
 			if (0 < l) {
-				ctx.lineHorPrevPx(x1, d, x2);
+				this._lineHorPrevPx(ctx, x1, d, x2);
 			}
 		}
 
@@ -6027,9 +6018,11 @@
 				if (oRuleElement.AxisColor) {
 					ctx.setLineWidth(1).setLineDash([3, 1]).setStrokeStyle(oRuleElement.AxisColor);
 					if (automaticAxisPos) {
-						ctx.beginPath().lineVer(x + middleX, top - 1, top - 1 + height - 1).stroke();
+						ctx.beginPath();
+						this._lineVer(ctx, x + middleX, top - 1, top - 1 + height - 1).stroke();
 					} else {
-						ctx.beginPath().lineVer(x + Asc.floor(width / 2), top - 1, top - 1 + height - 1).stroke();
+						ctx.beginPath();
+						this._lineVer(ctx, x + Asc.floor(width / 2), top - 1, top - 1 + height - 1).stroke();
 					}
 				}
 
@@ -6632,7 +6625,7 @@
 			let extLength = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
 			if (extLength === 0 && angle === 0) {
 				// temporary exception
-				ctx.lineDiag(x1, y1, x2, y2);
+				t._lineDiag(ctx, x1, y1, x2, y2);
 				ctx.stroke();
 
 				!external ? drawDot(x1, y1, lineColor) : drawDot(x1, y1, externalLineColor);
@@ -6740,13 +6733,13 @@
 			ctx.setLineWidth(widthLine);
 			ctx.beginPath();
 			ctx.setStrokeStyle(externalLineColor);
-			ctx.lineDiag(x1, y1, x2, y2);
+			t._lineDiag(ctx, x1, y1, x2, y2);
 			ctx.stroke();
 
 			ctx.setStrokeStyle(whiteColor);
 			for (let i = 0; i < dashCount; i++) {
 				ctx.beginPath();
-				ctx.lineDiag(x1, y1, x1 - xStep * 0.2, y1 - yStep * 0.2);
+				t._lineDiag(ctx, x1, y1, x1 - xStep * 0.2, y1 - yStep * 0.2);
 				ctx.stroke();
 				x1 += xStep;
 				y1 += yStep;
@@ -6832,7 +6825,7 @@
 			for (let i = 1; i < 3; i++) {
 				let x2 = i * cellWidth;
 				ctx.beginPath();
-				ctx.lineVer(x2 + x1, y1, y1 + tableHeight);
+				t._lineVer(ctx, x2 + x1, y1, y1 + tableHeight);
 				ctx.stroke();
 			}
 
@@ -6840,7 +6833,7 @@
 			for (let j = 1; j < 3; j++) {
 				let y2 = j * cellHeight;
 				ctx.beginPath();
-				ctx.lineHor(x1, y1 + y2, x1 + tableWidth);
+				t._lineHor(ctx, x1, y1 + y2, x1 + tableWidth);
 				ctx.stroke();
 			}
 		};
@@ -7152,13 +7145,13 @@
 
 			switch (type) {
 				case c_oAscBorderType.Hor:
-					ctx.lineHor(x1 + t.getRightToLeftOffset(), y1, x2 + t.getRightToLeftOffset());
+					t._lineHor(ctx, x1 + t.getRightToLeftOffset(), y1, x2 + t.getRightToLeftOffset());
 					break;
 				case c_oAscBorderType.Ver:
-					ctx.lineVer(x1 + 2*t.getRightToLeftOffset(), y1, y2);
+					t._lineVer(ctx, x1 + 2*t.getRightToLeftOffset(), y1, y2);
 					break;
 				case c_oAscBorderType.Diag:
-					ctx.lineDiag(x1, y1, x2, y2);
+					t.lineDiag(ctx, x1, y1, x2, y2);
 					break;
 			}
 		}
@@ -7574,17 +7567,17 @@
 		}
 	};
 
-	WorksheetView.prototype._dashLineCleverVer = function (x, y1, y2, _this) {
+	/*WorksheetView.prototype._dashLineCleverVer = function (x, y1, y2, _this) {
 		let ctx = this;
 		ctx.dashLineCleverVer(_this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x) : x, y1, y2)
 		return ctx;
-	};
+	};*/
 
-	WorksheetView.prototype._dashLineCleverHor = function (x1, y, x2, _this) {
+	/*WorksheetView.prototype._dashLineCleverHor = function (x1, y, x2, _this) {
 		let ctx = this;
 		ctx.dashLineCleverHor(_this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x2) : x1, y, _this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x1) : x2)
 		return ctx;
-	};
+	};*/
 
     WorksheetView.prototype.drawFrozenGuides = function ( x, y, target ) {
         var data, offsetFrozen;
@@ -20157,14 +20150,14 @@
 			ctx.fillRect(startX + _diff, startY + _diff, width - _diff, height - _diff);
 			if (isPivotCollapsed) {
 				ctx.beginPath();
-				ctx.lineHor(startX + _diff, startY, startX + width);
-				ctx.lineHor(startX + _diff, startY + height, startX + width);
-				ctx.lineVer(startX, startY + _diff, startY + height);
-				ctx.lineVer(startX + width, startY + _diff, startY + height);
+				t._lineHor(ctx, startX + _diff, startY, startX + width);
+				t._lineHor(ctx, startX + _diff, startY + height, startX + width);
+				t._lineVer(ctx, startX, startY + _diff, startY + height);
+				t._lineVer(ctx, startX + width, startY + _diff, startY + height);
 
 				ctx.stroke();
 			} else {
-				ctx.strokeRect(startX, startY, width, height);
+				t.strokeRect(ctx, startX, startY, width, height);
 			}
 		};
 
@@ -20172,7 +20165,7 @@
 			//isDescending = true - стрелочка смотрит вниз
 			//рисуем сверху вниз
 			ctx.beginPath();
-			ctx.lineVer(startX, startY, startY + heightArrow * scaleIndex);
+			t._lineVer(ctx, startX, startY, startY + heightArrow * scaleIndex);
 
 			var tmp;
 			var x = startX;
@@ -20187,11 +20180,11 @@
 					x1 = x - tmp;
 					x2 = x - tmp + 1;
 					y1 = y - tmp + heightArrow1 - 1;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 					x1 = x + tmp;
 					x2 = x + tmp + 1;
 					y1 = y - tmp + heightArrow1 - 1;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 				}
 			} else {
 				for (i = 0; i < height; i++) {
@@ -20199,11 +20192,11 @@
 					x1 = x - tmp;
 					x2 = x - tmp + 1;
 					y1 = y + tmp;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 					x1 = x + tmp;
 					x2 = x + tmp + 1;
 					y1 = y + tmp;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 				}
 			}
 
@@ -20247,7 +20240,7 @@
 			var diffY = (height / 2);
 			height = height * scaleIndex;
 			for (var i = 0; i < height; i++) {
-				ctx.lineHor(x - (i + base), y + (height - i) - diffY, x + i)
+				t._lineHor(ctx, x - (i + base), y + (height - i) - diffY, x + i)
 			}
 
 			ctx.setStrokeStyle(m_oColor);
@@ -20470,8 +20463,8 @@
 
 		var diff = Math.floor((lnW - 1) / 2);
 		ctx.beginPath();
-		ctx.lineVer(x1 - diff, y1 + 1, y1 - lnSize + 1);
-		ctx.lineHor(x1 + 1, y1 - diff, x1 - lnSize + 1);
+		t._lineVer(ctx, x1 - diff, y1 + 1, y1 - lnSize + 1);
+		t._lineHor(ctx, x1 + 1, y1 - diff, x1 - lnSize + 1);
 
 
 		ctx.setStrokeStyle(m_oColor);
@@ -22913,7 +22906,7 @@
 			//фон для группировки
 			ctx.setFillStyle(this.settings.header.style[kHeaderDefault].background).fillRect(x1, y1, x2 - x1, y2 - y1);
 			ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-			ctx.lineHorPrevPx(x1, y2, x2);
+			this._lineHorPrevPx(ctx, x1, y2, x2);
 			ctx.stroke();
 
 			groupData = this.arrColGroups ? this.arrColGroups : this.getGroupDataArray(true, range.r1, range.r2);
@@ -22975,13 +22968,13 @@
 							collasedEndRow = this._getGroupCollapsed(arrayLines[i][j].end + 1, bCol);
 							//var collasedEndRow = rowLevelMap[arrayLines[i][j].end + 1] && rowLevelMap[arrayLines[i][j].end + 1].collapsed
 							if(!collasedEndRow) {
-								ctx.lineHorPrevPx(startPos, posY, endPos + paddingTop);
+								this._lineHorPrevPx(ctx, startPos, posY, endPos + paddingTop);
 							}
 
 							// _
 							//|
 							if(!collasedEndRow && startX === arrayLines[i][j].start) {
-								ctx.lineVerPrevPx(startPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
+								t._lineVerPrevPx(ctx, startPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
 							}
 						} else {
 
@@ -23025,14 +23018,14 @@
 							if( endPos > startPos + paddingTop - 1*padding) {
 								if(!collasedEndRow && endPos > startPos + paddingTop - 1*padding) {
 									//ctx.lineVerPrevPx(posX, startPos - paddingTop - 1*padding, endPos);
-									ctx.lineHorPrevPx(startPos + paddingTop - 1*padding, posY, endPos);
+									t._lineHorPrevPx(ctx, startPos + paddingTop - 1*padding, posY, endPos);
 								}
 
 								// _
 								//  |
 								if(!collasedEndRow && endX === arrayLines[i][j].end + 1 && endPos > startPos + paddingTop - 1*padding) {
-									//ctx.lineHorPrevPx(posX - lineWidth + thickLineDiff, endPos, posX + 4*padding);
-									ctx.lineVerPrevPx(endPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
+									//this._lineHorPrevPx(ctx, posX - lineWidth + thickLineDiff, endPos, posX + 4*padding);
+									t._lineVerPrevPx(ctx, endPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
 								}
 							}
 						}
@@ -23054,8 +23047,8 @@
 				if(pointLevel === 0 || (tempButtonMap[pointLevel + 1] && tempButtonMap[pointLevel + 1][l]) || colWidth === 0) {
 					continue;
 				}
-				ctx.lineVerPrevPx(this._getColLeft(l) - offsetX + colWidth / 2, 7 * padding + pointLevel * buttonSize, 7 * padding + (pointLevel) * buttonSize + 2 * padding);
-				//ctx.lineHorPrevPx(7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + colWidth / 2, 7 + (pointLevel) * buttonSize + 2);
+				t._lineVerPrevPx(ctx, this._getColLeft(l) - offsetX + colWidth / 2, 7 * padding + pointLevel * buttonSize, 7 * padding + (pointLevel) * buttonSize + 2 * padding);
+				//this._lineHorPrevPx(ctx, 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + colWidth / 2, 7 + (pointLevel) * buttonSize + 2);
 			}
 
 			ctx.stroke();
@@ -23069,7 +23062,7 @@
 
 			ctx.setFillStyle(this.settings.header.style[kHeaderDefault].background).fillRect(x1, y1, x2 - x1, y2 - y1);
 			ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-			ctx.lineVerPrevPx(x2, y1, y2);
+			t._lineVerPrevPx(ctx, x2, y1, y2);
 			ctx.stroke();
 
 			groupData = this.arrRowGroups ? this.arrRowGroups : this.getGroupDataArray(null, range.r1, range.r2);
@@ -23146,13 +23139,13 @@
 							var collasedEndCol = this._getGroupCollapsed(arrayLines[i][j].end + 1);
 							//var collasedEndCol = rowLevelMap[arrayLines[i][j].end + 1] && rowLevelMap[arrayLines[i][j].end + 1].collapsed;
 							if(!collasedEndCol) {
-								ctx.lineVerPrevPx(posX - this.getRightToLeftOffset(), startPos, endPos + paddingTop);
+								this._lineVerPrevPx(ctx, posX - this.getRightToLeftOffset(), startPos, endPos + paddingTop);
 							}
 
 							// _
 							//|
 							if(!collasedEndCol && startY === arrayLines[i][j].start) {
-								ctx.lineHorPrevPx(posX - lineWidthDiff + thickLineDiff  + this.getRightToLeftOffset(), startPos, posX + 4*padding + this.getRightToLeftOffset());
+								this._lineHorPrevPx(ctx, posX - lineWidthDiff + thickLineDiff  + this.getRightToLeftOffset(), startPos, posX + 4*padding + this.getRightToLeftOffset());
 							}
 						} else {
 							if(endPosArr[arrayLines[i][j].start]) {
@@ -23194,12 +23187,12 @@
 								var collapsedStartRow = this._getGroupCollapsed(arrayLines[i][j].start - 1);
 								var hiddenStartRow = this._getHidden(arrayLines[i][j].start);
 								if(!collapsedStartRow && !hiddenStartRow) {
-									ctx.lineVerPrevPx(posX, startPos - paddingTop - 1*padding, endPos);
+									this._lineVerPrevPx(ctx, posX, startPos - paddingTop - 1*padding, endPos);
 								}
 
 								// |_
 								if(!collapsedStartRow && !hiddenStartRow && endY === arrayLines[i][j].end + 1 && !checkPrevHideLevel(i, arrayLines[i][j].start)) {
-									ctx.lineHorPrevPx(posX - lineWidthDiff + thickLineDiff, endPos, posX + 4*padding);
+									this._lineHorPrevPx(ctx, posX - lineWidthDiff + thickLineDiff, endPos, posX + 4*padding);
 								}
 							}
 						}
@@ -23221,7 +23214,7 @@
 				if(pointLevel === 0 || (tempButtonMap[pointLevel + 1] && tempButtonMap[pointLevel + 1][l]) || rowHeight === 0) {
 					continue;
 				}
-				ctx.lineHorPrevPx(padding * 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + rowHeight / 2, padding * 7 + (pointLevel) * buttonSize + padding * 2);
+				this._lineHorPrevPx(ctx, padding * 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + rowHeight / 2, padding * 7 + (pointLevel) * buttonSize + padding * 2);
 			}
 
 			ctx.stroke();
@@ -23298,10 +23291,10 @@
 				ctx.clearRect(x, y, w, h);
 			}
 
-			ctx.lineHorPrevPx(x, y, x + w + this.getRightToLeftOffset());
-			ctx.lineHorPrevPx(x + w, y + h, x);
-			ctx.lineVerPrevPx(x + w, y, y + h);
-			ctx.lineVerPrevPx(x, y + h, y - borderSize);
+			this._lineHorPrevPx(ctx, x, y, x + w + this.getRightToLeftOffset());
+			this._lineHorPrevPx(ctx, x + w, y + h, x);
+			this._lineVerPrevPx(ctx, x + w, y, y + h);
+			this._lineVerPrevPx(ctx, x, y + h, y - borderSize);
 
 			ctx.stroke();
 			ctx.RemoveClipRect();
@@ -23336,11 +23329,11 @@
 
 			if(w > sizeLine + 2) {
 				if(this._getGroupCollapsed(val, bCol)/*rowLevelMap[val] && rowLevelMap[val].collapsed*/) {
-					ctx.lineHorPrevPx(x + paddingLine + this.getRightToLeftOffset(), y + h / 2 + 1, x + sizeLine + paddingLine + this.getRightToLeftOffset());
-					ctx.lineVerPrevPx(x + paddingLine + sizeLine / 2 + 1 - this.getRightToLeftOffset(), y + h / 2 - sizeLine / 2,  y + h / 2 + sizeLine / 2);
+					this._lineHorPrevPx(ctx, x + paddingLine + this.getRightToLeftOffset(), y + h / 2 + 1, x + sizeLine + paddingLine + this.getRightToLeftOffset());
+					this._lineVerPrevPx(ctx, x + paddingLine + sizeLine / 2 + 1 - this.getRightToLeftOffset(), y + h / 2 - sizeLine / 2,  y + h / 2 + sizeLine / 2);
 				} else {
 					x += this.getRightToLeftOffset();
-					ctx.lineHorPrevPx(x + paddingLine, y + h / 2 + diff, x + sizeLine + paddingLine);
+					this._lineHorPrevPx(ctx, x + paddingLine, y + h / 2 + diff, x + sizeLine + paddingLine);
 				}
 			}
 
@@ -23445,11 +23438,11 @@
 		ctx.setFillStyle(st.background).fillRect(0, 0, this.headersLeft, this.headersTop);
 
 		ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-		ctx.lineHorPrevPx(x1, y2, x2);
-		ctx.lineVerPrevPx(x2, y1, y2);
+		this._lineHorPrevPx(ctx, x1, y2, x2);
+		this._lineVerPrevPx(ctx, x2, y1, y2);
 		//угол до кнопок
-		ctx.lineHorPrevPx(0, this.headersTop, this.headersLeft);
-		ctx.lineVerPrevPx(this.headersLeft, 0, this.headersTop);
+		this._lineHorPrevPx(ctx, 0, this.headersTop, this.headersLeft);
+		this._lineVerPrevPx(ctx, this.headersLeft, 0, this.headersTop);
 		ctx.stroke();
 		ctx.closePath();
 
@@ -23487,10 +23480,10 @@
 
 		ctx.setStrokeStyle(this.settings.header.style[kHeaderDefault].border).setLineWidth( AscCommon.AscBrowser.convertToRetinaValue(1, true)).beginPath();
 
-		ctx.lineHorPrevPx(x, y, x + w);
-		ctx.lineVerPrevPx(x + w, y, y + h);
-		ctx.lineHorPrevPx(x + w, y + h, x);
-		ctx.lineVerPrevPx(x, y + h, y - AscCommon.AscBrowser.convertToRetinaValue(1, true));
+		this._lineHorPrevPx(ctx, x, y, x + w);
+		this._lineVerPrevPx(ctx, x + w, y, y + h);
+		this._lineHorPrevPx(ctx, x + w, y + h, x);
+		this._lineVerPrevPx(ctx, x, y + h, y - AscCommon.AscBrowser.convertToRetinaValue(1, true));
 
 		var text = level + 1 + "";
 		var sr = this.stringRender;
@@ -26842,6 +26835,7 @@
 	};
 
 	WorksheetView.prototype._startRtlRendering = function (ctx) {
+		return;
 		if (!ctx) {
 			ctx = this.drawingCtx;
 		}
@@ -26912,6 +26906,97 @@
 		this.objectRender.updateSizeDrawingObjects({target: c_oTargetType.ColumnResize, col: 100});
 		this.objectRender.updateDrawingsTransform({target: c_oTargetType.ColumnResize, col: 100});
 		this.objectRender.updateRange(new Asc.Range(0, 0, gc_nMaxCol0, gc_nMaxCol0));
+	};
+
+	WorksheetView.prototype._lineHor = function (ctx, x1, y, x2) {
+		ctx.lineHor(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineVer = function (ctx, x, y1, y2) {
+		ctx.lineVer(this.getRightToLeft() ? (ctx.getWidth() - x) :  x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineDiag = function (ctx, x1, y1, x2, y2) {
+		ctx.lineDiag(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y1, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2, y2);
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineVerPrevPx = function (ctx, x, y1, y2) {
+		ctx.lineVerPrevPx(this.getRightToLeft() ? (ctx.getWidth() - x) :  x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineHorPrevPx = function (ctx, x1, y, x2) {
+		ctx.lineHorPrevPx(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._dashLineCleverHor = function (ctx, x, y1, y2) {
+		ctx.dashLineCleverHor(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._dashLineCleverVer = function (ctx, x1, y, x2) {
+		ctx.dashLineCleverVer(this.getRightToLeft() ? (ctx.getWidth() - x1) : x1, y, this.getRightToLeft() ? (ctx.getWidth() - x2) : x2)
+		return ctx;
+	};
+
+
+	WorksheetView.prototype._AddClipRect = function (ctx, x, y, w, h) {
+		ctx.AddClipRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h)
+		return ctx;
+	};
+
+	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
+		ctx.fillText( text, this.getRightToLeft() ? (ctx.getWidth() - x) : x, y, maxWidth, charWidths, angle)
+		return ctx;
+	};
+	WorksheetView.prototype._moveTo = function (ctx, x, y) {
+		ctx.moveTo(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y);
+		return ctx;
+	};
+	WorksheetView.prototype._lineTo = function (ctx, x, y) {
+		ctx.lineTo(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y);
+		return ctx;
+	};
+	WorksheetView.prototype._fillRect = function (ctx, x, y, w, h) {
+		ctx.fillRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRect = function (ctx, x, y, w, h) {
+		ctx.clearRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._rect = function (ctx, x, y, w, h) {
+		ctx.rect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRectByY = function (ctx, x, y, w, h) {
+		ctx.clearRectByY(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRectByX = function (ctx, x, y, w, h) {
+		ctx.clearRectByX(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
+	};
+	/*WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
+		stringRender.render(ctx, this.getRightToLeft() ? (ctx.getWidth() - textX - textW) : textX, textY, textW, color);
+		return stringRender;
+	};*/
+	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
+		stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
+		return stringRender;
+	};
+	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
+		ctx.fillText(text, x, y, maxWidth, charWidths, angle);
+		return ctx;
+
+	};
+	WorksheetView.prototype._strokeRect = function (ctx, x, y, w, h) {
+		ctx.strokeRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
+		return ctx;
 	};
 
 
