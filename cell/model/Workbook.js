@@ -18814,22 +18814,22 @@
 					/* checking whether the ref is included in the selected merge area (if not, then we return an error) */
 					if (formulaRef && !t.bbox.containsRange(formulaRef)) {
 						error = c_oAscError.ID.CannotChangeFormulaArray;
+						return false;
 					} else if (nRow0 == nRowStart && nCol0 == nColStart) {
 						if (formulaRef && !formulaRef.isOneCell()) {
 							error = c_oAscError.ID.CannotChangeFormulaArray;
+							return false;
 						} else {
 							oLeftTopCellStyle = cell.getStyle();
 						}
 					}
-				} else {
-					return false;
 				}
 			});
 
 		if (error) {
 			/* Complete the transaction in history before exiting the function merge */
 			AscCommon.History.EndTransaction();
-			return {errorType: error}
+			return {errorType: error};
 		}
 
 		this.worksheet.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.mergeRange, true, this.bbox, this.worksheet.getId());
