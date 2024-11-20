@@ -6178,9 +6178,9 @@
 			return null;
 		}
 
-		if (this.getRightToLeft()) {
+		/*if (this.getRightToLeft()) {
 			offsetX = -offsetX;
-		}
+		}*/
 
 		var c = this._getVisibleCell(col, row);
 
@@ -6212,21 +6212,21 @@
 			}
 		}
 
-		var x1 = this.checkRtl(this._getColLeft(colL), ctx) - offsetX;
+		var x1 = this._getColLeft(colL) - offsetX;
 		var y1 = this._getRowTop(rowT) - offsetY;
-		var w = this.checkRtl(this._getColLeft(colR  + 1), ctx) - offsetX - x1;
+		var w = this._getColLeft(colR  + 1) - offsetX - x1;
 		var h = this._getRowTop(rowB + 1) - offsetY - y1;
 		var x2 = x1 + w - (isTrimmedR ? 0 : gridlineSize);
 		var y2 = y1 + h;
 		var bl = y2 - Asc.round(
 				(isMerged ? (ct.metrics.height - ct.metrics.baseline) : this._getRowDescender(rowB)) * this.getZoom());
-		if (this.getRightToLeft()) {
+		/*if (this.getRightToLeft()) {
 			let temp = x1;
 			x1 = x2;
 			x2 = temp;
 			w = -w;
-		}
-		var x1ct = isMerged ? x1 : this._getColLeft(col, true, ctx) - offsetX;
+		}*/
+		var x1ct = isMerged ? x1 : this._getColLeft(col, false, ctx) - offsetX;
 		var x2ct = isMerged ? x2 : x1ct + this._getColumnWidth(col) - gridlineSize;
 		var textX = this._calcTextHorizPos(x1ct, x2ct, ct.metrics, ct.cellHA);
 		var textY = this._calcTextVertPos(y1, h, bl, ct.metrics, ct.cellVA);
@@ -6411,7 +6411,7 @@
 				}
 			}
 
-			this._drawText(this.stringRender.restoreInternalState(ct.state), drawingCtx, textX, textY, textW, color)
+			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color)
 			ctx.RemoveClipRect();
 		}
 
@@ -10866,7 +10866,7 @@
 
 		if (this.workbook.getSmoothScrolling()) {
 			this._AddClipRect(ctx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
-			this.drawingGraphicCtx.AddClipRect && ctx._AddClipRect(this.drawingGraphicCtx, clearLeft - clearOffset, y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
+			this.drawingGraphicCtx.AddClipRect && this._AddClipRect(this.drawingGraphicCtx, clearLeft - clearOffset, y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
 		}
 		this._endRtlDrawingRendering();
         // Дорисовываем необходимое
@@ -26976,23 +26976,23 @@
 		ctx.clearRectByX(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
 		return ctx;
 	};
-	/*WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
+	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
 		stringRender.render(ctx, this.getRightToLeft() ? (ctx.getWidth() - textX - textW) : textX, textY, textW, color);
 		return stringRender;
 	};
 	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
 		ctx.fillText( text, this.getRightToLeft() ? (ctx.getWidth() - x) : x, y, maxWidth, charWidths, angle)
 		return ctx;
-	};*/
-	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
-		stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
-		return stringRender;
 	};
-	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
+	// WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
+	// 	stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
+	// 	return stringRender;
+	// };
+	/*WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
 		ctx.fillText(text, x, y, maxWidth, charWidths, angle);
 		return ctx;
 
-	};
+	};*/
 	WorksheetView.prototype._strokeRect = function (ctx, x, y, w, h) {
 		ctx.strokeRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h);
 		return ctx;
