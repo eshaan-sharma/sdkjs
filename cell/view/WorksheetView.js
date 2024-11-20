@@ -7539,30 +7539,30 @@
 			fHorLine = this._dashLineCleverHor;
 			fVerLine = this._dashLineCleverVer;
 		} else {
-			fHorLine = ctx.lineHorPrevPx;
-			fVerLine = ctx.lineVerPrevPx;
+			fHorLine = this._lineHorPrevPx;
+			fVerLine = this._lineVerPrevPx;
 		}
 
 		if (this.topLeftFrozenCell) {
 			var row = this.topLeftFrozenCell.getRow0();
 			var col = this.topLeftFrozenCell.getCol0();
 			if (0 < row) {
-				fHorLine.apply(ctx, [0, this._getRowTop(row), ctx.getWidth(), this]);
+				fHorLine.apply(this, [ctx, 0, this._getRowTop(row), ctx.getWidth(), this]);
 			} else {
-				fHorLine.apply(ctx, [this.headersLeft, this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
+				fHorLine.apply(this, [ctx, this.headersLeft, this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
 			}
 
 			if (0 < col) {
-				fVerLine.apply(ctx, [this._getColLeft(col), 0, ctx.getHeight(), this]);
+				fVerLine.apply(this, [ctx, this._getColLeft(col), 0, ctx.getHeight(), this]);
 			} else {
-				fVerLine.apply(ctx, [this.headersLeft + this.headersWidth, this.headersTop, this.headersTop + this.headersHeight, this]);
+				fVerLine.apply(this, [ctx, this.headersLeft + this.headersWidth, this.headersTop, this.headersTop + this.headersHeight, this]);
 
 			}
 			ctx.stroke();
 
 		} else if (this.model.getSheetView().asc_getShowRowColHeaders()) {
-			fHorLine.apply(ctx, [this.headersLeft + this.getRightToLeftOffset(), this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
-			fVerLine.apply(ctx, [this.headersWidth + this.headersLeft, this.headersTop, this.headersTop + this.headersHeight, this]);
+			fHorLine.apply(this, [ctx, this.headersLeft + this.getRightToLeftOffset(), this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
+			fVerLine.apply(this, [ctx, this.headersWidth + this.headersLeft, this.headersTop, this.headersTop + this.headersHeight, this]);
 			ctx.stroke();
 		}
 	};
@@ -7885,8 +7885,8 @@
             fHorLine = this._dashLineCleverHor;
             fVerLine = this._dashLineCleverVer;
         } else {
-            fHorLine = ctx.lineHorPrevPx;
-            fVerLine = ctx.lineVerPrevPx;
+            fHorLine = this._lineHorPrevPx;
+            fVerLine = this._lineVerPrevPx;
         }
 
         let firstCol = oIntersection.c1 === visibleRange.c1 && !isAllRange;
@@ -7920,7 +7920,8 @@
         if (canFill) {
             let fillColor = strokeColor.Copy();
             fillColor.a = 0.15;
-            ctx.setFillStyle(fillColor).fillRect(x1, y1, x2 - x1, y2 - y1);
+            ctx.setFillStyle(fillColor);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
         }
 
 
@@ -7951,16 +7952,16 @@
             ctx.beginPath();
 
             if (drawTopSide && !firstRow) {
-                fHorLine.apply(ctx, [x1 - !isDashLine * (2 + isRetina * 1) + _diff + this.getRightToLeftOffset()*1, y1, x2 + !isDashLine * (1 + isRetina * 1) - _diff + this.getRightToLeftOffset()*1, this]);
+                fHorLine.apply(this, [ctx, x1 - !isDashLine * (2 + isRetina * 1) + _diff + this.getRightToLeftOffset()*1, y1, x2 + !isDashLine * (1 + isRetina * 1) - _diff + this.getRightToLeftOffset()*1, this]);
             }
             if (drawBottomSide) {
-                fHorLine.apply(ctx, [x1, y2 + !isDashLine * 1 - thinLineDiff, x2, this]);
+                fHorLine.apply(this, [ctx, x1, y2 + !isDashLine * 1 - thinLineDiff, x2, this]);
             }
             if (drawLeftSide && !firstCol) {
-                fVerLine.apply(ctx, [x1 - this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1) - _diff, this]);
+                fVerLine.apply(this, [ctx, x1 - this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1) - _diff, this]);
             }
             if (drawRightSide) {
-                fVerLine.apply(ctx, [x2 + !isDashLine * 1 - thinLineDiff -this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1), this]);
+                fVerLine.apply(this, [ctx, x2 + !isDashLine * 1 - thinLineDiff -this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1), this]);
             }
             ctx.closePath().stroke();
 		}
@@ -7989,16 +7990,16 @@
             ctx.setStrokeStyle(colorN);
             ctx.beginPath();
             if (drawTopSide) {
-                fHorLine.apply(ctx, [x1 + isRetina * 1 + this.getRightToLeftOffset()*1, y1 + 1 + isRetina * !firstRow * 1, x2 - 1 - isRetina * 1 + this.getRightToLeftOffset()*1, ctx]);
+                fHorLine.apply(this, [ctx, x1 + isRetina * 1 + this.getRightToLeftOffset()*1, y1 + 1 + isRetina * !firstRow * 1, x2 - 1 - isRetina * 1 + this.getRightToLeftOffset()*1, ctx]);
             }
             if (drawBottomSide) {
-                fHorLine.apply(ctx, [x1 + isRetina * 1+ this.getRightToLeftOffset()*1, y2 - 1 - isRetina * 1, x2 - 1 - isRetina * 1+ this.getRightToLeftOffset()*1, ctx]);
+                fHorLine.apply(this, [ctx, x1 + isRetina * 1+ this.getRightToLeftOffset()*1, y2 - 1 - isRetina * 1, x2 - 1 - isRetina * 1+ this.getRightToLeftOffset()*1, ctx]);
             }
             if (drawLeftSide) {
-                fVerLine.apply(ctx, [x1 + 1 + isRetina * !firstCol * 1, y1 + isRetina * 1, y2 - 2 - isRetina * !firstCol * 1, ctx]);
+                fVerLine.apply(this, [ctx, x1 + 1 + isRetina * !firstCol * 1, y1 + isRetina * 1, y2 - 2 - isRetina * !firstCol * 1, ctx]);
             }
             if (drawRightSide) {
-                fVerLine.apply(ctx, [x2 - 1 - isRetina * 1, y1 + isRetina * 1, y2 - 2 - isRetina * 1, ctx]);
+                fVerLine.apply(this, [ctx, x2 - 1 - isRetina * 1, y1 + isRetina * 1, y2 - 2 - isRetina * 1, ctx]);
             }
             ctx.closePath().stroke();
         }
@@ -8018,33 +8019,33 @@
 
 			ctx.setFillStyle(colorN);
             if (drawRightSide && drawBottomSide) {
-                ctx.fillRect(x2 - diffBorder + this.getRightToLeftOffset()*1, y2 - diffBorder, sizeBorder, sizeBorder);
+                this._fillRect(ctx, x2 - diffBorder + this.getRightToLeftOffset()*1, y2 - diffBorder, sizeBorder, sizeBorder);
             }
             ctx.setFillStyle(strokeColor);
             if (drawRightSide && drawBottomSide) {
-                ctx.fillRect(x2 - diff + this.getRightToLeftOffset()*1, y2 - diff, size, size);
+				this._fillRect(ctx, x2 - diff + this.getRightToLeftOffset()*1, y2 - diff, size, size);
             }
 
             if (isResize) {
                 ctx.setFillStyle(colorN);
                 if (drawLeftSide && drawTopSide) {
-                    ctx.fillRect(x1 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x1 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
                 }
                 if (drawRightSide && drawTopSide) {
-                    ctx.fillRect(x2 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x2 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
                 }
                 if (drawLeftSide && drawBottomSide) {
-                    ctx.fillRect(x1 - diffBorder, y2 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x1 - diffBorder, y2 - diffBorder, sizeBorder, sizeBorder);
                 }
                 ctx.setFillStyle(strokeColor);
                 if (drawLeftSide && drawTopSide) {
-                    ctx.fillRect(x1 - diff, y1 - diff, size, size);
+					this._fillRect(ctx, x1 - diff, y1 - diff, size, size);
                 }
                 if (drawRightSide && drawTopSide) {
-                    ctx.fillRect(x2 - diff, y1 - diff, size, size);
+					this._fillRect(ctx, x2 - diff, y1 - diff, size, size);
                 }
                 if (drawLeftSide && drawBottomSide) {
-                    ctx.fillRect(x1 - diff, y2 - diff, size, size);
+					this._fillRect(ctx, x1 - diff, y2 - diff, size, size);
                 }
             }
         }
