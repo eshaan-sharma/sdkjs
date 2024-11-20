@@ -3790,7 +3790,7 @@
 			let clipLeftShape, clipTopShape, clipWidthShape, clipHeightShape;
 
 			let doDraw = function(range, titleWidth, titleHeight) {
-				drawingCtx.AddClipRect && drawingCtx.AddClipRect(clipLeft, clipTop, clipWidth, clipHeight);
+				drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipLeft, clipTop, clipWidth, clipHeight);
 
 				let transformMatrix;
 				let _transform = drawingCtx.Transform;
@@ -3910,7 +3910,7 @@
 					clipR = oInvertBaseTransform.TransformPointX(clipRightShape, clipBottomShape);
 					clipB = oInvertBaseTransform.TransformPointY(clipRightShape, clipBottomShape);
 					oDocRenderer.SaveGrState();
-					oDocRenderer.AddClipRect(clipL, clipT, clipR - clipL, clipB - clipT);
+					t._AddClipRect(oDocRenderer, clipL, clipT, clipR - clipL, clipB - clipT);
 					t.objectRender.print(drawingPrintOptions);
 					delete oDocRenderer.IsPrintPreview;
 					oDocRenderer.RestoreGrState();
@@ -3929,7 +3929,7 @@
 					clipT = clipTopShape >> 0;
 					clipR = (clipLeftShape + clipWidthShape + 0.5) >> 0;
 					clipB = (clipTopShape + clipHeightShape + 0.5) >> 0;
-					drawingCtx.AddClipRect && drawingCtx.AddClipRect(clipL, clipT, clipR - clipL, clipB - clipT);
+					drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipL, clipT, clipR - clipL, clipB - clipT);
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oBaseTransform);
 					}
@@ -4525,9 +4525,8 @@
 	};
 
     WorksheetView.prototype._clean = function () {
-        this.drawingCtx
-            .setFillStyle( this.settings.cells.defaultState.background )
-            .fillRect( 0, 0, this.drawingCtx.getWidth(), this.drawingCtx.getHeight() );
+        this.drawingCtx.setFillStyle( this.settings.cells.defaultState.background );
+		this._fillRect( this.drawingCtx, 0, 0, this.drawingCtx.getWidth(), this.drawingCtx.getHeight() );
         if ( this.overlayCtx ) {
             this.overlayCtx.clear();
         }
@@ -4652,12 +4651,12 @@
 
         this._drawHeader(null, this.headersLeft, this.headersTop, this.headersWidth,
           this.headersHeight, kHeaderDefault, true, -1);
-        this.drawingCtx.beginPath()
-          .moveTo(x2 - dx, y1 + dy)
-          .lineTo(x2 - dx, y2 - dy)
-          .lineTo(x1 + dx, y2 - dy)
-          .lineTo(x2 - dx, y1 + dy)
-          .setFillStyle(activeNamedSheetView ? this.settings.header.cornerColorSheetView : this.settings.header.cornerColor)
+        this.drawingCtx.beginPath();
+		this._moveTo(this.drawingCtx, x2 - dx, y1 + dy);
+		this._lineTo(this.drawingCtx, x2 - dx, y2 - dy);
+		this._lineTo(this.drawingCtx, x1 + dx, y2 - dy);
+		this._lineTo(this.drawingCtx, x2 - dx, y1 + dy);
+		this.drawingCtx.setFillStyle(activeNamedSheetView ? this.settings.header.cornerColorSheetView : this.settings.header.cornerColor)
           .fill();
     };
 
@@ -4705,7 +4704,7 @@
 		let isUseMainClip = (window["IS_NATIVE_EDITOR"] !== true);
 
 		if (isUseMainClip)
-			ctx.AddClipRect(clipRectX, this.headersTop - this.groupHeight, ctxW, ctxH);
+			this._AddClipRect(ctx, clipRectX, this.headersTop - this.groupHeight, ctxW, ctxH);
 
           // draw column headers
 		  var l = this._getColLeft(start) - offsetX, w;
@@ -4757,7 +4756,7 @@
         let isUseMainClip = (window["IS_NATIVE_EDITOR"] !== true);
 
         if (isUseMainClip)
-            ctx.AddClipRect(this.headersLeft - this.groupWidth, clipRectY, ctxW, ctxH);
+            this._AddClipRect(ctx, this.headersLeft - this.groupWidth, clipRectY, ctxW, ctxH);
         // draw row headers
         var t = this._getRowTop(start) - offsetY, h;
         for (var i = start; i <= end; ++i) {
@@ -4846,8 +4845,8 @@
         // background только для видимых
         if (!isZeroHeader) {
             // draw background
-            ctx.setFillStyle(backgroundColor)
-              .fillRect(x, y, w, h);
+            ctx.setFillStyle(backgroundColor);
+			this._fillRect(ctx, x, y, w, h);
         }
 
         let t = this;
@@ -4960,7 +4959,7 @@
         var textX = this._calcTextHorizPos(x, x2WithoutBorder, tm, tm.width < w ? AscCommon.align_Center : AscCommon.align_Left);
         var textY = this._calcTextVertPos(y, h, bl, tm, Asc.c_oAscVAlign.Bottom);
 
-		ctx.AddClipRect(x, y, w, h);
+		this._AddClipRect(ctx, x, y, w, h);
 		ctx.setFillStyle(color);
 
 		let charsWidth = 0;
@@ -5213,7 +5212,7 @@
 
             oGraphics.SaveGrState();
             oGraphics.transform3(new AscCommon.CMatrix());
-            oGraphics.AddClipRect(left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
+            this._AddClipRect(oGraphics, left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
             oShape.draw(oGraphics);
 
             oGraphics.RestoreGrState();
@@ -5256,7 +5255,7 @@
         for (i = colStartTmp; i <= colEndTmp; ++i) {
         	w = this._getColumnWidth(i);
         	if (0 !== w) {
-				this.drawingCtx.clearRectByX(l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
+				this._clearRectByX(this.drawingCtx, l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
 				l += w;
 			}
         }
@@ -5269,7 +5268,7 @@
             for (i = colStart; i <= colEnd; ++i) {
 				w = this._getColumnWidth(i);
 				if (0 !== w) {
-					this.drawingCtx.clearRectByX(l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
+					this._clearRectByX(this.drawingCtx, l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
 					l += w;
 				}
             }
@@ -5304,7 +5303,7 @@
         for (i = rowStartTmp; i <= rowEndTmp; ++i) {
 			h = this._getRowHeight(i);
             if (0 !== h) {
-				this.drawingCtx.clearRectByY(this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
+				this._clearRectByY(this.drawingCtx, this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
 				t += h;
             }
         }
@@ -5317,7 +5316,7 @@
             for (i = rowStart; i <= rowEnd; ++i) {
 				h = this._getRowHeight(i);
                 if (0 !== h) {
-					this.drawingCtx.clearRectByY(this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
+					this._clearRectByY(this.drawingCtx, this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
 					t += h;
                 }
             }
@@ -5325,7 +5324,7 @@
     };
 
     WorksheetView.prototype._cleanColumnHeadersRect = function () {
-        this.drawingCtx.clearRect(this.cellsLeft, this.headersTop, this.drawingCtx.getWidth() - this.cellsLeft,
+        this._clearRect(this.drawingCtx, this.cellsLeft, this.headersTop, this.drawingCtx.getWidth() - this.cellsLeft,
           this.headersHeight);
     };
 
@@ -5381,8 +5380,8 @@
 		let y2 = Math.min(this._getRowTop(range.r2 + 1) - offsetY, heightCtx);
 		let isPrint = this.usePrintScale;
 		if (!ctx.isNotDrawBackground && !isPrint) {
-			ctx.setFillStyle(this.settings.cells.defaultState.background)
-				.fillRect(x1, y1, x2 - x1, y2 - y1);
+			ctx.setFillStyle(this.settings.cells.defaultState.background);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
 		}
 
 		//рисуем текст для преварительного просмотра
@@ -5432,7 +5431,7 @@
 			x2 = Math.min(this._getColLeft(clearRange.c2 + 1) - offsetX - (clearRange.c2 === pivotRange.c2 ? 1 : 0), widthCtx);
 			y2 = Math.min(this._getRowTop(clearRange.r2 + 1) - offsetY - (clearRange.r2 === pivotRange.r2 ? 1 : 0), heightCtx);
 
-			ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
 		}
 
 		if (!drawingCtx && !window['IS_NATIVE_EDITOR'] && isClip) {
@@ -5716,7 +5715,7 @@
 				break;
 		}
 
-		drawingCtx.AddClipRect(clipX, clipY, clipWidth, clipHeight);
+		this._AddClipRect(drawingCtx, clipX, clipY, clipWidth, clipHeight);
 		//for test
 		//console.log(" range: " + range.getName() + " clipX: " + clipX + " clipY: " + clipY + " clipWidth: " + clipWidth + " clipHeight: " + clipHeight + " caset: " + caset)
 		//drawingCtx.setLineWidth(3).setStrokeStyle(AscCommonExcel.c_oAscCoAuthoringOtherBorderColor).strokeRect(clipX + 1, clipY + 1, clipWidth - 1, clipHeight - 1);
@@ -6074,7 +6073,8 @@
 
 			var color = (isPositive || oRuleElement.NegativeBarBorderColorSameAsPositive) ? oRuleElement.BorderColor : oRuleElement.NegativeBorderColor;
 			if (color) {
-				ctx.setLineWidth(1).setLineDash([]).setStrokeStyle(color).strokeRect(x, top, dataBarLength - 1, height - 4);
+				ctx.setLineWidth(1).setLineDash([]).setStrokeStyle(color);
+				this._strokeRect(ctx, x, top, dataBarLength - 1, height - 4);
 			}
 		}
 	};
@@ -6255,7 +6255,7 @@
 				}
 
 				hb = this._getRowTop(rowB + 1) - this._getRowTop(rowT);
-				ctx.AddClipRect(xb1, yb1, wb, hb);
+				this._AddClipRect(ctx, xb1, yb1, wb, hb);
 				clipUse = true;
 			}
 
@@ -6265,13 +6265,13 @@
 			if (90 === ct.angle || -90 === ct.angle) {
 				// клип по ячейке
 				if (!isMerged) {
-					ctx.AddClipRect(xb1, yb1, wb, hb);
+					this._AddClipRect(ctx, xb1, yb1, wb, hb);
 					clipUse = true;
 				}
 			} else {
 				// клип по строке
 				if (!isMerged) {
-					ctx.AddClipRect(0, y1, this.drawingCtx.getWidth(), h);
+					this._AddClipRect(ctx, 0, y1, this.drawingCtx.getWidth(), h);
 					clipUse = true;
 				}
 
@@ -6374,7 +6374,7 @@
 				ctx.RemoveClipRect();
 			}
 		} else {
-			ctx.AddClipRect(x1, y1, w, h);
+			this._AddClipRect(ctx, x1, y1, w, h);
 			if (this._getCellCF(cfIterator, c, row, col, Asc.ECfType.iconSet) /*&& AscCommon.align_Left === ct.cellHA*/) {
 				var iconSize = AscCommon.AscBrowser.convertToRetinaValue(getCFIconSize(font.getSize()) * this.getZoom(), true);
 				//TODO оставляю отступ 0, пересмотреть!
@@ -6562,7 +6562,7 @@
 		let t = this;
 
 		// clip by visible area
-		ctx.AddClipRect(t._getColLeft(visibleRange.c1) - offsetX, t._getRowTop(visibleRange.r1) - offsetY, Math.abs(t._getColLeft(visibleRange.c2 + 1) - t._getColLeft(visibleRange.c1)), Math.abs(t._getRowTop(visibleRange.r2 + 1) - t._getRowTop(visibleRange.r1)));
+		this._AddClipRect(ctx, t._getColLeft(visibleRange.c1) - offsetX, t._getRowTop(visibleRange.r1) - offsetY, Math.abs(t._getColLeft(visibleRange.c2 + 1) - t._getColLeft(visibleRange.c1)), Math.abs(t._getRowTop(visibleRange.r2 + 1) - t._getRowTop(visibleRange.r1)));
 		
 		const doDrawArrow = function (_from, _to, external, isPrecedent) {
 			// drawing line, arrow, dot, minitable as part of a whole dependency line
@@ -6647,8 +6647,8 @@
 				} else {
 					ctx.beginPath();
 					ctx.setStrokeStyle(!external ? lineColor : externalLineColor);
-					ctx.moveTo(x1, y1);
-					ctx.lineTo(newX2, newY2);
+					t._moveTo(ctx, x1, y1);
+					t._lineTo(ctx, newX2, newY2);
 					ctx.stroke();
 					drawArrowHead(newX2, newY2, arrowSize, angle, lineColor);
 					drawDot(x1, y1, lineColor);
@@ -6770,10 +6770,10 @@
 				lineDeg2 = -90 + angle * 180 / Math.PI;
 
 			ctx.beginPath();
-			ctx.moveTo(x2, y2);
-			ctx.lineTo(x2 + Math.cos(lineDeg1 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg1 * Math.PI / 180) * arrowSize / 2);
-			ctx.lineTo(x2 + Math.cos(lineDeg * Math.PI / 180) * arrowSize, y2 + Math.sin(lineDeg * Math.PI / 180) * arrowSize);
-			ctx.lineTo(x2 + Math.cos(lineDeg2 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg2 * Math.PI / 180) * arrowSize / 2);
+			t._moveTo(ctx, x2, y2);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg1 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg1 * Math.PI / 180) * arrowSize / 2);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg * Math.PI / 180) * arrowSize, y2 + Math.sin(lineDeg * Math.PI / 180) * arrowSize);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg2 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg2 * Math.PI / 180) * arrowSize / 2);
 			ctx.closePath().fill();
 		};
 		const drawDot = function (x, y, color) {
@@ -6806,7 +6806,7 @@
 			// draw white canvas behind the table
 			ctx.setFillStyle(whiteColor);
 			ctx.beginPath();
-			ctx.fillRect(x1, y1 - lineWidth, tableWidth, tableHeight + (lineWidth * 2));
+			t._fillRect(ctx, x1, y1 - lineWidth, tableWidth, tableHeight + (lineWidth * 2));
 
 			ctx.setLineWidth(lineWidth);
 			ctx.setFillStyle(cellStrokesColor);
@@ -6814,12 +6814,12 @@
 
 			// draw main rectangle
 			ctx.beginPath();
-			ctx.strokeRect(x1, y1, tableWidth, tableHeight);
+			t._strokeRect(ctx, x1, y1, tableWidth, tableHeight);
 
 			let isEven = lineWidth % 2 !== 0 ? 0.5 : 0;
 			ctx.beginPath();
-			ctx.fillRect(x1, y1 - lineWidth, tableWidth + isEven, lineWidth + isEven);
-			ctx.strokeRect(x1, y1 - lineWidth, tableWidth, tableHeight + lineWidth);
+			t._fillRect(ctx, x1, y1 - lineWidth, tableWidth + isEven, lineWidth + isEven);
+			t._strokeRect(ctx, x1, y1 - lineWidth, tableWidth, tableHeight + lineWidth);
 
 			// Vertical lines
 			for (let i = 1; i < 3; i++) {
@@ -6855,7 +6855,7 @@
 				ctx.beginPath();
 				ctx.setStrokeStyle(lineColor);
 				ctx.setLineWidth(1);
-				ctx.strokeRect(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1));
+				t._strokeRect(ctx, x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1));
 				// then go to the next area
 			}
 		};
@@ -7024,7 +7024,7 @@
 				let _y1 = Math.max(tY1, y1);
 				let _y2 = Math.min(tY1 + textHeight * _zoom, y2);
 				if (_x1 < _x2 && _y1 < _y2) {
-					ctx.AddClipRect(x1, y1, x2 - x1, y2 - y1);
+					this._AddClipRect(ctx, x1, y1, x2 - x1, y2 - y1);
 					this._drawText(this.stringRender, undefined, tX1, tY1, 100, this.settings.activeCellBorderColor);
 					ctx.RemoveClipRect();
 				}
@@ -7082,7 +7082,7 @@
                 continue;
             }
 
-            ctx.fillRect( this._getColLeft(col + 1) - offsetX - gridlineSize, this._getRowTop(row) - offsetY, gridlineSize, this._getRowHeight(row) - gridlineSize );
+			this._fillRect( ctx, this._getColLeft(col + 1) - offsetX - gridlineSize, this._getRowTop(row) - offsetY, gridlineSize, this._getRowHeight(row) - gridlineSize );
         }
     };
 
@@ -7596,8 +7596,8 @@
                         var offsetX = this._getOffsetX();
                         offsetFrozen = this.getFrozenPaneOffset( false, true );
                         offsetX -= offsetFrozen.offsetX;
-                        ctx.setFillPattern( this.settings.ptrnLineDotted1 )
-                            .fillRect( this._getColLeft(data.col) - offsetX - gridlineSize, 0, 1, h );
+                        ctx.setFillPattern( this.settings.ptrnLineDotted1 );
+						this._fillRect( ctx, this._getColLeft(data.col) - offsetX - gridlineSize, 0, 1, h );
                     }
                 }
                 break;
@@ -7610,8 +7610,8 @@
                         var offsetY = this._getOffsetY();
                         offsetFrozen = this.getFrozenPaneOffset( true, false );
                         offsetY -= offsetFrozen.offsetY;
-                        ctx.setFillPattern( this.settings.ptrnLineDotted1 )
-                            .fillRect( 0, this._getRowTop(data.row) - offsetY - 1, w, 1 );
+                        ctx.setFillPattern( this.settings.ptrnLineDotted1 );
+						this._fillRect( ctx, 0, this._getRowTop(data.row) - offsetY - 1, w, 1 );
                     }
                 }
                 break;
@@ -7979,7 +7979,7 @@
 				let _w = this._getColLeft(fs.c2 + 1) - left - 2 - isRetina * 1;
 				let _h = this._getRowTop(fs.r2 + 1) - top - 2  - isRetina * 1;
 				if (0 < _w && 0 < _h) {
-					ctx.clearRect(_x1, _y1, _w, _h);
+					this._clearRect(ctx, _x1, _y1, _w, _h);
 				}
 			}
 		}
@@ -8078,9 +8078,9 @@
 				let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(oFrozenRange.c1);
 				let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(oFrozenRange.r1);
 
-				this.overlayCtx.save().beginPath()
-					.rect(clipX, clipY, clipW, clipH)
-					.clip();
+				this.overlayCtx.save().beginPath();
+				this._rect(this.overlayCtx, clipX, clipY, clipW, clipH)
+				this.overlayCtx.clip();
 				res = drawFunction.call(this, oFrozenRange, this._getColLeft(0) - this.cellsLeft, offsetY, args);
 				this.overlayCtx.restore();
 
@@ -8095,9 +8095,9 @@
 				let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(oFrozenRange.c1);
 				let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(oFrozenRange.r1);
 
-				this.overlayCtx.save().beginPath()
-					.rect(clipX, clipY, clipW, clipH)
-					.clip();
+				this.overlayCtx.save().beginPath();
+				this._rect(this.overlayCtx, clipX, clipY, clipW, clipH);
+				this.overlayCtx.clip();
 				res = drawFunction.call(this, oFrozenRange, offsetX, this._getOffsetY(0, true), args);
 				this.overlayCtx.restore();
 
@@ -8113,9 +8113,9 @@
         let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(this.visibleRange.c1);
         let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(this.visibleRange.r1);
 
-        this.overlayCtx.save().beginPath()
-            .rect(clipX, clipY, clipW, clipH)
-            .clip();
+        this.overlayCtx.save().beginPath();
+		this._rect(this.overlayCtx, clipX, clipY, clipW, clipH)
+		this.overlayCtx.clip();
         drawFunction.call(this, this.visibleRange, offsetX, offsetY, args);
         this.overlayCtx.restore();
     };
@@ -8148,9 +8148,9 @@
 
 		this._startRtlRendering(ctx);
 
-        ctx.save().beginPath()
-          .rect(this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
-          .clip();
+        ctx.save().beginPath();
+		this._rect(ctx, this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
+		ctx.clip();
 
 		//draw foreign cursors
 		if ((this.collaborativeEditing.getCollaborativeEditing() || api.isLiveViewer()) && this.collaborativeEditing.getFast()) {
@@ -8793,11 +8793,11 @@
                 y2 += nRad;
             }
             ctx.save()
-              .beginPath()
-              .rect(this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
-              .clip()
-              .clearRect(x1, y1, x2 - x1, y2 - y1)
-              .restore();
+              .beginPath();
+			this._rect(ctx, this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
+			ctx.clip()
+			this._clearRect(ctx, x1, y1, x2 - x1, y2 - y1)
+			ctx.restore();
         }
 		this._endRtlRendering(ctx);
         return this;
@@ -10477,9 +10477,9 @@
 				clearOffset = clearTop - firstDrawRowPos;
 			}
 		}
-        ctx.setFillStyle(this.settings.cells.defaultState.background)
-          .fillRect(this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
-        this.drawingGraphicCtx.clearRect(this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+        ctx.setFillStyle(this.settings.cells.defaultState.background);
+		this._fillRect(ctx, this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+        this._clearRect(this.drawingGraphicCtx, this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
 
 		this._updateDrawingArea();
 
@@ -10514,8 +10514,8 @@
 
             let startClip = function () {
                 if (t.workbook.getSmoothScrolling()) {
-                    ctx.AddClipRect(t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
-                    t.drawingGraphicCtx.AddClipRect && t.drawingGraphicCtx.AddClipRect(t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+                    t._AddClipRect(ctx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+                    t.drawingGraphicCtx.AddClipRect && t._AddClipRect(t.drawingGraphicCtx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
                 }
             };
 
@@ -10857,16 +10857,16 @@
 			}
 		}
 
-        ctx.setFillStyle(this.settings.cells.defaultState.background)
-          .fillRect(clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset, ctxH);
-        this.drawingGraphicCtx.clearRect(clearLeft - clearOffset, y, clearWidth + clearOffset, ctxH);
+        ctx.setFillStyle(this.settings.cells.defaultState.background);
+		this._fillRect(ctx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset, ctxH);
+        this._clearRect(this.drawingGraphicCtx, clearLeft - clearOffset, y, clearWidth + clearOffset, ctxH);
 
 		this._updateDrawingArea();
 
 
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.AddClipRect(clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
-			this.drawingGraphicCtx.AddClipRect && this.drawingGraphicCtx.AddClipRect(clearLeft - clearOffset, y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
+			this._AddClipRect(ctx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
+			this.drawingGraphicCtx.AddClipRect && ctx._AddClipRect(this.drawingGraphicCtx, clearLeft - clearOffset, y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
 		}
 		this._endRtlDrawingRendering();
         // Дорисовываем необходимое
@@ -20216,8 +20216,8 @@
 
 			ctx.beginPath();
 
-			ctx.moveTo(x, y);
-			ctx.lineTo(x, y - heightCleanLine);
+			t._moveTo(ctx, x, y);
+			t._lineTo(ctx, x, y - heightCleanLine);
 			ctx.setLineWidth(2 * t.getRetinaPixelRatio() * (isMobileRetina ? 2 : 1));
 			ctx.setStrokeStyle(m_oColor);
 			ctx.stroke();
@@ -23284,11 +23284,11 @@
 			x = x - offsetX;
 			y = y - offsetY;
 
-			ctx.AddClipRect(bCol ? pos.pos - borderSize - offsetX : x - borderSize, bCol ? y - borderSize : pos.pos - borderSize - offsetY, bCol ? pos.size + borderSize : w + borderSize + this.getRightToLeftOffset(), bCol ? h + borderSize : pos.size + borderSize);
+			this._AddClipRect(ctx, bCol ? pos.pos - borderSize - offsetX : x - borderSize, bCol ? y - borderSize : pos.pos - borderSize - offsetY, bCol ? pos.size + borderSize : w + borderSize + this.getRightToLeftOffset(), bCol ? h + borderSize : pos.size + borderSize);
 			ctx.beginPath();
 
 			if(buttons[i].clean) {
-				ctx.clearRect(x, y, w, h);
+				this._clearRect(ctx, x, y, w, h);
 			}
 
 			this._lineHorPrevPx(ctx, x, y, x + w + this.getRightToLeftOffset());
@@ -23473,7 +23473,7 @@
 		var h = props.h;
 
 		if(bClean) {
-			this.drawingCtx.clearRect(x, y, w, h);
+			this._clearRect(this.drawingCtx, x, y, w, h);
 		}
 
 		ctx.beginPath();
@@ -26948,11 +26948,6 @@
 		ctx.AddClipRect(this.getRightToLeft() ? (ctx.getWidth() - x - w) : x, y, w, h)
 		return ctx;
 	};
-
-	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
-		ctx.fillText( text, this.getRightToLeft() ? (ctx.getWidth() - x) : x, y, maxWidth, charWidths, angle)
-		return ctx;
-	};
 	WorksheetView.prototype._moveTo = function (ctx, x, y) {
 		ctx.moveTo(this.getRightToLeft() ? (ctx.getWidth() - x) : x, y);
 		return ctx;
@@ -26984,6 +26979,10 @@
 	/*WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
 		stringRender.render(ctx, this.getRightToLeft() ? (ctx.getWidth() - textX - textW) : textX, textY, textW, color);
 		return stringRender;
+	};
+	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
+		ctx.fillText( text, this.getRightToLeft() ? (ctx.getWidth() - x) : x, y, maxWidth, charWidths, angle)
+		return ctx;
 	};*/
 	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
 		stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
