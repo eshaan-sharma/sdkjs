@@ -1044,7 +1044,7 @@
 	};
 
 	WorksheetView.prototype._initScrollStep = function () {
-		let isMobileVersion = this.workbook && this.workbook.Api && this.workbook.Api.isMobileVersion;
+		/*let isMobileVersion = this.workbook && this.workbook.Api && this.workbook.Api.isMobileVersion;
 		if (isMobileVersion) {
 			let oView = this.workbook && this.workbook.controller && this.workbook.controller.settings;
 			let defaultStep = 10;
@@ -1053,7 +1053,10 @@
 		} else {
 			this.vScrollPxStep = this.defaultRowHeightPx;
 			this.hScrollPxStep = this.defaultColWidthPx;
-		}
+		}*/
+
+		this.vScrollPxStep = this.defaultRowHeightPx;
+		this.hScrollPxStep = this.defaultColWidthPx;
 	};
 
 	WorksheetView.prototype.getCellEditMode = function () {
@@ -1164,7 +1167,7 @@
 
 		beforeVisibleRangeHeight += this.getScrollCorrect();
 		let defaultScrollPxStep = Asc.round(this.getVScrollStep());
-		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeHeight - frozenVisibleRangeHeight)/defaultScrollPxStep);
+		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeHeight - frozenVisibleRangeHeight)/defaultScrollPxStep) / this.getRetinaPixelRatio();
 	};
 
 	WorksheetView.prototype.getVerticalSmoothScrollRange = function (bCheckEqual) {
@@ -1194,9 +1197,9 @@
 		let defaultScrollPxStep = Asc.round(this.getVScrollStep());
 		let beforeVisibleRangeHeight = this._getRowTop(row) - this.cellsTop;
 		if (isMobileVersion || AscCommonExcel.c_oAscScrollType.ScrollInitRowsColsCount & this.scrollType) {
-			beforeVisibleRangeHeight += this.getScrollCorrect();
+			//beforeVisibleRangeHeight += this.getScrollCorrect();
 		}
-		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeHeight - frozenVisibleRangeHeight)/defaultScrollPxStep);
+		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeHeight - frozenVisibleRangeHeight)/defaultScrollPxStep) / this.getRetinaPixelRatio();
 	};
 
 	WorksheetView.prototype.getFirstVisibleColSmoothScroll = function (allowPane) {
@@ -1212,7 +1215,7 @@
 
 		beforeVisibleRangeWidth += this.getHorizontalScrollCorrect();
 		let defaultScrollPxStep = Asc.round(this.getHScrollStep());
-		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeWidth - frozenVisibleRangeWidth)/defaultScrollPxStep);
+		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeWidth - frozenVisibleRangeWidth)/defaultScrollPxStep) / this.getRetinaPixelRatio();
 	};
 
 	WorksheetView.prototype.getHorizontalSmoothScrollRange = function (/*bCheckEqual*/) {
@@ -1242,10 +1245,10 @@
 		let defaultScrollPxStep = Asc.round(this.getHScrollStep());
 		let beforeVisibleRangeWidth = this._getColLeft(col) - this.cellsLeft;
 		if (isMobileVersion || AscCommonExcel.c_oAscScrollType.ScrollInitRowsColsCount & this.scrollType) {
-			beforeVisibleRangeWidth += this.getHorizontalScrollCorrect();
+			//beforeVisibleRangeWidth += this.getHorizontalScrollCorrect();
 		}
 
-		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeWidth - frozenVisibleRangeWidth)/defaultScrollPxStep);
+		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeWidth - frozenVisibleRangeWidth)/defaultScrollPxStep) / this.getRetinaPixelRatio();
 	};
 
     WorksheetView.prototype.getLastVisibleRow = function () {
@@ -10973,6 +10976,10 @@
     };
 
 	WorksheetView.prototype.executeScrollDefaultStep = function (callback) {
+
+		callback();
+		return;
+
 		let oView = this.workbook && this.workbook.controller && this.workbook.controller.settings;
 		let defaultStep = 10;
 		let realVScrollPxStep = this.vScrollPxStep;
@@ -26810,13 +26817,14 @@
 		return this.renderingSettings;
 	};
 
-	WorksheetView.prototype.getVScrollStep = function () {
+	WorksheetView.prototype.getVScrollStep = function (byStep) {
 		let isMobileVersion = this.workbook && this.workbook.Api && this.workbook.Api.isMobileVersion;
-		return this.vScrollPxStep * this.getZoom() * (isMobileVersion ? this.getRetinaPixelRatio() : 1);
+		//return this.vScrollPxStep * this.getZoom() * (isMobileVersion ? this.getRetinaPixelRatio() : 1);
+		return byStep ? this.vScrollPxStep * this.getZoom() : 1;
 	};
 
-	WorksheetView.prototype.getHScrollStep = function () {
-		return this.hScrollPxStep * this.getZoom() * this.getRetinaPixelRatio();
+	WorksheetView.prototype.getHScrollStep = function (byStep) {
+		return byStep ? this.hScrollPxStep * this.getZoom() * this.getRetinaPixelRatio() : 1;
 	};
 
 	WorksheetView.prototype.checkRtl = function (x, ctx, units, checkOffsets) {

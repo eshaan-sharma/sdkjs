@@ -54,8 +54,8 @@
 		function asc_CEventsController() {
 			//----- declaration -----
 			this.settings = {
-				vscrollStep: 10,
-				hscrollStep: 10,
+				vscrollStep: 1,
+				hscrollStep: 1,
 				scrollTimeout: 20,
 				wheelScrollLinesV: 3
 			};
@@ -2114,7 +2114,7 @@
 
 			const wb = window["Asc"]["editor"].wb;
 			//TODO for mac touchpads. need review
-			if (wb.smoothScroll && AscCommon.AscBrowser.isMacOs) {
+			if (wb.smoothScroll) {
 				var delta  = 0;
 
 				if (undefined != event.wheelDelta && event.wheelDelta != 0) {
