@@ -131,6 +131,8 @@
 			ConvertationOpenLimitError : -84,
 			ConvertationOpenFormat     : -85,
 
+			CannotSaveWatermark     : -86,
+
 			UserDrop : -100,
 			Warning  : -101,
 			UpdateVersion : -102,
@@ -166,8 +168,16 @@
 			PivotOverlap				: -314,
 			PivotGroup					: -315,
 			PivotWithoutUnderlyingData	: -316,
+			PivotFieldNameExists        : -317,
+			FormulaInPivotFieldName     : -318,
+			PasteInPivot                : -319,
 
 			CircularReference			: -320,
+			PivotItemNameNotFound       : -321,
+			CalculatedItemInPageField   : -322,
+			NotUniqueFieldWithCalculated: -323,
+			WrongDataFieldSubtotalForCalculatedItems: -324,
+			PivotFieldCustomSubtotalsWithCalculatedItems: -325,
 
 			ForceSaveButton: -331,
 			ForceSaveTimeout: -332,
@@ -335,6 +345,7 @@
 	prot['ConvertationSaveError']            = prot.ConvertationSaveError;
 	prot['ConvertationOpenLimitError']       = prot.ConvertationOpenLimitError;
 	prot['ConvertationOpenFormat']       	 = prot.ConvertationOpenFormat;
+	prot['CannotSaveWatermark']       	     = prot.CannotSaveWatermark;
 	prot['UserDrop']                         = prot.UserDrop;
 	prot['Warning']                          = prot.Warning;
 	prot['UpdateVersion']                    = prot.UpdateVersion;
@@ -358,6 +369,14 @@
 	prot['InvalidReferenceOrName']           = prot.InvalidReferenceOrName;
 	prot['LockCreateDefName']                = prot.LockCreateDefName;
 	prot['LockedCellPivot']                  = prot.LockedCellPivot;
+	prot['PivotFieldNameExists']             = prot.PivotFieldNameExists;
+	prot['FormulaInPivotFieldName']          = prot.FormulaInPivotFieldName;
+	prot['PivotItemNameNotFound']            = prot.PivotItemNameNotFound;
+	prot['CalculatedItemInPageField']        = prot.CalculatedItemInPageField;
+	prot['NotUniqueFieldWithCalculated']     = prot.NotUniqueFieldWithCalculated
+	prot['WrongDataFieldSubtotalForCalculatedItems'] = prot.WrongDataFieldSubtotalForCalculatedItems;
+	prot['PivotFieldCustomSubtotalsWithCalculatedItems'] = prot.PivotFieldCustomSubtotalsWithCalculatedItems;
+	prot['PasteInPivot']                     = prot.PasteInPivot;
 	prot['PivotLabledColumns']               = prot.PivotLabledColumns;
 	prot['PivotOverlap']                     = prot.PivotOverlap;
 	prot['PivotGroup']                       = prot.PivotGroup;
@@ -418,6 +437,7 @@
 	prot['TraceDependentsNoFormulas']        = prot.TraceDependentsNoFormulas;
 	prot['TracePrecedentsNoValidReference']  = prot.TracePrecedentsNoValidReference;
 	prot['MustIntegerOrDecimalNumber']       = prot.MustIntegerOrDecimalNumber;
+	prot['DocumentAndChangeMismatch']        = prot.DocumentAndChangeMismatch;
 
 
 

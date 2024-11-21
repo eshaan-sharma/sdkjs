@@ -116,6 +116,8 @@
 
 		if (!form)
 			return "Form" + counter;
+		else if (form.IsSignatureForm())
+			return "Signature" + counter;
 		else if (form.IsRadioButton())
 			return "Group " + counter; // Добавил пробел, потому что в UI с пробелом генерится, чтобы не было разницы
 		else if (form.IsComplexForm())

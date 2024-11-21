@@ -167,7 +167,6 @@
         this.forceSaveButtonContinue = false;
         this.forceSaveTimeoutTimeout = null;
 		this.forceSaveForm = null;
-		this.disconnectOnSave = null;
 		this.disconnectRestrictions = null;//to restore restrictions after disconnect
 		this.forceSaveUndoRequest = false; // Флаг нужен, чтобы мы знали, что данное сохранение пришло по запросу Undo в совместке
 
@@ -231,7 +230,8 @@
 		this.binaryChanges = false;
 
 		this.isBlurEditor = false;
-
+		
+		this.builderFonts = {};
 
 		this.formatPainter = new AscCommon.CFormatPainter(this);
 		this.eyedropper = new AscCommon.CEyedropper(this);
@@ -306,7 +306,11 @@
 				if(t.isDocumentLoadComplete) {
 					//todo disconnect and downloadAs ability
 					t.sendEvent("asc_onError", Asc.c_oAscError.ID.EditingError, c_oAscError.Level.NoCritical);
-					t.asc_setViewMode(true);
+					if (t.isCoAuthoringEnable) {
+						t.asc_coAuthoringDisconnect();
+					} else {
+						t.asc_setViewMode(true);
+					}
 				}
 				else {
 					t.sendEvent("asc_onError", Asc.c_oAscError.ID.ConvertationOpenError, c_oAscError.Level.Critical);
@@ -488,7 +492,7 @@
 
 			if (this.DocInfo.get_Wopi())
 			{
-				this.documentShardKey = this.DocInfo.get_Wopi()["WOPISrc"];
+				this.documentWopiSrc = this.DocInfo.get_Wopi()["WOPISrc"];
 				this.documentUserSessionId = this.DocInfo.get_Wopi()["UserSessionId"];
 				this.documentIsWopi = true;
 			}
@@ -508,7 +512,7 @@
 			}
 			if (!this.documentWopiSrc) {
 				//todo add tenant in origin?
-				this.documentShardKey = this.documentId;
+				this.documentShardKey = this.DocInfo.get_Shardkey() || this.documentId;
 			}
 		}
 
@@ -1184,7 +1188,7 @@
 	{
 		// здесь прокинуть евент о заморозке меню
 	};
-	baseEditorsApi.prototype.asyncImagesDocumentStartLoaded      = function()
+	baseEditorsApi.prototype.asyncImagesDocumentStartLoaded      = function(aImages)
 	{
 		// евент о заморозке не нужен... оно и так заморожено
 		// просто нужно вывести информацию в статус бар (что началась загрузка картинок)
@@ -1324,6 +1328,9 @@
 	// Переопределяется во всех редакторах
 	baseEditorsApi.prototype._haveOtherChanges = function () {
 		return false;
+	};
+	baseEditorsApi.prototype._haveChanges = function() {
+		return AscCommon.History.Have_Changes();
 	};
 	baseEditorsApi.prototype._onSaveCallback = function (e) {
 		var t = this;
@@ -1510,6 +1517,28 @@
 			this.downloadAs(Asc.c_oAscAsyncAction.DownloadAs, oOptions);
 		}
 	};
+	baseEditorsApi.prototype.getConvertedBinFileFromRtf  = function (document, nOutputFormat, fCallback) {
+		if (this.canEdit()) {
+			this.insertDocumentUrlsData = {
+				imageMap: null, documents: [document], convertCallback: function (_api, url) {
+					_api.insertDocumentUrlsData.imageMap = url;
+					if (url['output.bin']) {
+						fCallback(url['output.bin']);
+					} else {
+						fCallback(null);
+					}
+					//_api.endInsertDocumentUrls();
+				}, endCallback: function (_api) {
+					fCallback(null);
+				}
+			};
+
+			const oOptions = new Asc.asc_CDownloadOptions(nOutputFormat);
+			oOptions.isNaturalDownload = true;
+			oOptions.isGetTextFromUrl = true;
+			this.downloadAs(Asc.c_oAscAsyncAction.DownloadAs, oOptions);
+		}
+	};
 	baseEditorsApi.prototype._onEndPermissions                   = function()
 	{
 		if (this.isOnLoadLicense) {
@@ -1563,6 +1592,8 @@
 	// CoAuthoring
 	baseEditorsApi.prototype._coAuthoringInit                    = function()
 	{
+		this.initCollaborativeEditing();
+		
 		var t = this;
 		//Если User не задан, отключаем коавторинг.
 		if (null == this.User || null == this.User.asc_getId())
@@ -1678,25 +1709,19 @@
 			var reason = data["reason"];
 			var interval = data["interval"];
 			var extendSession = true;
-			if (c_oCloseCode.sessionIdle == code) {
+			if (c_oCloseCode.sessionIdle === code) {
 				var idleTime = t.isIdle();
 				if (idleTime > interval) {
 					extendSession = false;
 				} else {
 					t.CoAuthoringApi.extendSession(idleTime);
 				}
-			} else if (c_oCloseCode.sessionAbsolute == code) {
+			} else if (c_oCloseCode.sessionAbsolute === code) {
 				extendSession = false;
 			}
 			if (!extendSession) {
-				if (t.asc_Save(false, true)) {
-					//enter view mode because save async
-					t.setViewModeDisconnect(AscCommon.getEnableDownloadByCloseCode(code));
-					t.disconnectOnSave = {code: code, reason: reason};
-				} else {
-					t.CoAuthoringApi.sendClientLog('debug', 'disconnect code:' + code + ';reason:' + reason);
-					t.CoAuthoringApi.disconnect(code, reason);
-				}
+				t.CoAuthoringApi.sendClientLog('debug', 'disconnect code:' + code + ';reason:' + reason);
+				t.CoAuthoringApi.disconnect(code, reason);
 			}
 		};
         this.CoAuthoringApi.onForceSave = function(data) {
@@ -1800,7 +1825,8 @@
 			{
 				t.asyncServerIdEndLoaded();
 			}
-			if (null != opt_closeCode) {
+			let isSessionIdleDisconnect = AscCommon.c_oCloseCode.sessionIdle === opt_closeCode;
+			if (null != opt_closeCode && !isSessionIdleDisconnect) {
 				if (null !== t.disconnectRestrictions) {
 					t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
 					t.asc_setRestriction(t.disconnectRestrictions);
@@ -1818,6 +1844,11 @@
 				t.disconnectRestrictions = t.restrictions;
 				t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
 				t.asc_setRestriction(Asc.c_oAscRestrictionType.View);
+				if (isSessionIdleDisconnect) {
+					t.waitNotIdle(undefined, function () {
+						t.CoAuthoringApi.connect();
+					});
+				}
 			}
 		};
 		this.CoAuthoringApi.onDocumentOpen = function (inputWrap) {
@@ -2159,6 +2190,7 @@
 		oAdditionalData["title"] = AscCommon.changeFileExtention(this.documentTitle, AscCommon.getExtentionByFormat(options.fileType), Asc.c_nMaxDownloadTitleLen);
 		oAdditionalData["nobase64"] = isNoBase64;
 		oAdditionalData["isSaveAs"] = options.isSaveAs;
+		oAdditionalData["saveAsPath"] = options.wopiSaveAsPath;
 		let locale = this.asc_getLocale() || undefined;
 		if (typeof locale === "string") {
 			locale = Asc.g_oLcidNameToIdMap[locale];
@@ -2637,7 +2669,7 @@
 	};
 	baseEditorsApi.prototype.asc_getAdvancedOptions = function () {
 		var cp            = {
-			'codepage'  : AscCommon.c_oAscCodePageUtf8,
+			'codepage'  : AscCommon.c_oAscCodePageNone,
 			'encodings' : AscCommon.getEncodingParams()
 		};
 		return new AscCommon.asc_CAdvancedOptions(cp);
@@ -2663,7 +2695,7 @@
 		if (this.canSave && this._saveCheck() && this.canSendChanges()) {
 			this.IsUserSave = !isAutoSave;
 
-			if (this.asc_isDocumentCanSave() || AscCommon.History.Have_Changes() || this._haveOtherChanges() ||
+			if (this.asc_isDocumentCanSave() || this._haveChanges() || this._haveOtherChanges() ||
 				this.canUnlockDocument || this.forceSaveUndoRequest) {
 				if (this._prepareSave(isIdle)) {
 					// Не даем пользователю сохранять, пока не закончится сохранение (если оно началось)
@@ -2821,7 +2853,8 @@
 	};
 	baseEditorsApi.prototype._onEndLoadSdk = function()
 	{
-		AscCommon.g_oTableId.init();
+		AscCommon.g_oTableId.init(this);
+		this.initCollaborativeEditing();
 
 		// init drag&drop
 		var t = this;
@@ -2855,6 +2888,9 @@
 		this._loadSdkImages();
 
 		this.checkDocumentTitleFonts();
+	};
+	baseEditorsApi.prototype.initCollaborativeEditing = function()
+	{
 	};
 	baseEditorsApi.prototype.checkDocumentTitleFonts = function() {
 		if (!AscFonts.FontPickerByCharacter || !this.documentTitle)
@@ -3306,8 +3342,36 @@
 	{
 		return this.asc_canPaste();
 	};
-	baseEditorsApi.prototype.onEndBuilderScript = function()
+	baseEditorsApi.prototype.onEndBuilderScript = function(callback)
 	{
+		let _t = this;
+		this.loadBuilderFonts(function()
+		{
+			return _t._onEndBuilderScript(callback);
+		});
+		
+		return true;
+	};
+	baseEditorsApi.prototype.addBuilderFont = function(fontName)
+	{
+		this.builderFonts[fontName] = true;
+	};
+	baseEditorsApi.prototype.loadBuilderFonts = function(callback)
+	{
+		let _t = this;
+		this.incrementCounterLongAction();
+		AscCommon.g_font_loader.LoadFonts(this.builderFonts, function(){
+			_t.decrementCounterLongAction();
+			callback();
+		});
+		this.builderFonts = {};
+	};
+	baseEditorsApi.prototype._onEndBuilderScript = function(callback)
+	{
+		// This method is intended to be overridden
+		if (callback)
+			callback(true);
+		
 		return true;
 	};
 
@@ -3762,15 +3826,29 @@
 		if (!this.canSave || !this._saveCheck())
 			return 0;
 
-		if (this.isPdfEditor())
-			return 0;
-
 		//viewer
-		if (this.isViewMode)
+		if (this.isViewMode || this.isPdfViewer)
 			return 0;
 
 		return new Date().getTime() - this.lastWorkTime;
 	};
+	baseEditorsApi.prototype.waitNotIdle = function (lastWorkTime, callback)
+	{
+		let t = this;
+		//todo remove first timeout
+		//start with timeout to aviod lastWorkTime update on:
+		//onDisconnect -> asc_setRestriction -> checkLastWork and CheckTargetUpdate -> checkLastWork
+		setTimeout(function () {
+			if (undefined === lastWorkTime) {
+				lastWorkTime = t.getLastWork();
+			}
+			if (lastWorkTime < t.getLastWork()) {
+				callback();
+			} else {
+				t.waitNotIdle(lastWorkTime, callback);
+			}
+		}, 100);
+	}
 
 	baseEditorsApi.prototype.checkInterfaceElementBlur = function()
 	{
@@ -3786,6 +3864,11 @@
 		document.activeElement.dispatchEvent(e);
 	};
 
+
+	baseEditorsApi.prototype.getLastWork = function()
+	{
+		return this.lastWorkTime;
+	};
 	baseEditorsApi.prototype.checkLastWork = function()
 	{
 		this.lastWorkTime = new Date().getTime();
@@ -3801,9 +3884,10 @@
 
 	baseEditorsApi.prototype.asc_setCurrentPassword = function(password)
 	{
+		this.currentPasswordOld = this.currentPassword;
 		this.currentPassword = password;
 		this.asc_Save(false, undefined, true);
-		if (!(this.DocInfo && this.DocInfo.get_OfflineApp())) {
+		if (!(this.DocInfo && this.DocInfo.get_OfflineApp()) && !this.isViewMode && !this.isPdfViewer) {
 			var rData = {
 				"c": 'setpassword',
 				"id": this.documentId,
@@ -5050,6 +5134,8 @@
 				if (types && types[i] && types[i].prototype && types[i].prototype.fromCValue)
 					arguments[i] = types[i].prototype.fromCValue(arguments[i]);
 			}
+			if (!this[name])
+				console.log("Wrap unexisted function: " + name);
 			let result = this[name].apply(this, arguments);
 			if (result && result.toCValue)
 				result = result.toCValue();
@@ -5087,6 +5173,42 @@
 		if (window.g_asc_plugins)
 			window.g_asc_plugins.onUpdateOptions();
 	};
+
+	baseEditorsApi.prototype.getCustomProperties = function() {
+		return null;
+	};
+
+	baseEditorsApi.prototype.asc_getAllCustomProperties = function() {
+		let oCustomProperties = this.getCustomProperties();
+		if(!oCustomProperties) return [];
+		return oCustomProperties.getAllProperties();
+	};
+	
+	baseEditorsApi.prototype.asc_addCustomProperty = function(name, type, value) {
+		this.addCustomProperty(name, type, value);
+	};
+
+	baseEditorsApi.prototype.asc_modifyCustomProperty = function(idx, name, type, value) {
+		this.modifyCustomProperty(idx, name, type, value);
+	};
+
+	
+	baseEditorsApi.prototype.asc_removeCustomProperty = function(idx) {
+		this.removeCustomProperty(idx);
+	};
+	
+	baseEditorsApi.prototype.addCustomProperty = function(name, type, value) {
+	};
+
+	baseEditorsApi.prototype.modifyCustomProperty = function(idx, name, type, value) {
+	};
+
+	baseEditorsApi.prototype.removeCustomProperty = function(idx) {
+	};
+	
+	baseEditorsApi.prototype.asc_setPdfViewer = function(isPdfViewer) {
+	};
+	
 
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
@@ -5168,5 +5290,29 @@
 	// passwords
 	prot["asc_setCurrentPassword"] = prot.asc_setCurrentPassword;
 	prot["asc_resetPassword"] = prot.asc_resetPassword;
+
+	// NATIVE INITIALIZER (need be in min version)
+	window["InitNativeEditors"] = function()
+	{
+		AscFonts.checkAllFonts();
+
+		let loader = AscCommon.g_font_loader;
+		loader.fontFiles = AscFonts.g_font_files;
+		loader.fontInfos = AscFonts.g_font_infos;
+		loader.map_font_index = AscFonts.g_map_font_index;
+
+		window["InitNativeObject"]();
+		if (window["InitNativeTextMeasurer"]) // fonts_ie.js
+			window["InitNativeTextMeasurer"]();
+		window["InitNativeZLib"]();
+	};
+
+	//custom properties
+	prot["asc_getAllCustomProperties"] = prot.asc_getAllCustomProperties;
+	prot["asc_addCustomProperty"] = prot.asc_addCustomProperty;
+	prot["asc_modifyCustomProperty"] = prot.asc_modifyCustomProperty;
+	prot["asc_removeCustomProperty"] = prot.asc_removeCustomProperty;
+	
+	prot["asc_setPdfViewer"] = prot.asc_setPdfViewer;
 
 })(window);

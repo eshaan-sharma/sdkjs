@@ -347,7 +347,7 @@ CDocumentContentElementBase.prototype.GetDirectTextPr = function()
 {
 	return new CTextPr();
 };
-CDocumentContentElementBase.prototype.DrawSelectionOnPage = function(CurPage)
+CDocumentContentElementBase.prototype.DrawSelectionOnPage = function(CurPage, clipInfo)
 {
 };
 CDocumentContentElementBase.prototype.StopSelection = function()
@@ -1332,7 +1332,7 @@ CDocumentContentElementBase.prototype.getDrawingDocument = function()
 	return Asc.editor.getDrawingDocument();
 };
 /**
- * @returns {?CDocumentSpellChecker}
+ * @returns {?AscWord.CDocumentSpellChecker}
  */
 CDocumentContentElementBase.prototype.getSpelling = function()
 {

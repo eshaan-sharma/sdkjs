@@ -180,7 +180,8 @@
 
 		this.CheckArray.length = nIndex < 0 ? 0 : nIndex;
 
-		if (bNeedUpdate)
+		// TODO: Сделать нормальную проверку, что текущий параграф или текущее выделение попала в проверенные элементы
+		//if (bNeedUpdate)
 			this.LogicDocument.UpdateInterface();
 	};
 	/**

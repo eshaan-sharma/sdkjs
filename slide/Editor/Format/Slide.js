@@ -1103,6 +1103,50 @@ AscFormat.InitClass(Slide, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_
 		});
     };
 
+
+    Slide.prototype.getAllRasterImagesForDraw = function(images) {
+        let aImages = images;
+        if(!aImages) {
+            aImages = [];
+        }
+
+        if(this.recalcInfo.recalculateBackground)
+        {
+            this.recalculateBackground();
+            this.recalcInfo.recalculateBackground = false;
+        }
+        if(this.backgroundFill) {
+            let sImageId = this.backgroundFill.checkRasterImageId();
+            if(sImageId) {
+                aImages.push(sImageId);
+            }
+        }
+        this.cSld.forEachSp(function(oSp) {
+            oSp.getAllRasterImages(aImages);
+        });
+        if(this.Layout) {
+            if(this.needLayoutSpDraw()) {
+                this.Layout.getAllRasterImagesForDraw(aImages);
+            }
+            if(this.Layout.Master) {
+                if(this.needMasterSpDraw()) {
+                    this.Layout.Master.getAllRasterImagesForDraw(aImages);
+                }
+            }
+        }
+        return aImages;
+    };
+    Slide.prototype.checkImageDraw = function(sImageSrc) {
+        const aImages = this.getAllRasterImagesForDraw();
+        for(let nIdx = 0; nIdx < aImages.length; ++nIdx) {
+            let sImage = aImages[nIdx];
+            if(AscCommon.getFullImageSrc2(sImage) === sImageSrc) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     Slide.prototype.changeSize = function(width, height)
     {
         var kw = width/this.Width, kh = height/this.Height;

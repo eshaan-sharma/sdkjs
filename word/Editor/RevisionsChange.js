@@ -366,6 +366,10 @@ CRevisionsChange.prototype.GetWeight = function()
 
 	return 0;
 };
+CRevisionsChange.prototype.IsValid = function()
+{
+	return !!(this.Element && this.Element.IsUseInDocument());
+};
 
 //--------------------------------------------------------export--------------------------------------------------------
 CRevisionsChange.prototype['get_UserId'] = CRevisionsChange.prototype.GetUserId;

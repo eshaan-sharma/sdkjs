@@ -70,6 +70,7 @@
 		var CChangesDrawingsContentLong = AscDFH.CChangesDrawingsContentLong;
 		var CChangesDrawingsContentLongMap = AscDFH.CChangesDrawingsContentLongMap;
 		var CChangesDrawingsContent = AscDFH.CChangesDrawingsContent;
+		var CChangesDrawingsDouble2 = AscDFH.CChangesDrawingsDouble2;
 
 
 
@@ -144,193 +145,21 @@
 		function CBaseObject() {
 			CBaseNoIdObject.call(this);
 			this.Id = null;
+			this.initId();
+		}
+		InitClass(CBaseObject, CBaseNoIdObject, AscDFH.historyitem_type_Unknown);
+		CBaseObject.prototype.initId = function() {
 			if ((AscCommon.g_oIdCounter.m_bLoad || AscCommon.History.CanAddChanges() || this.notAllowedWithoutId()) && !this.isGlobalSkipAddId()) {
 				this.Id = AscCommon.g_oIdCounter.Get_NewId();
 				AscCommon.g_oTableId.Add(this, this.Id);
 			}
-		}
-		InitClass(CBaseObject, CBaseNoIdObject, AscDFH.historyitem_type_Unknown);
-
+		};
+		CBaseObject.prototype.notAllowedWithoutId = function () {
+			return true;
+		};
 		CBaseObject.prototype.isGlobalSkipAddId = function () {
 			const oApi = window.editor || Asc.editor;
 			return !!(oApi && oApi.isSkipAddIdToBaseObject);
-		}
-
-		function InitClassWithoutType(fClass, fBase) {
-			fClass.prototype = Object.create(fBase.prototype);
-			fClass.prototype.superclass = fBase;
-			fClass.prototype.constructor = fClass;
-		}
-
-		function InitClass(fClass, fBase, nType) {
-			InitClassWithoutType(fClass, fBase);
-			fClass.prototype.classType = nType;
-		}
-
-
-		function CBaseFormatObject() {
-			CBaseObject.call(this);
-			this.parent = null;
-		}
-
-		CBaseFormatObject.prototype = Object.create(CBaseObject.prototype);
-		CBaseFormatObject.prototype.constructor = CBaseFormatObject;
-		CBaseFormatObject.prototype.classType = AscDFH.historyitem_type_Unknown;
-		CBaseFormatObject.prototype.getObjectType = function () {
-			return this.classType;
-		};
-		CBaseFormatObject.prototype.setParent = function (oParent) {
-			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_CommonChartFormat_SetParent, this.parent, oParent));
-			this.parent = oParent;
-		};
-		CBaseFormatObject.prototype.getImageFromBulletsMap = function(oImages) {};
-		CBaseFormatObject.prototype.getDocContentsWithImageBullets = function (arrContents) {};
-		CBaseFormatObject.prototype.setParentToChild = function (oChild) {
-			if (oChild && oChild.setParent) {
-				oChild.setParent(this);
-			}
-		};
-		CBaseFormatObject.prototype.createDuplicate = function (oIdMap) {
-			var oCopy = new this.constructor();
-			this.fillObject(oCopy, oIdMap);
-			return oCopy;
-		};
-		CBaseFormatObject.prototype.fillObject = function (oCopy, oIdMap) {
-		};
-		CBaseFormatObject.prototype.fromPPTY = function (pReader) {
-			var oStream = pReader.stream;
-			var nStart = oStream.cur;
-			var nEnd = nStart + oStream.GetULong() + 4;
-			if (this.readAttribute) {
-				this.readAttributes(pReader);
-			}
-			this.readChildren(nEnd, pReader);
-			oStream.Seek2(nEnd);
-		};
-		CBaseFormatObject.prototype.readAttributes = function (pReader) {
-			var oStream = pReader.stream;
-			oStream.Skip2(1); // start attributes
-			while (true) {
-				var nType = oStream.GetUChar();
-				if (nType == g_nodeAttributeEnd)
-					break;
-				this.readAttribute(nType, pReader)
-			}
-		};
-		CBaseFormatObject.prototype.readAttribute = function (nType, pReader) {
-		};
-		CBaseFormatObject.prototype.readChildren = function (nEnd, pReader) {
-			var oStream = pReader.stream;
-			while (oStream.cur < nEnd) {
-				var nType = oStream.GetUChar();
-				this.readChild(nType, pReader);
-			}
-		};
-		CBaseFormatObject.prototype.readChild = function (nType, pReader) {
-			pReader.stream.SkipRecord();
-		};
-		CBaseFormatObject.prototype.toPPTY = function (pWriter) {
-			if (this.privateWriteAttributes) {
-				this.writeAttributes(pWriter);
-			}
-			this.writeChildren(pWriter);
-		};
-		CBaseFormatObject.prototype.writeAttributes = function (pWriter) {
-			pWriter.WriteUChar(g_nodeAttributeStart);
-			this.privateWriteAttributes(pWriter);
-			pWriter.WriteUChar(g_nodeAttributeEnd);
-		};
-		CBaseFormatObject.prototype.privateWriteAttributes = function (pWriter) {
-		};
-		CBaseFormatObject.prototype.writeChildren = function (pWriter) {
-		};
-		CBaseFormatObject.prototype.writeRecord1 = function (pWriter, nType, oChild) {
-			if (AscCommon.isRealObject(oChild)) {
-				pWriter.WriteRecord1(nType, oChild, function (oChild) {
-					oChild.toPPTY(pWriter);
-				});
-			} else {
-				//TODO: throw an error
-			}
-		};
-		CBaseFormatObject.prototype.writeRecord2 = function (pWriter, nType, oChild) {
-			if (AscCommon.isRealObject(oChild)) {
-				this.writeRecord1(pWriter, nType, oChild);
-			}
-		};
-		CBaseFormatObject.prototype.getChildren = function () {
-			return [];
-		};
-		CBaseFormatObject.prototype.traverse = function (fCallback, bReverseOrder) {
-			if (fCallback(this)) {
-				return true;
-			}
-			let aChildren = this.getChildren();
-			if(bReverseOrder === undefined || bReverseOrder === true) {
-				for (let nChild = aChildren.length - 1; nChild > -1; --nChild) {
-					let oChild = aChildren[nChild];
-					if (oChild && oChild.traverse) {
-						if (oChild.traverse(fCallback, bReverseOrder)) {
-							return true;
-						}
-					}
-				}
-			}
-			else {
-				for (let nChild = 0; nChild < aChildren.length; ++nChild) {
-					let oChild = aChildren[nChild];
-					if (oChild && oChild.traverse) {
-						if (oChild.traverse(fCallback, bReverseOrder)) {
-							return true;
-						}
-					}
-				}
-			}
-			return false;
-		};
-		CBaseFormatObject.prototype.handleRemoveObject = function (sObjectId) {
-			return false;
-		};
-		CBaseFormatObject.prototype.onRemoveChild = function (oChild) {
-			if (this.parent) {
-				this.parent.onRemoveChild(this);
-			}
-		};
-		CBaseFormatObject.prototype.notAllowedWithoutId = function () {
-			return true;
-		};
-		CBaseFormatObject.prototype.isEqual = function (oOther) {
-			if (!oOther) {
-				return false;
-			}
-			if (this.getObjectType() !== oOther.getObjectType()) {
-				return false;
-			}
-			var aThisChildren = this.getChildren();
-			var aOtherChildren = oOther.getChildren();
-			if (aThisChildren.length !== aOtherChildren.length) {
-				return false;
-			}
-			for (var nChild = 0; nChild < aThisChildren.length; ++nChild) {
-				var oThisChild = aThisChildren[nChild];
-				var oOtherChild = aOtherChildren[nChild];
-				if (oThisChild !== this.checkEqualChild(oThisChild, oOtherChild)) {
-					return false;
-				}
-			}
-			return true;
-		};
-		CBaseFormatObject.prototype.checkEqualChild = function (oThisChild, oOtherChild) {
-			if (AscCommon.isRealObject(oThisChild) && oThisChild.isEqual) {
-				if (!oThisChild.isEqual(oOtherChild)) {
-					return undefined;
-				}
-			} else {
-				if (oThisChild !== oOtherChild) {
-					return undefined;
-				}
-			}
-			return oThisChild;
 		};
 		//Method for debug
 		CBaseObject.prototype.compareTypes = function (oOther) {
@@ -368,6 +197,184 @@
 						}
 					}
 				}
+			}
+		};
+
+		function InitClassWithoutType(fClass, fBase) {
+			fClass.prototype = Object.create(fBase.prototype);
+			fClass.prototype.superclass = fBase;
+			fClass.prototype.constructor = fClass;
+		}
+
+		function InitClass(fClass, fBase, nType) {
+			InitClassWithoutType(fClass, fBase);
+			fClass.prototype.classType = nType;
+		}
+
+		function CBaseFormatNoIdObject() {
+			CBaseNoIdObject.call(this);
+		}
+		InitClass(CBaseFormatNoIdObject, CBaseNoIdObject, AscDFH.historyitem_type_Unknown);
+		CBaseFormatNoIdObject.prototype.getImageFromBulletsMap = function(oImages) {};
+		CBaseFormatNoIdObject.prototype.getDocContentsWithImageBullets = function (arrContents) {};
+		CBaseFormatNoIdObject.prototype.createDuplicate = function (oIdMap) {
+			var oCopy = new this.constructor();
+			this.fillObject(oCopy, oIdMap);
+			return oCopy;
+		};
+		CBaseFormatNoIdObject.prototype.fillObject = function (oCopy, oIdMap) {
+		};
+		CBaseFormatNoIdObject.prototype.fromPPTY = function (pReader) {
+			var oStream = pReader.stream;
+			var nStart = oStream.cur;
+			var nEnd = nStart + oStream.GetULong() + 4;
+			if (this.readAttribute) {
+				this.readAttributes(pReader);
+			}
+			this.readChildren(nEnd, pReader);
+			oStream.Seek2(nEnd);
+		};
+		CBaseFormatNoIdObject.prototype.readAttributes = function (pReader) {
+			var oStream = pReader.stream;
+			oStream.Skip2(1); // start attributes
+			while (true) {
+				var nType = oStream.GetUChar();
+				if (nType == g_nodeAttributeEnd)
+					break;
+				this.readAttribute(nType, pReader)
+			}
+		};
+		CBaseFormatNoIdObject.prototype.readAttribute = function (nType, pReader) {
+		};
+		CBaseFormatNoIdObject.prototype.readChildren = function (nEnd, pReader) {
+			var oStream = pReader.stream;
+			while (oStream.cur < nEnd) {
+				var nType = oStream.GetUChar();
+				this.readChild(nType, pReader);
+			}
+		};
+		CBaseFormatNoIdObject.prototype.readChild = function (nType, pReader) {
+			pReader.stream.SkipRecord();
+		};
+		CBaseFormatNoIdObject.prototype.toPPTY = function (pWriter) {
+			if (this.privateWriteAttributes) {
+				this.writeAttributes(pWriter);
+			}
+			this.writeChildren(pWriter);
+		};
+		CBaseFormatNoIdObject.prototype.writeAttributes = function (pWriter) {
+			pWriter.WriteUChar(g_nodeAttributeStart);
+			this.privateWriteAttributes(pWriter);
+			pWriter.WriteUChar(g_nodeAttributeEnd);
+		};
+		CBaseFormatNoIdObject.prototype.privateWriteAttributes = function (pWriter) {
+		};
+		CBaseFormatNoIdObject.prototype.writeChildren = function (pWriter) {
+		};
+		CBaseFormatNoIdObject.prototype.writeRecord1 = function (pWriter, nType, oChild) {
+			if (AscCommon.isRealObject(oChild)) {
+				pWriter.WriteRecord1(nType, oChild, function (oChild) {
+					oChild.toPPTY(pWriter);
+				});
+			} else {
+				//TODO: throw an error
+			}
+		};
+		CBaseFormatNoIdObject.prototype.writeRecord2 = function (pWriter, nType, oChild) {
+			if (AscCommon.isRealObject(oChild)) {
+				this.writeRecord1(pWriter, nType, oChild);
+			}
+		};
+		CBaseFormatNoIdObject.prototype.getChildren = function () {
+			return [];
+		};
+		CBaseFormatNoIdObject.prototype.traverse = function (fCallback, bReverseOrder) {
+			if (fCallback(this)) {
+				return true;
+			}
+			let aChildren = this.getChildren();
+			if(bReverseOrder === undefined || bReverseOrder === true) {
+				for (let nChild = aChildren.length - 1; nChild > -1; --nChild) {
+					let oChild = aChildren[nChild];
+					if (oChild && oChild.traverse) {
+						if (oChild.traverse(fCallback, bReverseOrder)) {
+							return true;
+						}
+					}
+				}
+			}
+			else {
+				for (let nChild = 0; nChild < aChildren.length; ++nChild) {
+					let oChild = aChildren[nChild];
+					if (oChild && oChild.traverse) {
+						if (oChild.traverse(fCallback, bReverseOrder)) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		};
+		CBaseFormatNoIdObject.prototype.isEqual = function (oOther) {
+			if (!oOther) {
+				return false;
+			}
+			if (this.getObjectType() !== oOther.getObjectType()) {
+				return false;
+			}
+			var aThisChildren = this.getChildren();
+			var aOtherChildren = oOther.getChildren();
+			if (aThisChildren.length !== aOtherChildren.length) {
+				return false;
+			}
+			for (var nChild = 0; nChild < aThisChildren.length; ++nChild) {
+				var oThisChild = aThisChildren[nChild];
+				var oOtherChild = aOtherChildren[nChild];
+				if (oThisChild !== this.checkEqualChild(oThisChild, oOtherChild)) {
+					return false;
+				}
+			}
+			return true;
+		};
+		CBaseFormatNoIdObject.prototype.checkEqualChild = function (oThisChild, oOtherChild) {
+			if (AscCommon.isRealObject(oThisChild) && oThisChild.isEqual) {
+				if (!oThisChild.isEqual(oOtherChild)) {
+					return undefined;
+				}
+			} else {
+				if (oThisChild !== oOtherChild) {
+					return undefined;
+				}
+			}
+			return oThisChild;
+		};
+		function CBaseFormatObject() {
+			CBaseFormatNoIdObject.call(this);
+			this.Id = null;
+			this.initId();
+			this.parent = null;
+		}
+		InitClass(CBaseFormatObject, CBaseFormatNoIdObject, AscDFH.historyitem_type_Unknown);
+		CBaseFormatObject.prototype.notAllowedWithoutId = CBaseObject.prototype.notAllowedWithoutId;
+		CBaseFormatObject.prototype.isGlobalSkipAddId = CBaseObject.prototype.isGlobalSkipAddId;
+		CBaseFormatObject.prototype.initId = CBaseObject.prototype.initId;
+		CBaseFormatObject.prototype.compareTypes = CBaseObject.prototype.compareTypes;
+
+		CBaseFormatObject.prototype.setParent = function (oParent) {
+			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_CommonChartFormat_SetParent, this.parent, oParent));
+			this.parent = oParent;
+		};
+		CBaseFormatObject.prototype.setParentToChild = function (oChild) {
+			if (oChild && oChild.setParent) {
+				oChild.setParent(this);
+			}
+		};
+		CBaseFormatObject.prototype.handleRemoveObject = function (sObjectId) {
+			return false;
+		};
+		CBaseFormatObject.prototype.onRemoveChild = function (oChild) {
+			if (this.parent) {
+				this.parent.onRemoveChild(this);
 			}
 		};
 
@@ -714,6 +721,9 @@
 		drawingContentChanges[AscDFH.historyitem_ThemeRemoveExtraClrScheme] = function (oClass) {
 			return oClass.extraClrSchemeLst;
 		};
+		drawingContentChanges[AscDFH.historyitem_CustomPropertiesAddProperty] = function (oClass) {
+			return oClass.properties;
+		};
 
 
 		drawingConstructorsMap[AscDFH.historyitem_ClrMap_SetClr] = CUniColor;
@@ -733,7 +743,7 @@
 
 		drawingConstructorsMap[AscDFH.historyitem_CNvPr_SetHlinkClick] = CT_Hyperlink;
 		drawingConstructorsMap[AscDFH.historyitem_CNvPr_SetHlinkHover] = CT_Hyperlink;
-
+		drawingConstructorsMap[AscDFH.historyitem_CustomPropertiesAddProperty] = CCustomProperty;
 
 		AscDFH.changesFactory[AscDFH.historyitem_DefaultShapeDefinition_SetSpPr] = CChangesDrawingsObject;
 		AscDFH.changesFactory[AscDFH.historyitem_DefaultShapeDefinition_SetBodyPr] = CChangesDrawingsObjectNoId;
@@ -800,6 +810,10 @@
 		AscDFH.changesFactory[AscDFH.historyitem_HF_SetFtr] = CChangesDrawingsBool;
 		AscDFH.changesFactory[AscDFH.historyitem_HF_SetHdr] = CChangesDrawingsBool;
 		AscDFH.changesFactory[AscDFH.historyitem_HF_SetSldNum] = CChangesDrawingsBool;
+		AscDFH.changesFactory[AscDFH.historyitem_CustomPropertiesAddProperty] = CChangesDrawingsContentNoId;
+
+
+
 
 // COLOR -----------------------
 		/*
@@ -939,6 +953,24 @@
 			return ret;
 		}
 
+		function writeDouble2(w, val) {
+			const isNumber = typeof val === "number";
+			w.WriteBool(isNumber);
+			if (isNumber) {
+				w.WriteDouble2(val);
+			}
+		}
+
+		function readDouble2(r) {
+			var ret;
+			if (r.GetBool()) {
+				ret = r.GetDoubleLE();
+			} else {
+				ret = null;
+			}
+			return ret;
+		}
+
 		function writeBool(w, val) {
 			w.WriteBool(isRealBool(val));
 			if (isRealBool(val)) {
@@ -988,6 +1020,40 @@
 				ret = null;
 			}
 			return ret;
+		}
+
+		function writeObjectNoId(w, val) {
+			const bIsRealObject = isRealObject(val);
+			w.WriteBool(bIsRealObject);
+			if (bIsRealObject) {
+				w.WriteLong(val.getObjectType());
+				val.Write_ToBinary(w);
+			}
+		}
+
+		function readObjectNoId(r) {
+			if (r.GetBool()) {
+				const val = AscCommon.g_oTableId.GetClassFromFactory(r.GetLong());
+				val.Read_FromBinary(r);
+				return val;
+			}
+			return null;
+		}
+		function writeObjectNoIdNoType(w, val) {
+			const bIsRealObject = isRealObject(val);
+			w.WriteBool(bIsRealObject);
+			if (bIsRealObject) {
+				val.Write_ToBinary(w);
+			}
+		}
+
+		function readObjectNoIdNoType(r, classConstructor) {
+			if (r.GetBool()) {
+				const val = new classConstructor();
+				val.Read_FromBinary(r);
+				return val;
+			}
+			return null;
 		}
 
 
@@ -1087,7 +1153,8 @@
 			EMPTY_PH: 3,
 			CHART_TEXT: 4,
 			CROP: 5,
-			FORM: 6
+			FORM: 6,
+			ANNOT_STAMP: 7
 		};
 		var TYPE_KIND = {
 			SLIDE: 0,
@@ -1807,7 +1874,22 @@
 				oMod.name = name;
 				while (reader.MoveToNextAttribute()) {
 					if (reader.GetNameNoNS() === "val") {
-						oMod.val = reader.GetValueInt();
+						let sVal = reader.GetValue();
+						let nLen = sVal.length;
+						if(typeof sVal === "string" && nLen > 0) {
+							if ((nLen - 1) === sVal.indexOf("%")) {
+								sVal.substring(0, nLen - 1);
+								let dVal = parseFloat(sVal);
+								if (AscFormat.isRealNumber(dVal))
+									oMod.val = dVal * 1000 + 0.5 >> 0;
+							}
+							else {
+								let dVal = parseFloat(sVal);
+								if(AscFormat.isRealNumber(dVal)) {
+									oMod.val = dVal + 0.5 >> 0;
+								}
+							}
+						}
 						break;
 					}
 				}
@@ -2420,7 +2502,7 @@
 		}
 
 		InitClass(CUniColor, CBaseNoIdObject, 0);
-		CUniColor.prototype.checkPhColor = function (unicolor, bMergeMods) {
+		CUniColor.prototype.checkPhColor = function (unicolor) {
 			if (this.color && this.color.type === c_oAscColor.COLOR_TYPE_SCHEME && this.color.id === 14) {
 				if (unicolor) {
 					if (unicolor.color) {
@@ -2430,9 +2512,7 @@
 						if (!this.Mods || this.Mods.Mods.length === 0) {
 							this.Mods = unicolor.Mods.createDuplicate();
 						} else {
-							if (bMergeMods) {
-								this.Mods.Merge(unicolor.Mods);
-							}
+							this.Mods.Merge(unicolor.Mods);
 						}
 					}
 				}
@@ -2596,6 +2676,7 @@
 			}
 			return true;
 		};
+		CUniColor.prototype.isEqual = CUniColor.prototype.IsIdentical;
 		CUniColor.prototype.Calculate = function (theme, slide, layout, masterSlide, RGBA, colorMap) {
 			if (this.color == null)
 				return this.RGBA;
@@ -3129,24 +3210,60 @@
 			}
 			return _ret;
 		};
+		CBlipFill.prototype.reduceSize = function (nW, nH, nMaxSize) {
+			let dWK = nW / nMaxSize;
+			let dHK = nH / nMaxSize;
+			let dK = Math.max(dWK, dHK);
+			let oResult = {W: nW, H: nH};
+			if (dK > 1) {
+				oResult.W = ((nW / dK) + 0.5 >> 0);
+				oResult.H = ((nH / dK) + 0.5 >> 0);
+			}
+			return oResult;
+		};
 		CBlipFill.prototype.getBase64Data = function (bReduce, bReturnOrigIfCantDraw) {
-			var sRasterImageId = this.RasterImageId;
+			let sRasterImageId = this.RasterImageId;
 			if (typeof sRasterImageId !== "string" || sRasterImageId.length === 0) {
 				return null;
 			}
-			var oApi = Asc.editor || editor;
-			var sDefaultResult = sRasterImageId;
+			let oApi = Asc.editor || editor;
+			let sDefaultResult = sRasterImageId;
+			const nMaxSize = 640;
 			if(bReturnOrigIfCantDraw === false) {
 				sDefaultResult = null;
+			}
+			if (window["NATIVE_EDITOR_ENJINE"] && window["native"]) {
+				let sSrc = AscCommon.getFullImageSrc2(sRasterImageId);
+				let oImageSize = AscCommon.getSourceImageSize(sSrc);
+				let nW = Math.max(oImageSize.width, 1);
+				let nH = Math.max(oImageSize.height, 1);
+				if (bReduce) {
+					let oReducedSize = this.reduceSize(nW, nH, nMaxSize);
+					nW = oReducedSize.W;
+					nH = oReducedSize.H;
+				}
+				let oCanvas = new AscCommon.CNativeGraphics();
+				oCanvas.width = nW;
+				oCanvas.height = nH;
+				oCanvas.create(window["native"], oCanvas.width, oCanvas.height, oCanvas.width, oCanvas.height);
+				oCanvas.transform(1, 0, 0, 1, 0, 0);
+				oCanvas.drawImage(sSrc, 0, 0, oCanvas.width, oCanvas.height);
+				let sResult;
+				try {
+					sResult = oCanvas.toDataURL("image/png");
+				} catch (err) {
+					sResult = sDefaultResult;
+				}
+				return {img: sResult, w: oCanvas.width, h: oCanvas.height};
 			}
 			if (!oApi) {
 				return {img: sDefaultResult, w: null, h: null};
 			}
-			var oImageLoader = oApi.ImageLoader;
+			let oImageLoader = oApi.ImageLoader;
 			if (!oImageLoader) {
 				return {img: sDefaultResult, w: null, h: null};
 			}
-			var oImage = oImageLoader.map_image_index[AscCommon.getFullImageSrc2(sRasterImageId)];
+			let oImage = oImageLoader.map_image_index[AscCommon.getFullImageSrc2(sRasterImageId)];
 			if (!oImage || !oImage.Image || oImage.Status !== AscFonts.ImageLoadStatus.Complete) {
 				return {img: sDefaultResult, w: null, h: null};
 			}
@@ -3154,20 +3271,15 @@
 			if (sRasterImageId.indexOf("data:") === 0 && sRasterImageId.indexOf("base64") > 0) {
 				return {img: sRasterImageId, w: oImage.Image.width, h: oImage.Image.height};
 			}
-			var sResult = sDefaultResult;
+			let sResult = sDefaultResult;
 			if (!window["NATIVE_EDITOR_ENJINE"]) {
-				var oCanvas = document.createElement("canvas");
-				var nW = Math.max(oImage.Image.width, 1);
-				var nH = Math.max(oImage.Image.height, 1);
+				let oCanvas = document.createElement("canvas");
+				let nW = Math.max(oImage.Image.width, 1);
+				let nH = Math.max(oImage.Image.height, 1);
 				if (bReduce) {
-					var nMaxSize = 640;
-					var dWK = nW / nMaxSize;
-					var dHK = nH / nMaxSize;
-					var dK = Math.max(dWK, dHK);
-					if (dK > 1) {
-						nW = ((nW / dK) + 0.5 >> 0);
-						nH = ((nH / dK) + 0.5 >> 0);
-					}
+					let oReducedSize = this.reduceSize(nW, nH, nMaxSize);
+					nW = oReducedSize.W;
+					nH = oReducedSize.H;
 				}
 				oCanvas.width = nW;
 				oCanvas.height = nH;
@@ -3186,7 +3298,31 @@
 		CBlipFill.prototype.getBase64RasterImageId = function (bReduce, bReturnOrigIfCantDraw) {
 			return this.getBase64Data(bReduce, bReturnOrigIfCantDraw).img;
 		};
-
+		CBlipFill.prototype.getTransparent = function() {
+			for (let nEffect = 0; nEffect < this.Effects.length; ++nEffect) {
+				let oEffect = this.Effects[nEffect];
+				if (oEffect && oEffect instanceof AscFormat.CAlphaModFix && AscFormat.isRealNumber(oEffect.amt)) {
+					return 255 * oEffect.amt / 100000;
+				}
+			}
+			return null;
+		};
+		CBlipFill.prototype.setTransparent = function(transparent) {
+			if (transparent != null) {
+				let i;
+				for (i = 0; i < this.Effects.length; ++i) {
+					if (this.Effects[i].Type === EFFECT_TYPE_ALPHAMODFIX) {
+						this.Effects[i].amt = ((transparent * 100000 / 255) >> 0);
+						break;
+					}
+				}
+				if (i === this.Effects.length) {
+					let oEffect = new CAlphaModFix();
+					oEffect.amt = ((transparent * 100000 / 255) >> 0);
+					this.Effects.push(oEffect);
+				}
+			}
+		};
 
 //-----Effects-----
 		var EFFECT_TYPE_NONE = 0;
@@ -5093,7 +5229,7 @@
 				}
 			}
 		};
-		CUniFill.prototype.checkPhColor = function (unicolor, bMergeMods) {
+		CUniFill.prototype.checkPhColor = function (unicolor) {
 			if (this.fill) {
 				switch (this.fill.type) {
 					case c_oAscFill.FILL_TYPE_BLIP:
@@ -5103,24 +5239,24 @@
 					}
 					case c_oAscFill.FILL_TYPE_SOLID: {
 						if (this.fill.color && this.fill.color) {
-							this.fill.color.checkPhColor(unicolor, bMergeMods);
+							this.fill.color.checkPhColor(unicolor);
 						}
 						break;
 					}
 					case c_oAscFill.FILL_TYPE_GRAD: {
 						for (var i = 0; i < this.fill.colors.length; ++i) {
 							if (this.fill.colors[i] && this.fill.colors[i].color) {
-								this.fill.colors[i].color.checkPhColor(unicolor, bMergeMods);
+								this.fill.colors[i].color.checkPhColor(unicolor);
 							}
 						}
 						break;
 					}
 					case c_oAscFill.FILL_TYPE_PATT: {
 						if (this.fill.bgClr) {
-							this.fill.bgClr.checkPhColor(unicolor, bMergeMods);
+							this.fill.bgClr.checkPhColor(unicolor);
 						}
 						if (this.fill.fgClr) {
-							this.fill.fgClr.checkPhColor(unicolor, bMergeMods);
+							this.fill.fgClr.checkPhColor(unicolor);
 						}
 						break;
 					}
@@ -6240,39 +6376,42 @@
 				return;
 			}
 			if (ln.Fill != null && ln.Fill.fill != null) {
-				this.Fill = ln.Fill.createDuplicate();
+				this.setFill(ln.Fill.createDuplicate());
 			}
 
 			if (ln.prstDash != null) {
-				this.prstDash = ln.prstDash;
+				this.setPrstDash(ln.prstDash);
 			}
 
 			if (ln.Join != null) {
-				this.Join = ln.Join.createDuplicate();
+				this.setJoin(ln.Join.createDuplicate());
 			}
 
 			if (ln.headEnd != null) {
-				this.headEnd = ln.headEnd.createDuplicate();
+				this.setHeadEnd(ln.headEnd.createDuplicate());
 			}
 
 			if (ln.tailEnd != null) {
-				this.tailEnd = ln.tailEnd.createDuplicate();
+				this.setTailEnd(ln.tailEnd.createDuplicate());
 			}
 
 			if (ln.algn != null) {
-				this.algn = ln.algn;
+				this.setAlgn(ln.algn);
 			}
 
 			if (ln.cap != null) {
-				this.cap = ln.cap;
+				this.setCap(ln.cap);
 			}
 
 			if (ln.cmpd != null) {
-				this.cmpd = ln.cmpd;
+				this.setCmpd(ln.cmpd);
 			}
 
 			if (ln.w != null) {
-				this.w = ln.w;
+				this.setW(ln.w);
+			}
+			else if(ln.isNoFillLine && ln.isNoFillLine()) {
+				this.setW(0);
 			}
 		};
 		CLn.prototype.calculate = function (theme, slide, layout, master, RGBA, colorMap) {
@@ -6847,6 +6986,9 @@
 			AscCommon.History.Add(new CChangesDrawingsString(this, AscDFH.historyitem_Ph_SetIdx, this.idx, idx));
 			this.idx = idx;
 		};
+		Ph.prototype.getIdx = function() {
+			return this.idx;
+		}
 		Ph.prototype.setOrient = function (orient) {
 			AscCommon.History.Add(new CChangesDrawingsLong(this, AscDFH.historyitem_Ph_SetOrient, this.orient, orient));
 			this.orient = orient;
@@ -6858,6 +7000,9 @@
 		Ph.prototype.setType = function (type) {
 			AscCommon.History.Add(new CChangesDrawingsLong(this, AscDFH.historyitem_Ph_SetType, this.type, type));
 			this.type = type;
+		};
+		Ph.prototype.getType = function() {
+			return this.type;
 		};
 
 		function fUpdateLocksValue(nLocks, nMask, bValue) {
@@ -7102,6 +7247,9 @@
 		}
 
 		InitClass(FontRef, CBaseNoIdObject, 0);
+		FontRef.prototype.getObjectType = function() {
+			return AscDFH.historyitem_type_FontRef;
+		};
 		FontRef.prototype.setIdx = function (idx) {
 			this.idx = idx;
 		};
@@ -7155,19 +7303,19 @@
 		CShapeStyle.prototype.merge = function (style) {
 			if (style != null) {
 				if (style.lnRef != null) {
-					this.lnRef = style.lnRef.createDuplicate();
+					this.setLnRef(style.lnRef.createDuplicate());
 				}
 
 				if (style.fillRef != null) {
-					this.fillRef = style.fillRef.createDuplicate();
+					this.setFillRef(style.fillRef.createDuplicate());
 				}
 
 				if (style.effectRef != null) {
-					this.effectRef = style.effectRef.createDuplicate();
+					this.setEffectRef(style.effectRef.createDuplicate());
 				}
 
 				if (style.fontRef != null) {
-					this.fontRef = style.fontRef.createDuplicate();
+					this.setFontRef(style.fontRef.createDuplicate());
 				}
 			}
 		};
@@ -7202,6 +7350,18 @@
 		CShapeStyle.prototype.setEffectRef = function (pr) {
 			AscCommon.History.Add(new CChangesDrawingsObjectNoId(this, AscDFH.historyitem_ShapeStyle_SetEffectRef, this.effectRef, pr));
 			this.effectRef = pr;
+		};
+		CShapeStyle.prototype.Write_ToBinary = function(w) {
+			AscFormat.writeObjectNoId(w, this.lnRef);
+			AscFormat.writeObjectNoId(w, this.fillRef);
+			AscFormat.writeObjectNoId(w, this.fontRef);
+			AscFormat.writeObjectNoId(w, this.effectRef);
+		};
+		CShapeStyle.prototype.Read_FromBinary = function(r) {
+			this.lnRef = AscFormat.readObjectNoId(r);
+			this.fillRef = AscFormat.readObjectNoId(r);
+			this.fontRef = AscFormat.readObjectNoId(r);
+			this.effectRef = AscFormat.readObjectNoId(r);
 		};
 
 		var LINE_PRESETS_MAP = {};
@@ -7334,46 +7494,46 @@
 				return;
 			}
 			if (xfrm.offX != null) {
-				this.offX = xfrm.offX;
+				this.setOffX(xfrm.offX);
 			}
 			if (xfrm.offY != null) {
-				this.offY = xfrm.offY;
+				this.setOffY(xfrm.offY);
 			}
 
 
 			if (xfrm.extX != null) {
-				this.extX = xfrm.extX;
+				this.setExtX(xfrm.extX);
 			}
 			if (xfrm.extY != null) {
-				this.extY = xfrm.extY;
+				this.setExtY(xfrm.extY);
 			}
 
 
 			if (xfrm.chOffX != null) {
-				this.chOffX = xfrm.chOffX;
+				this.setChOffX(xfrm.chOffX);
 			}
 			if (xfrm.chOffY != null) {
-				this.chOffY = xfrm.chOffY;
+				this.setChOffY(xfrm.chOffY);
 			}
 
 
 			if (xfrm.chExtX != null) {
-				this.chExtX = xfrm.chExtX;
+				this.setChExtX(xfrm.chExtX);
 			}
 			if (xfrm.chExtY != null) {
-				this.chExtY = xfrm.chExtY;
+				this.setChExtY(xfrm.chExtY);
 			}
 
 
 			if (xfrm.flipH != null) {
-				this.flipH = xfrm.flipH;
+				this.setFlipH(xfrm.flipH);
 			}
 			if (xfrm.flipV != null) {
-				this.flipV = xfrm.flipV;
+				this.setFlipV(xfrm.flipV);
 			}
 
 			if (xfrm.rot != null) {
-				this.rot = xfrm.rot;
+				this.setRot(xfrm.rot);
 			}
 		};
 		CXfrm.prototype.createDuplicate = function () {
@@ -7559,7 +7719,7 @@
 			this.EffectLst = null;
 		}
 
-		InitClass(CEffectProperties, CBaseNoIdObject, 0);
+		InitClass(CEffectProperties, CBaseNoIdObject, AscDFH.historyitem_type_CEffectProperties);
 		CEffectProperties.prototype.createDuplicate = function () {
 			var oCopy = new CEffectProperties();
 			if (this.EffectDag) {
@@ -7569,6 +7729,20 @@
 				oCopy.EffectLst = this.EffectLst.createDuplicate();
 			}
 			return oCopy;
+		};
+		CEffectProperties.prototype.merge = function (effectPr) {
+			// if (effectPr.EffectDag) {
+			// 	if (!this.EffectDag) {
+			// 		this.EffectDag = new CEffectContainer();
+			// 	}
+			// 	this.EffectDag.merge(effectPr.EffectDag);
+			// }
+			if (effectPr.EffectLst) {
+				if (!this.EffectLst) {
+					this.EffectLst = new CEffectLst();
+				}
+				this.EffectLst.merge(effectPr.EffectLst);
+			}
 		};
 		CEffectProperties.prototype.Write_ToBinary = function (w) {
 			var nFlags = 0;
@@ -7638,6 +7812,32 @@
 				oCopy.softEdge = this.softEdge.createDuplicate();
 			}
 			return oCopy;
+		};
+		CEffectLst.prototype.merge = function (effectLst) {
+			if (effectLst.blur) {
+				this.blur = effectLst.blur.createDuplicate();
+			}
+			if (effectLst.fillOverlay) {
+				this.fillOverlay = effectLst.fillOverlay.createDuplicate();
+			}
+			if (effectLst.glow) {
+				this.glow = effectLst.glow.createDuplicate();
+			}
+			if (effectLst.innerShdw) {
+				this.innerShdw = effectLst.innerShdw.createDuplicate();
+			}
+			if (effectLst.outerShdw) {
+				this.outerShdw = effectLst.outerShdw.createDuplicate();
+			}
+			if (effectLst.prstShdw) {
+				this.prstShdw = effectLst.prstShdw.createDuplicate();
+			}
+			if (effectLst.reflection) {
+				this.reflection = effectLst.reflection.createDuplicate();
+			}
+			if (effectLst.softEdge) {
+				this.softEdge = effectLst.softEdge.createDuplicate();
+			}
 		};
 		CEffectLst.prototype.Write_ToBinary = function (w) {
 			var nFlags = 0;
@@ -7875,6 +8075,31 @@
          this.ln = new CLn();
          this.ln.merge(spPr.ln);
          }  */
+		};
+		CSpPr.prototype.fullMerge = function (spPr) {
+			if (spPr.xfrm != null) {
+				this.xfrm.merge(spPr.xfrm);
+			}
+			if (spPr.geometry !== null) {
+				this.setGeometry(spPr.geometry.createDuplicate());
+			}
+
+			if (spPr.Fill !== null && spPr.Fill.fill !== null) {
+				this.setFill(spPr.Fill.createDuplicate());
+			}
+
+			if (spPr.ln != null) {
+				if (this.ln == null)
+					this.setLn(new CLn());
+
+				this.ln.merge(spPr.ln);
+			}
+			if (spPr.effectProps !== null) {
+				if (this.effectProps === null) {
+					this.setEffectPr(new CEffectProperties());
+				}
+				this.effectProps.merge(spPr.effectProps);
+			}
 		};
 		CSpPr.prototype.setParent = function (pr) {
 			AscCommon.History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_SpPr_SetParent, this.parent, pr));
@@ -8553,7 +8778,7 @@
 			this.name = "";
 			this.fillStyleLst = [];
 			this.lnStyleLst = [];
-			this.effectStyleLst = null;
+			this.effectStyleLst = [];
 			this.bgFillStyleLst = [];
 		}
 
@@ -8564,15 +8789,25 @@
 				if (!ret)
 					return null;
 				var ret2 = ret.createDuplicate();
-				ret2.checkPhColor(unicolor, false);
+				ret2.checkPhColor(unicolor);
 				return ret2;
 			} else if (number >= 1001) {
 				var ret = this.bgFillStyleLst[number - 1001];
 				if (!ret)
 					return null;
 				var ret2 = ret.createDuplicate();
-				ret2.checkPhColor(unicolor, false);
+				ret2.checkPhColor(unicolor);
 				return ret2;
+			}
+			return null;
+		};
+		FmtScheme.prototype.GetOuterShdw = function (number) {
+			if (this.effectStyleLst[number - 1]) {
+				const effectStyle = this.effectStyleLst[number - 1];
+				const effectLst = effectStyle.effectProperties && effectStyle.effectProperties.EffectLst;
+				if (effectLst && effectLst.outerShdw) {
+					return effectLst.outerShdw.createDuplicate();
+				}
 			}
 			return null;
 		};
@@ -8587,6 +8822,11 @@
 			w.WriteLong(this.lnStyleLst.length);
 			for (i = 0; i < this.lnStyleLst.length; ++i) {
 				this.lnStyleLst[i].Write_ToBinary(w);
+			}
+
+			w.WriteLong(this.effectStyleLst.length);
+			for (i = 0; i < this.effectStyleLst.length; ++i) {
+				this.effectStyleLst[i].Write_ToBinary(w);
 			}
 
 			w.WriteLong(this.bgFillStyleLst.length);
@@ -8610,6 +8850,12 @@
 
 			_len = r.GetLong();
 			for (i = 0; i < _len; ++i) {
+				this.effectStyleLst[i] = new CEffectStyle();
+				this.effectStyleLst[i].Read_FromBinary(r);
+			}
+
+			_len = r.GetLong();
+			for (i = 0; i < _len; ++i) {
 				this.bgFillStyleLst[i] = new CUniFill();
 				this.bgFillStyleLst[i].Read_FromBinary(r);
 			}
@@ -8623,6 +8869,10 @@
 			}
 			for (i = 0; i < this.lnStyleLst.length; ++i) {
 				oCopy.lnStyleLst[i] = this.lnStyleLst[i].createDuplicate();
+			}
+
+			for (i = 0; i < this.effectStyleLst.length; ++i) {
+				oCopy.effectStyleLst[i] = this.effectStyleLst[i].createDuplicate();
 			}
 
 			for (i = 0; i < this.bgFillStyleLst.length; ++i) {
@@ -8679,6 +8929,33 @@
 				}
 			}
 		};
+		
+		function CEffectStyle() {
+			CBaseNoIdObject.call(this);
+			this.effectProperties = null;
+			//todo
+			this.scene3d = null;
+			this.sp3d = null;
+		}
+		InitClass(CEffectStyle, CBaseNoIdObject, AscDFH.historyitem_type_Unknown);
+
+		CEffectStyle.prototype.Write_ToBinary = function (w) {
+			writeObjectNoId(w, this.effectProperties);
+		};
+		CEffectStyle.prototype.Read_FromBinary = function (r) {
+			this.setEffectPr(readObjectNoId(r, CEffectProperties));
+		};
+		CEffectStyle.prototype.setEffectPr = function (pr) {
+			this.effectProperties = pr;
+		};
+		CEffectStyle.prototype.createDuplicate = function () {
+			const copy = new CEffectStyle();
+			if (this.effectProperties) {
+				copy.setEffectPr(this.effectProperties.createDuplicate());
+			}
+			return copy;
+		};
+
 
 		function ThemeElements(oTheme) {
 			CBaseNoIdObject.call(this);
@@ -8744,6 +9021,9 @@
 			typeof minor_font.ea === "string" && minor_font.ea.length > 0 && (AllFonts[minor_font.ea] = 1);
 			typeof minor_font.cs === "string" && minor_font.latin.length > 0 && (AllFonts[minor_font.cs] = 1);
 		};
+		CTheme.prototype.getOuterShdw = function (idx) {
+			return this.themeElements.fmtScheme.GetOuterShdw(idx);
+		};
 		CTheme.prototype.getFillStyle = function (idx, unicolor) {
 			if (idx === 0 || idx === 1000) {
 				return AscFormat.CreateNoFillUniFill();
@@ -8753,7 +9033,7 @@
 				if (this.themeElements.fmtScheme.fillStyleLst[idx - 1]) {
 					ret = this.themeElements.fmtScheme.fillStyleLst[idx - 1].createDuplicate();
 					if (ret) {
-						ret.checkPhColor(unicolor, false);
+						ret.checkPhColor(unicolor);
 						return ret;
 					}
 				}
@@ -8761,7 +9041,7 @@
 				if (this.themeElements.fmtScheme.bgFillStyleLst[idx - 1001]) {
 					ret = this.themeElements.fmtScheme.bgFillStyleLst[idx - 1001].createDuplicate();
 					if (ret) {
-						ret.checkPhColor(unicolor, false);
+						ret.checkPhColor(unicolor);
 						return ret;
 					}
 				}
@@ -8775,7 +9055,7 @@
 			if (this.themeElements.fmtScheme.lnStyleLst[idx - 1]) {
 				var ret = this.themeElements.fmtScheme.lnStyleLst[idx - 1].createDuplicate();
 				if (ret.Fill) {
-					ret.Fill.checkPhColor(unicolor, false);
+					ret.Fill.checkPhColor(unicolor);
 				}
 				return ret;
 			}
@@ -9253,8 +9533,15 @@
 				}
 			});
 		};
-		CSld.prototype.refreshAllContentsFields = function() {
+		CSld.prototype.refreshAllContentsFields = function(bNoHistory) {
+			let bOldUpdate = AscCommon.History.RecalculateData.Update;
+			if(bNoHistory) {
+				AscCommon.History.RecalculateData.Update = false;
+			}
 			this.handleAllContents(RefreshContentAllFields);
+			if(bNoHistory) {
+				AscCommon.History.RecalculateData.Update = bOldUpdate;
+			}
 		};
 
 		function RefreshContentAllFields(oContent) {
@@ -10610,6 +10897,12 @@
 		};
 		CBullet.prototype.isBullet = function () {
 			return this.bulletType != null && this.bulletType.type != null;
+		};
+		CBullet.prototype.isNone = function() {
+			if (!this.bulletType)
+				return true;
+			
+			return this.bulletType.type === AscFormat.BULLET_TYPE_TYPEFACE_NONE;
 		};
 		CBullet.prototype.getPresentationBullet = function (theme, color) {
 			var para_pr = new CParaPr();
@@ -12830,11 +13123,12 @@
 		prot["asc_getPages"] = prot.asc_getPages;
 
 		function CCustomProperties() {
-			CBaseNoIdObject.call(this);
+			CBaseObject.call(this);
 			this.properties = [];
+			this.Lock = new AscCommon.CLock();
 		}
 
-		InitClass(CCustomProperties, CBaseNoIdObject, 0);
+		InitClass(CCustomProperties, CBaseObject, AscDFH.historyitem_type_CustomProperties);
 		CCustomProperties.prototype.fromStream = function (s) {
 			var _type = s.GetUChar();
 			var _len = s.GetULong();
@@ -12892,18 +13186,67 @@
 			});
 		};
 		CCustomProperties.prototype.add = function (name, variant, opt_linkTarget) {
+			this.addProperty(this.properties.length, this.createPropertyWithVariant(name, variant, opt_linkTarget));
+		};
+		CCustomProperties.prototype.createPropertyWithVariant = function (name, variant, opt_linkTarget) {
 			var newProperty = new CCustomProperty();
 			newProperty.fmtid = "{D5CDD505-2E9C-101B-9397-08002B2CF9AE}";
 			newProperty.pid = null;
 			newProperty.name = name;
 			newProperty.linkTarget = opt_linkTarget || null;
 			newProperty.content = variant;
-			this.properties.push(newProperty);
+			return newProperty;
+		};
+		CCustomProperties.prototype.createProperty = function (name, type, value, opt_linkTarget) {
+			let oVariant = new CVariant();
+			oVariant.setType(type);
+			oVariant.setValue(value);
+			return this.createPropertyWithVariant(name, oVariant, opt_linkTarget);
+		};
+		CCustomProperties.prototype.getAllProperties = function () {
+			return [].concat(this.properties);
+		};
+		CCustomProperties.prototype.addProperty = function (idx, pr) {
+			let nInsertIdx = Math.min(this.properties.length, Math.max(0, idx));
+			AscCommon.History.Add(new CChangesDrawingsContentNoId(this, AscDFH.historyitem_CustomPropertiesAddProperty, nInsertIdx, [pr], true));
+			this.properties.splice(nInsertIdx, 0, pr);
+		};
+		CCustomProperties.prototype.removeProperty = function (idx) {
+			if(idx < 0 || idx >= this.properties.length)
+				return;
+			let aDeleteElems = this.properties.splice(idx, 1);
+			AscCommon.History.Add(new CChangesDrawingsContentNoId(this, AscDFH.historyitem_CustomPropertiesAddProperty, idx, aDeleteElems, false));
+		};
+		CCustomProperties.prototype.modifyProperty = function (idx, pr) {
+			if(idx < 0 || idx >= this.properties.length)
+				return;
+			this.removeProperty(idx);
+			this.addProperty(idx, pr);
+		};
+		CCustomProperties.prototype.AddProperty = function (name, type, value) {
+			for(let nIdx = 0; nIdx < this.properties.length; ++nIdx) {
+				let oPr = this.properties[nIdx];
+				if(oPr.name === name) {
+					this.ModifyProperty(nIdx, name, type, value);
+					return;
+				}
+			}
+			this.addProperty(this.properties.length, this.createProperty(name, type, value, null));
+		};
+		CCustomProperties.prototype.ModifyProperty = function (idx, name, type, value) {
+			this.modifyProperty(idx, this.createProperty(name, type, value, null));
+		};
+		CCustomProperties.prototype.RemoveProperty = function (idx) {
+			return this.removeProperty(idx);
+		};
+		CCustomProperties.prototype.hasProperties = function () {
+			return this.properties.length > 0;
 		};
 
 		window['AscCommon'].CCustomProperties = CCustomProperties;
 		prot = CCustomProperties.prototype;
 		prot["add"] = prot.add;
+
 
 		function CCustomProperty() {
 			CBaseNoIdObject.call(this);
@@ -12982,7 +13325,43 @@
 
 			s.WriteRecord4(0, this.content);
 		};
-
+		CCustomProperty.prototype.setContent = function (v) {
+			this.content = v;
+		};
+		CCustomProperty.prototype.asc_getName = function() {
+			return this.name;
+		};
+		CCustomProperty.prototype.asc_getType = function() {
+			if(this.content) {
+				return this.content.getVariantType();
+			}
+			return c_oVariantTypes.vtEmpty;
+		};
+		CCustomProperty.prototype.asc_getValue = function() {
+			if(this.content) {
+				return this.content.getValue();
+			}
+			return null;
+		};
+		CCustomProperty.prototype.Write_ToBinary = function(w) {
+			let oStream = AscCommon.pptx_content_writer.BinaryFileWriter;
+			var old = new AscCommon.CMemory(true);
+            oStream.ExportToMemory(old);
+            oStream.ImportFromMemory(w);
+            oStream.WriteRecord4(0, this);
+            oStream.ExportToMemory(w);
+            oStream.ImportFromMemory(old);
+		};
+		CCustomProperty.prototype.Read_FromBinary = function(r) {
+			let fileStream = r.ToFileStream();
+			fileStream.GetUChar();
+			this.fromStream(fileStream);
+			r.FromFileStream(fileStream);
+		};
+		
+		CCustomProperty.prototype["asc_getName"] = CCustomProperty.prototype.asc_getName;
+		CCustomProperty.prototype["asc_getType"] = CCustomProperty.prototype.asc_getType;
+		CCustomProperty.prototype["asc_getValue"] = CCustomProperty.prototype.asc_getValue;
 
 		function CVariantVector() {
 			CBaseNoIdObject.call(this);
@@ -13201,7 +13580,6 @@
 		};
 
 		function CVariant(parent) {
-			CBaseNoIdObject.call(this);
 			this.type = null;
 			this.strContent = null;
 			this.iContent = null;
@@ -13212,11 +13590,8 @@
 			this.vector = null;
 			this.array = null;
 			this.vStream = null;
-
 			this.parent = parent;
 		}
-
-		InitClass(CVariant, CBaseNoIdObject, 0);
 		CVariant.prototype.fromStream = function (s) {
 			var _type;
 			var _len = s.GetULong();
@@ -13311,21 +13686,54 @@
 			s.WriteRecord4(7, this.array);
 			s.WriteRecord4(8, this.vStream);
 		};
+		CVariant.prototype.setParent = function(pr) {
+			this.parent = pr;
+		};
+		CVariant.prototype.setType = function(pr) {
+			this.type = pr;
+		};
+		CVariant.prototype.setStrContent = function(pr) {
+			this.strContent = pr;
+		};
+		CVariant.prototype.setIContent = function(pr) {
+			this.iContent = pr;
+		};
+		CVariant.prototype.setUContent = function(pr) {
+			this.uContent = pr;
+		};
+		CVariant.prototype.setDContent = function(pr) {
+			this.dContent = pr;
+		};
+		CVariant.prototype.setBContent = function(pr) {
+			this.bContent = pr;
+		};
+		CVariant.prototype.setVariant = function(pr) {
+			this.variant = pr;
+		};
+		CVariant.prototype.setVector = function(pr) {
+			this.vector = pr;
+		};
+		CVariant.prototype.setArray = function(pr) {
+			this.array = pr;
+		};
+		CVariant.prototype.setVStream = function(pr) {
+			this.vStream = pr;
+		};
 		CVariant.prototype.setText = function (val) {
-			this.type = c_oVariantTypes.vtLpwstr;
-			this.strContent = val;
+			this.setType(c_oVariantTypes.vtLpwstr);
+			this.setStrContent(val);
 		};
 		CVariant.prototype.setNumber = function (val) {
-			this.type = c_oVariantTypes.vtI4;
-			this.iContent = val;
+			this.setType(c_oVariantTypes.vtI4);
+			this.setIContent(val);
 		};
 		CVariant.prototype.setDate = function (val) {
-			this.type = c_oVariantTypes.vtFiletime;
-			this.strContent = val.toISOString().slice(0, 19) + 'Z';
+			this.setDate(c_oVariantTypes.vtFiletime);
+			this.setStrContent(val.toISOString().slice(0, 19) + 'Z');
 		};
 		CVariant.prototype.setBool = function (val) {
-			this.type = c_oVariantTypes.vtBool;
-			this.bContent = val;
+			this.setType(c_oVariantTypes.vtBool);
+			this.setBContent(val);
 		};
 		CVariant.prototype.typeStrToEnum = function (name) {
 			switch (name) {
@@ -13538,6 +13946,116 @@
 		CVariant.prototype.getVariantType = function () {
 			return AscFormat.isRealNumber(this.type) ? this.type : c_oVariantTypes.vtEmpty;
 		};
+		CVariant.prototype.getValue = function () {
+			switch (this.type) {
+				case c_oVariantTypes.vtClsid:
+				case c_oVariantTypes.vtOStorage:
+				case c_oVariantTypes.vtStorage:
+				case c_oVariantTypes.vtOStream:
+				case c_oVariantTypes.vtStream:
+				case c_oVariantTypes.vtError:
+				case c_oVariantTypes.vtCy:
+				case c_oVariantTypes.vtBstr:
+				case c_oVariantTypes.vtDecimal:
+				case c_oVariantTypes.vtEmpty:
+				case c_oVariantTypes.vtVariant:
+				case c_oVariantTypes.vtVector:
+				case c_oVariantTypes.vtArray:
+				case c_oVariantTypes.vtVStream:
+				case c_oVariantTypes.vtBlob:
+				case c_oVariantTypes.vtOBlob:
+				case c_oVariantTypes.vtNull: {
+					return null;
+				}
+				case c_oVariantTypes.vtI2:
+				case c_oVariantTypes.vtI4:
+				case c_oVariantTypes.vtI8:
+				case c_oVariantTypes.vtInt:
+				case c_oVariantTypes.vtI1: {
+					return this.iContent;
+				}
+				case c_oVariantTypes.vtUint:
+				case c_oVariantTypes.vtUi8:
+				case c_oVariantTypes.vtUi4:
+				case c_oVariantTypes.vtUi2:
+				case c_oVariantTypes.vtUi1: {
+					return this.uContent;
+				}
+				case c_oVariantTypes.vtR8:
+				case c_oVariantTypes.vtR4: {
+					return this.dContent;
+				}
+				case c_oVariantTypes.vtLpwstr:
+				case c_oVariantTypes.vtLpstr: {
+					return this.strContent;
+				}
+				case c_oVariantTypes.vtDate:
+				case c_oVariantTypes.vtFiletime: {
+					return new Date(this.strContent);
+				}
+				case c_oVariantTypes.vtBool: {
+					return this.bContent;
+				}
+			}
+		};
+		CVariant.prototype.setValue = function(v) {
+			switch (this.type) {
+				case c_oVariantTypes.vtClsid:
+				case c_oVariantTypes.vtOStorage:
+				case c_oVariantTypes.vtStorage:
+				case c_oVariantTypes.vtOStream:
+				case c_oVariantTypes.vtStream:
+				case c_oVariantTypes.vtError:
+				case c_oVariantTypes.vtCy:
+				case c_oVariantTypes.vtBstr:
+				case c_oVariantTypes.vtDecimal:
+				case c_oVariantTypes.vtEmpty:
+				case c_oVariantTypes.vtVariant:
+				case c_oVariantTypes.vtVector:
+				case c_oVariantTypes.vtArray:
+				case c_oVariantTypes.vtVStream:
+				case c_oVariantTypes.vtBlob:
+				case c_oVariantTypes.vtOBlob:
+				case c_oVariantTypes.vtNull: {
+					break;
+				}
+				case c_oVariantTypes.vtI2:
+				case c_oVariantTypes.vtI4:
+				case c_oVariantTypes.vtI8:
+				case c_oVariantTypes.vtInt:
+				case c_oVariantTypes.vtI1: {
+					this.setIContent(v);
+					break;
+				}
+				case c_oVariantTypes.vtUint:
+				case c_oVariantTypes.vtUi8:
+				case c_oVariantTypes.vtUi4:
+				case c_oVariantTypes.vtUi2:
+				case c_oVariantTypes.vtUi1: {
+					this.setUContent(v);
+					break;
+				}
+				case c_oVariantTypes.vtR8:
+				case c_oVariantTypes.vtR4: {
+					this.setDContent(v);
+					break;
+				}
+				case c_oVariantTypes.vtLpwstr:
+				case c_oVariantTypes.vtLpstr: {
+					this.setStrContent(v);
+					break;
+				}
+				case c_oVariantTypes.vtDate:
+				case c_oVariantTypes.vtFiletime: {
+					this.setStrContent(v.toISOString().slice(0, 19) + 'Z');
+					break;
+				}
+				case c_oVariantTypes.vtBool: {
+					this.setBContent(v);
+					break;
+				}
+			}
+		};
 		window['AscCommon'].CVariant = CVariant;
 
 		prot = CVariant.prototype;
@@ -13585,7 +14103,41 @@
 		};
 
 		window['AscCommon'].c_oVariantTypes = c_oVariantTypes;
-
+		window['AscCommon']["c_oVariantTypes"] = c_oVariantTypes;
+		c_oVariantTypes["vtEmpty"] = c_oVariantTypes.vtEmpty;
+		c_oVariantTypes["vtNull"] = c_oVariantTypes.vtNull;
+		c_oVariantTypes["vtVariant"] = c_oVariantTypes.vtVariant;
+		c_oVariantTypes["vtVector"] = c_oVariantTypes.vtVector;
+		c_oVariantTypes["vtArray"] = c_oVariantTypes.vtArray;
+		c_oVariantTypes["vtVStream"] = c_oVariantTypes.vtVStream;
+		c_oVariantTypes["vtBlob"] = c_oVariantTypes.vtBlob;
+		c_oVariantTypes["vtOBlob"] = c_oVariantTypes.vtOBlob;
+		c_oVariantTypes["vtI1"] = c_oVariantTypes.vtI1;
+		c_oVariantTypes["vtI2"] = c_oVariantTypes.vtI2;
+		c_oVariantTypes["vtI4"] = c_oVariantTypes.vtI4;
+		c_oVariantTypes["vtI8"] = c_oVariantTypes.vtI8;
+		c_oVariantTypes["vtInt"] = c_oVariantTypes.vtInt;
+		c_oVariantTypes["vtUi1"] = c_oVariantTypes.vtUi1;
+		c_oVariantTypes["vtUi2"] = c_oVariantTypes.vtUi2;
+		c_oVariantTypes["vtUi4"] = c_oVariantTypes.vtUi4;
+		c_oVariantTypes["vtUi8"] = c_oVariantTypes.vtUi8;
+		c_oVariantTypes["vtUint"] = c_oVariantTypes.vtUint;
+		c_oVariantTypes["vtR4"] = c_oVariantTypes.vtR4;
+		c_oVariantTypes["vtR8"] = c_oVariantTypes.vtR8;
+		c_oVariantTypes["vtDecimal"] = c_oVariantTypes.vtDecimal;
+		c_oVariantTypes["vtLpstr"] = c_oVariantTypes.vtLpstr;
+		c_oVariantTypes["vtLpwstr"] = c_oVariantTypes.vtLpwstr;
+		c_oVariantTypes["vtBstr"] = c_oVariantTypes.vtBstr;
+		c_oVariantTypes["vtDate"] = c_oVariantTypes.vtDate;
+		c_oVariantTypes["vtFiletime"] = c_oVariantTypes.vtFiletime;
+		c_oVariantTypes["vtBool"] = c_oVariantTypes.vtBool;
+		c_oVariantTypes["vtCy"] = c_oVariantTypes.vtCy;
+		c_oVariantTypes["vtError"] = c_oVariantTypes.vtError;
+		c_oVariantTypes["vtStream"] = c_oVariantTypes.vtStream;
+		c_oVariantTypes["vtOStream"] = c_oVariantTypes.vtOStream;
+		c_oVariantTypes["vtStorage"] = c_oVariantTypes.vtStorage;
+		c_oVariantTypes["vtOStorage"] = c_oVariantTypes.vtOStorage;
+		c_oVariantTypes["vtClsid"] = c_oVariantTypes.vtClsid;
 
 		function CPres() {
 			CBaseNoIdObject.call(this);
@@ -13889,10 +14441,12 @@
 			let oColor = new CUniColor();
 			oColor.color = new CSchemeColor();
 			oColor.color.id = id;
-			for(let nMod = 0; nMod < aMods.length; ++nMod) {
-				let oModObject = aMods[nMod];
-				let oMod = new CColorMod(oModObject.name, oModObject.val);
-				oColor.addColorMod(oMod);
+			if (aMods) {
+				for(let nMod = 0; nMod < aMods.length; ++nMod) {
+					let oModObject = aMods[nMod];
+					let oMod = new CColorMod(oModObject.name, oModObject.val);
+					oColor.addColorMod(oMod);
+				}
 			}
 			return oColor;
 		}
@@ -14435,24 +14989,10 @@
 			}
 
 			if (ret.transparent != null) {
-
 				if (ret.fill && ret.fill.type === c_oAscFill.FILL_TYPE_BLIP) {
-
-					for (var i = 0; i < ret.fill.Effects.length; ++i) {
-						if (ret.fill.Effects[i].Type === EFFECT_TYPE_ALPHAMODFIX) {
-							ret.fill.Effects[i].amt = ((ret.transparent * 100000 / 255) >> 0);
-							break;
-						}
-					}
-					if (i === ret.fill.Effects.length) {
-						var oEffect = new CAlphaModFix();
-						oEffect.amt = ((ret.transparent * 100000 / 255) >> 0);
-						ret.fill.Effects.push(oEffect);
-					}
+					ret.fill.setTransparent(ret.transparent);
 				}
 			}
-
-
 			return ret;
 		}
 
@@ -18051,12 +18591,18 @@
 		window['AscFormat'].readLong = readLong;
 		window['AscFormat'].writeDouble = writeDouble;
 		window['AscFormat'].readDouble = readDouble;
+		window['AscFormat'].writeDouble2 = writeDouble2;
+		window['AscFormat'].readDouble2 = readDouble2;
 		window['AscFormat'].writeBool = writeBool;
 		window['AscFormat'].readBool = readBool;
 		window['AscFormat'].writeString = writeString;
 		window['AscFormat'].readString = readString;
 		window['AscFormat'].writeObject = writeObject;
 		window['AscFormat'].readObject = readObject;
+		window['AscFormat'].readObjectNoId = readObjectNoId;
+		window['AscFormat'].writeObjectNoId = writeObjectNoId;
+		window['AscFormat'].readObjectNoIdNoType = readObjectNoIdNoType;
+		window['AscFormat'].writeObjectNoIdNoType = writeObjectNoIdNoType;
 		window['AscFormat'].checkThemeFonts = checkThemeFonts;
 		window['AscFormat'].ExecuteNoHistory = ExecuteNoHistory;
 		window['AscFormat'].CreatePresentationTableStyles = CreatePresentationTableStyles;
@@ -18340,9 +18886,11 @@
 		window['AscFormat'].InitClassWithoutType = InitClassWithoutType;
 		window['AscFormat'].CBaseObject = CBaseObject;
 		window['AscFormat'].CBaseFormatObject = CBaseFormatObject;
+		window['AscFormat'].CBaseFormatNoIdObject = CBaseFormatNoIdObject;
 		window['AscFormat'].CBaseNoIdObject = CBaseNoIdObject;
 		window['AscFormat'].checkRasterImageId = checkRasterImageId;
 		window['AscFormat'].IdEntry = IdEntry;
+		window['AscFormat'].CEffectStyle = CEffectStyle;
 
 		window['AscFormat'].DEFAULT_COLOR_MAP = null;
 		window['AscFormat'].DEFAULT_THEME = null;
@@ -18361,6 +18909,7 @@
 		window['AscFormat'].fRGBAToHexString = fRGBAToHexString;
 		window['AscFormat'].RefreshContentAllFields = RefreshContentAllFields;
 		window['AscFormat'].IsEqualObjects = IsEqualObjects;
+		window['AscFormat'].CreateSchemeUnicolorWithMods = CreateSchemeUnicolorWithMods;
 		window['AscFormat'].szPh_full = szPh_full;
 		window['AscFormat'].szPh_half = szPh_half;
 		window['AscFormat'].szPh_quarter = szPh_quarter;

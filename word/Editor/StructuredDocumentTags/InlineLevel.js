@@ -848,12 +848,20 @@ CInlineLevelSdt.prototype.Get_RightPos = function(SearchPos, ContentPos, Depth, 
 };
 CInlineLevelSdt.prototype.Remove = function(nDirection, bOnAddText)
 {
+	let logicDocument  = this.GetLogicDocument();
+	let isRemoveOnDrag = logicDocument ? logicDocument.DragAndDropAction : false;
+	
 	if (this.IsPlaceHolder())
 	{
+		if (isRemoveOnDrag && this.CanBeDeleted())
+		{
+			this.RemoveThisFromParent(true);
+			return true;
+		}
+		
 		if (!this.CanBeDeleted() && !bOnAddText)
 			return true;
 
-		let logicDocument = this.GetLogicDocument();
 		if (!bOnAddText && !this.IsSelectionUse())
 		{
 			this.SelectAll(1);
@@ -878,8 +886,14 @@ CInlineLevelSdt.prototype.Remove = function(nDirection, bOnAddText)
 
 	let result = CParagraphContentWithParagraphLikeContent.prototype.Remove.call(this, nDirection, bOnAddText);
 	
-	let logicDocument = this.GetLogicDocument();
-	if (!result
+	if (isRemoveOnDrag
+		&& this.IsEmpty()
+		&& this.CanBeDeleted())
+	{
+		this.RemoveThisFromParent(true);
+		result = true;
+	}
+	else if (!result
 		&& this.IsEmpty()
 		&& !this.IsPlaceHolder()
 		&& logicDocument
@@ -1204,7 +1218,21 @@ CInlineLevelSdt.prototype.SelectContentControl = function()
 		&& arrDrawings.length > 0
 		&& (oLogicDocument = this.GetLogicDocument()))
 	{
-		oLogicDocument.Select_DrawingObject(arrDrawings[0].GetId());
+		let drawing = null;
+		if (this.IsFixedForm())
+		{
+			let parentShape = this.GetParagraph().GetParentShape();
+			if (parentShape)
+				drawing = parentShape.GetParaDrawing();
+		}
+		else
+		{
+			drawing = arrDrawings[0];
+		}
+		
+		if (drawing)
+			oLogicDocument.Select_DrawingObject(drawing.GetId());
+		
 		return;
 	}
 
@@ -2212,6 +2240,10 @@ CInlineLevelSdt.prototype.GetPictureFormPr = function()
 {
 	return this.Pr.PictureFormPr;
 };
+CInlineLevelSdt.prototype.IsSignatureForm = function()
+{
+	return (this.IsForm() && this.IsPicture() && undefined !== this.Pr.PictureFormPr && this.Pr.PictureFormPr.IsSignature());
+};
 /**
  * Проверяем является ли данный контейнер специальным для поля со списком
  * @returns {boolean}
@@ -2323,7 +2355,7 @@ CInlineLevelSdt.prototype.SelectListItem = function(sValue)
 		if (!this.IsPlaceHolder())
 		{
 			this.SelectAll();
-			this.Remove();
+			this.Remove(1, true);
 			this.RemoveSelection();
 		}
 		else
@@ -2989,7 +3021,7 @@ CInlineLevelSdt.prototype.IsFormFilled = function()
 			return (sText !== "");
 		}
 	}
-	else if (this.IsComboBox())
+	else if (this.IsComboBox() || this.IsDatePicker())
 	{
 		var sText = this.GetSelectedText(true);
 		return (sText !== "");
@@ -3080,14 +3112,30 @@ CInlineLevelSdt.prototype.ConvertFormToFixed = function(nW, nH)
 		|| -1 === nPosInParent
 		|| oParagraph.IsInFixedForm())
 		return null;
+	
+	// TODO: Разобраться, почему мы посылаем useWrap=true, хотя по факту не true
+	let layout = oParagraph.GetLayout(this.GetStartPosInParagraph(), true);
+	if (!layout)
+		return null;
+	
+	let anchorPosition = new CAnchorPosition();
+	layout.ParagraphLayout.X = X;
+	layout.ParagraphLayout.Y = Y + nH;
+	anchorPosition.Set(nW, nH, 0, {L :0, T : 0, R : 0, B : 0}, 0, layout.ParagraphLayout, layout.PageLimits);
+	anchorPosition.Calculate_X(true);
+	anchorPosition.Calculate_Y(true);
+	
+	let x = anchorPosition.Calculate_X_Value(Asc.c_oAscRelativeFromH.Page);
+	let y = anchorPosition.Calculate_Y_Value(Asc.c_oAscRelativeFromV.Page);
 
 	let drawing = this.private_ConvertFormToFixed(nW, nH);
-	drawing.Set_PositionH(Asc.c_oAscRelativeFromH.Page, false, X, false);
-	drawing.Set_PositionV(Asc.c_oAscRelativeFromV.Page, false, Y, false);
+	drawing.Set_PositionH(Asc.c_oAscRelativeFromH.Page, false, x, false);
+	drawing.Set_PositionV(Asc.c_oAscRelativeFromV.Page, false, y, false);
 	drawing.Set_Distance(0, 0, 0, 0);
 	drawing.Set_DrawingType(drawing_Anchor);
 	drawing.Set_WrappingType(WRAPPING_TYPE_NONE);
 	drawing.Set_BehindDoc(false);
+	drawing.Set_LayoutInCell(false);
 	
 	var oRun = new ParaRun(oParagraph, false);
 	oRun.AddToContent(0, drawing);

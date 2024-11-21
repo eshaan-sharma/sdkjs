@@ -73,9 +73,9 @@
 	 * Class representing a text annotation.
 	 * @constructor
     */
-    function CAnnotationText(sName, nPage, aRect, oDoc)
+    function CAnnotationText(sName, nPage, aOrigRect, oDoc)
     {
-        AscPDF.CAnnotationBase.call(this, sName, AscPDF.ANNOTATIONS_TYPES.Text, nPage, aRect, oDoc);
+        AscPDF.CAnnotationBase.call(this, sName, AscPDF.ANNOTATIONS_TYPES.Text, nPage, aOrigRect, oDoc);
 
         this._noteIcon      = NOTE_ICONS_TYPES.Comment;
         this._point         = undefined;
@@ -88,11 +88,9 @@
         this._width         = undefined;
         this._fillColor     = [1, 0.82, 0];
 
-        // internal
-        TurnOffHistory();
         this._replies = [];
     }
-    CAnnotationText.prototype = Object.create(AscPDF.CAnnotationBase.prototype);
+    AscFormat.InitClass(CAnnotationText, AscPDF.CAnnotationBase, AscDFH.historyitem_type_Pdf_Annot_Text);
 	CAnnotationText.prototype.constructor = CAnnotationText;
     
     CAnnotationText.prototype.SetState = function(nType) {
@@ -110,8 +108,8 @@
     CAnnotationText.prototype.ClearReplies = function() {
         this._replies = [];
     };
-    CAnnotationText.prototype.AddReply = function(CommentData) {
-        let oReply = new CAnnotationText(AscCommon.CreateGUID(), this.GetPage(), this.GetRect().slice(), this.GetDocument());
+    CAnnotationText.prototype.AddReply = function(CommentData, nPos) {
+        let oReply = new CAnnotationText(AscCommon.CreateGUID(), this.GetPage(), this.GetOrigRect().slice(), this.GetDocument());
 
         oReply.SetContents(CommentData.m_sText);
         oReply.SetCreationDate(CommentData.m_sOOTime);
@@ -119,14 +117,20 @@
         oReply.SetAuthor(CommentData.m_sUserName);
         oReply.SetDisplay(window["AscPDF"].Api.Objects.display["visible"]);
         oReply.SetReplyTo(this.GetReplyTo() || this);
+        CommentData.SetUserData(oReply.GetId());
 
-        oReply.SetApIdx(this.GetDocument().GetMaxApIdx() + 2);
-        CommentData.m_sUserData = oReply.GetApIdx();
+        if (!nPos) {
+            nPos = this._replies.length;
+        }
 
-        this._replies.push(oReply);
+        this._replies.splice(nPos, 0, oReply);
     };
     CAnnotationText.prototype.GetAscCommentData = function() {
         let oAscCommData = new Asc.asc_CCommentDataWord(null);
+        if (null == this.GetContents()) {
+            return undefined;
+        }
+
         oAscCommData.asc_putText(this.GetContents());
         let sModDate = this.GetModDate();
         if (sModDate)
@@ -140,7 +144,7 @@
             bSolved = true;
         oAscCommData.asc_putSolved(bSolved);
         oAscCommData.asc_putQuoteText("");
-        oAscCommData.m_sUserData = this.GetApIdx();
+        oAscCommData.m_sUserData = this.GetId();
 
         this._replies.forEach(function(reply) {
             oAscCommData.m_aReplies.push(reply.GetAscCommentData());
@@ -149,81 +153,72 @@
         return oAscCommData;
     };
 
+    CAnnotationText.prototype.SetIconType = function(nType) {
+        this._noteIcon = nType;
+    };
     CAnnotationText.prototype.GetIconType = function() {
         return this._noteIcon;
     };
-    CAnnotationText.prototype.GetIconImg = function() {
+    CAnnotationText.prototype.GetIconDrawFunc = function() {
         let nType = this.GetIconType();
         switch (nType) {
             case NOTE_ICONS_TYPES.Check1:
-                return NOTE_ICONS_IMAGES.Check1;
             case NOTE_ICONS_TYPES.Check2:
-                return NOTE_ICONS_IMAGES.Check2;
+                return drawIconCheck;
             case NOTE_ICONS_TYPES.Circle:
-                return NOTE_ICONS_IMAGES.Circle;
+                return drawIconCircle;
             case NOTE_ICONS_TYPES.Comment:
-                return NOTE_ICONS_IMAGES.Comment;
+                return drawIconComment;
             case NOTE_ICONS_TYPES.Cross:
-                return NOTE_ICONS_IMAGES.Cross;
+                return drawIconCross;
             case NOTE_ICONS_TYPES.CrossH:
-                return NOTE_ICONS_IMAGES.CrossH;
+                return drawIconCrossHairs;
             case NOTE_ICONS_TYPES.Help:
-                return NOTE_ICONS_IMAGES.Help;
+                return drawIconHelp;
             case NOTE_ICONS_TYPES.Insert:
-                return NOTE_ICONS_IMAGES.Insert;
+                return drawIconInsert;
             case NOTE_ICONS_TYPES.Key:
-                return NOTE_ICONS_IMAGES.Key;
+                return drawIconKey;
             case NOTE_ICONS_TYPES.NewParagraph:
-                return NOTE_ICONS_IMAGES.NewParagraph;
+                return drawIconNewParagraph;
             case NOTE_ICONS_TYPES.Note:
-                return NOTE_ICONS_IMAGES.Note;
+                return drawIconNote;
             case NOTE_ICONS_TYPES.Paragraph:
-                return NOTE_ICONS_IMAGES.Paragraph;
+                return drawIconParagraph;
             case NOTE_ICONS_TYPES.RightArrow:
-                return NOTE_ICONS_IMAGES.RightArrow;
+                return drawIconRightArrow;
             case NOTE_ICONS_TYPES.RightPointer:
-                return NOTE_ICONS_IMAGES.RightPointer;
+                return drawIconRightPointer;
             case NOTE_ICONS_TYPES.Star:
-                return NOTE_ICONS_IMAGES.Star;
+                return drawIconStar;
             case NOTE_ICONS_TYPES.UpArrow:
-                return NOTE_ICONS_IMAGES.UpArrow;
+                return drawIconUpArrow;
             case NOTE_ICONS_TYPES.UpLeftArrow:
-                return NOTE_ICONS_IMAGES.UpLeftArrow;
+                return drawIconUpLeftArrow;
         }
 
         return null;
     };
     CAnnotationText.prototype.LazyCopy = function() {
         let oDoc = this.GetDocument();
-        oDoc.TurnOffHistory();
+        oDoc.StartNoHistoryMode();
 
         let oNewAnnot = new CAnnotationText(AscCommon.CreateGUID(), this.GetPage(), this.GetOrigRect().slice(), oDoc);
 
         oNewAnnot.lazyCopy = true;
-
-        if (this._pagePos) {
-            oNewAnnot._pagePos = {
-                x: this._pagePos.x,
-                y: this._pagePos.y,
-                w: this._pagePos.w,
-                h: this._pagePos.h
-            }
-        }
-
-        
-        if (this._origRect)
-            oNewAnnot._origRect = this._origRect.slice();
-
-        let aFillColor = this.GetFillColor();
-
         oNewAnnot._originView = this._originView;
         oNewAnnot._apIdx = this._apIdx;
-        oNewAnnot.SetFillColor(aFillColor ? aFillColor.slice() : undefined);
+
+        let aFillColor = this.GetFillColor();
+        aFillColor && oNewAnnot.SetFillColor(aFillColor.slice());
         oNewAnnot.SetOriginPage(this.GetOriginPage());
         oNewAnnot.SetAuthor(this.GetAuthor());
         oNewAnnot.SetModDate(this.GetModDate());
         oNewAnnot.SetCreationDate(this.GetCreationDate());
         oNewAnnot.SetContents(this.GetContents());
+        oNewAnnot.SetIconType(this.GetIconType());
+
+        oDoc.EndNoHistoryMode();
 
         return oNewAnnot;
     };
@@ -235,79 +230,79 @@
         if (!this.graphicObjects)
             this.graphicObjects = new AscFormat.DrawingObjectsController(this);
 
-        let oRGB            = this.GetRGBColor(this.GetFillColor());
-        let ICON_TO_DRAW    = this.GetIconImg();
+        let oRGB = this.GetRGBColor(this.GetFillColor());
 
-        let aRect       = this.GetRect();
+        let oDoc        = this.GetDocument();
         let nPage       = this.GetPage();
         let aOrigRect   = this.GetOrigRect();
-        let nRotAngle   = this.GetDocument().Viewer.getPageRotate(nPage);
-
-        let nWidth  = (aRect[2] - aRect[0]) * AscCommon.AscBrowser.retinaPixelRatio;
-        let nHeight = (aRect[3] - aRect[1]) * AscCommon.AscBrowser.retinaPixelRatio;
+        let nRotAngle   = oDoc.Viewer.getPageRotate(nPage);
         
-        let imgW = ICON_TO_DRAW.width;
-        let imgH = ICON_TO_DRAW.height;
-
-        let nScaleX = nWidth / imgW;
-        let nScaleY = nHeight / imgH;
-        let wScaled = Math.max(imgW * nScaleX + 0.5 >> 0, 40);
-        let hScaled = Math.max(imgH * nScaleY + 0.5 >> 0, 40);
-
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-
-        if (oGraphics.isThumbnails) {
-            let oTr = oGraphics.GetTransform();
-            wScaled = wScaled * oTr.sy + 0.5 >> 0;
-            hScaled = hScaled * oTr.sy + 0.5 >> 0;
-        }
+        let nX          = aOrigRect[0] + 0.5 >> 0;
+        let nY          = aOrigRect[1] + 0.5 >> 0;
+        let nWidth      = (aOrigRect[2] - aOrigRect[0]) / oDoc.Viewer.zoom;
+        let nHeight     = (aOrigRect[3] - aOrigRect[1]) / oDoc.Viewer.zoom;
         
-        // Set the canvas dimensions to match the image
-        canvas.width = wScaled;
-        canvas.height = hScaled;
+        let oCtx = oGraphics.GetContext();
+        oCtx.save();
+        oGraphics.EnableTransform();
+        oCtx.iconFill = "rgb(" + oRGB.r + "," + oRGB.g + "," + oRGB.b + ")";
 
-        // Draw the image onto the canvas
-        let nOpacity = this.GetOpacity();
-        context.save();
-        context.globalAlpha = nOpacity;
-        context.translate(wScaled >> 1, hScaled >> 1);
-        context.rotate(-nRotAngle * Math.PI / 180);
-        context.drawImage(ICON_TO_DRAW, 0, 0, imgW, imgH, -wScaled / 2, -hScaled / 2, wScaled, hScaled);
-        context.restore();
+        let nScale = 1.25 / oDoc.Viewer.zoom;
+        let drawFunc = this.GetIconDrawFunc();
+        drawFunc(oCtx, nX , nY, nScale, nScale, -nRotAngle * Math.PI / 180);
 
-        if (!AscCommon.AscBrowser.isIE || AscCommon.AscBrowser.isIeEdge) {
-            if (oRGB.r != 255 || oRGB.g != 209 || oRGB.b != 0) {
-                // Get the pixel data of the canvas
-                let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                let data = imageData.data;
-    
-                // Loop through each pixel
-                for (let i = 0; i < data.length; i += 4) {
-                    const red = data[i];
-                    const green = data[i + 1];
-                    const blue = data[i + 2];
-    
-                    // Check if the pixel is black (R = 0, G = 0, B = 0)
-                    if (red === 255 && green === 209 && blue === 0) {
-                        // Change the pixel color to red (R = 255, G = 0, B = 0)
-                        data[i] = oRGB.r; // Red
-                        data[i + 1] = oRGB.g; // Green
-                        data[i + 2] = oRGB.b; // Blue
-                        // Note: The alpha channel (transparency) remains unchanged
-                    }
-                }
-    
-                // Put the modified pixel data back onto the canvas
-                context.putImageData(imageData, 0, 0);
-            }
-        }
+        oCtx.restore();
 
-        // Draw the comment note
-        oGraphics.SetIntegerGrid(true);
-        oGraphics.DrawImageXY(canvas, aOrigRect[0], aOrigRect[1]);
-        oGraphics.SetIntegerGrid(false);
+        oGraphics.DrawLockObjectRect(this.Lock.Get_Type(), nX, nY, 20 / oDoc.Viewer.zoom, 20 / oDoc.Viewer.zoom);
+        //// draw rect
+        // oGraphics.SetLineWidth(1);
+        // oGraphics.SetStrokeStyle(0, 255, 255);
+        // oGraphics.SetLineDash([]);
+        // oGraphics.BeginPath();
+        // oGraphics.Rect(nX, nY, nWidth, nHeight);
+        // oGraphics.Stroke();
     };
+    CAnnotationText.prototype.drawLocks = function (transform, oGraphicsPDF) {
+		if (AscCommon.IsShapeToImageConverter) {
+			return;
+		}
+		var bNotes = !!(this.parent && this.parent.kind === AscFormat.TYPE_KIND.NOTES);
+		if (!this.group && !bNotes) {
+			var oLock;
+			if (this.parent instanceof AscCommonWord.ParaDrawing) {
+				oLock = this.parent.Lock;
+			} else if (this.Lock) {
+				oLock = this.Lock;
+			}
+			if (oLock && AscCommon.c_oAscLockTypes.kLockTypeNone !== oLock.Get_Type()) {
+				var bCoMarksDraw = true;
+				var oApi = editor || Asc['editor'];
+				if (oApi) {
+
+					switch (oApi.getEditorId()) {
+						case AscCommon.c_oEditorId.Word: {
+							bCoMarksDraw = (true === oApi.isCoMarksDraw || AscCommon.c_oAscLockTypes.kLockTypeMine !== oLock.Get_Type());
+							break;
+						}
+						case AscCommon.c_oEditorId.Presentation: {
+							bCoMarksDraw = (!AscCommon.CollaborativeEditing.Is_Fast() || AscCommon.c_oAscLockTypes.kLockTypeMine !== oLock.Get_Type());
+							break;
+						}
+						case AscCommon.c_oEditorId.Spreadsheet: {
+							bCoMarksDraw = (!oApi.collaborativeEditing.getFast() || AscCommon.c_oAscLockTypes.kLockTypeMine !== oLock.Get_Type());
+							break;
+						}
+					}
+				}
+				if (bCoMarksDraw && oGraphicsPDF.DrawLockObjectRect) {
+					oGraphicsPDF.transform3(transform);
+					oGraphicsPDF.DrawLockObjectRect(oLock.Get_Type(), 0, 0, this.extX, this.extY);
+					return true;
+				}
+			}
+		}
+		return false;
+	};
     CAnnotationText.prototype.IsNeedDrawFromStream = function() {
         return false;
     };
@@ -328,9 +323,6 @@
     };
     CAnnotationText.prototype.IsComment = function() {
         return true;
-    };
-    CAnnotationText.prototype.getObjectType = function() {
-        return -1;
     };
     
     CAnnotationText.prototype.WriteToBinary = function(memory) {
@@ -371,125 +363,1392 @@
         memory.WriteLong(nEndPos - nStartPos);
         memory.Seek(nEndPos);
     };
-    // CAnnotationText.prototype.ClearCache = function() {};
-    function TurnOffHistory() {
-        if (AscCommon.History.IsOn() == true)
-            AscCommon.History.TurnOff();
-    }
-
+    
     window["AscPDF"].CAnnotationText            = CAnnotationText;
     window["AscPDF"].TEXT_ANNOT_STATE           = TEXT_ANNOT_STATE;
     window["AscPDF"].TEXT_ANNOT_STATE_MODEL     = TEXT_ANNOT_STATE_MODEL;
 	
-	function toBase64(str) {
-		return window.btoa(unescape(encodeURIComponent(str)));
-	}
-	
-	function getSvgImage(svg) {
-		let image = new Image();
-		if (!AscCommon.AscBrowser.isIE || AscCommon.AscBrowser.isIeEdge) {
-			image.src = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
-		}
-		else {
-			image.src = "data:image/svg+xml;base64," + toBase64(svg);
-			image.onload = function() {
-				// Почему-то IE не определяет размеры сам
-				this.width = 20;
-				this.height = 20;
-			};
-		}
-		
-		return image;
-	}
+    function drawIconCheck(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
 
-    let SVG_ICON_CHECK = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path d='M5.2381 8.8L4 11.8L7.71429 16C12.0476 9.4 13.2857 8.2 17 4C14.5238 4 9.77778 8.8 7.71429 11.8L5.2381 8.8Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_CIRCLE = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17ZM10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z' fill='black'/>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M10 14C12.2091 14 14 12.2091 14 10C14 7.79086 12.2091 6 10 6C7.79086 6 6 7.79086 6 10C6 12.2091 7.79086 14 10 14ZM10 15C12.7614 15 15 12.7614 15 10C15 7.23858 12.7614 5 10 5C7.23858 5 5 7.23858 5 10C5 12.7614 7.23858 15 10 15Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_COMMENT = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path d='M2 4C2 3.44772 2.44772 3 3 3H17C17.5523 3 18 3.44772 18 4V14C18 14.5523 17.5523 15 17 15H10L7.5 17.5L5 15H3C2.44772 15 2 14.5523 2 14V4Z' fill='#FFD100'/>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M17 15H10L8.20711 16.7929L7.5 17.5L6.79289 16.7929L5 15H3C2.44772 15 2 14.5523 2 14V4C2 3.44772 2.44772 3 3 3H17C17.5523 3 18 3.44772 18 4V14C18 14.5523 17.5523 15 17 15ZM9.29289 14.2929L7.5 16.0858L5.70711 14.2929L5.41421 14H5H3V4H17V14H10H9.58579L9.29289 14.2929ZM15 6H5V7H15V6ZM5 8H15V9H5V8ZM12 10H5V11H12V10Z' fill='#333333'/>\
-    </svg>";
-    
-    let SVG_ICON_CROSS = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M4.81055 5.70711L5.4718 6.36836L6.7943 7.69087L9.29585 10.1924L7.00452 12.4838L5.57703 13.9113L4.86328 14.625L5.57039 15.3321L6.28413 14.6184L7.71162 13.1909L10.003 10.8995L12.2943 13.1909L13.7218 14.6184L14.4355 15.3321L15.1427 14.625L14.4289 13.9113L13.0014 12.4838L10.7101 10.1924L13.2116 7.69087L14.5341 6.36836L15.1954 5.70711L14.4883 5L13.827 5.66125L12.5045 6.98377L10.003 9.48533L7.50141 6.98377L6.17891 5.66126L5.51766 5L4.81055 5.70711Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_HELP = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M17 10.5C17 14.0899 14.0899 17 10.5 17C6.91015 17 4 14.0899 4 10.5C4 6.91015 6.91015 4 10.5 4C14.0899 4 17 6.91015 17 10.5ZM18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5ZM11 14V13H10V14H11Z' fill='black'/>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M10.2071 7C9.88696 7 9.57993 7.12718 9.35355 7.35355C9.12718 7.57993 9 7.88696 9 8.20711V8.5H8V8.20711C8 7.62175 8.23253 7.06036 8.64645 6.64645C9.06036 6.23253 9.62175 6 10.2071 6H10.7929C11.3783 6 11.9396 6.23253 12.3536 6.64645C12.7675 7.06036 13 7.62175 13 8.20711V8.5C13 9.28689 12.6295 10.0279 12 10.5L11.6 10.8C11.2223 11.0833 11 11.5279 11 12H10C10 11.2131 10.3705 10.4721 11 10L11.4 9.7C11.7777 9.41672 12 8.97214 12 8.5V8.20711C12 7.88696 11.8728 7.57993 11.6464 7.35355C11.4201 7.12718 11.113 7 10.7929 7H10.2071Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_INSERT = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path d='M10 5L16.1867 15H3.81333L10 5ZM10 3L2 16H18L10 3Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_KEY = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <mask id='path-1-inside-1_9139_69160' fill='white'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M12 13C14.7614 13 17 10.7614 17 8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8C7 8.59785 7.10493 9.1712 7.29737 9.70263L2.5 14.5L5.5 17.5L6 17L6 16H7V15H8L8 14H9L10.2974 12.7026C10.8288 12.8951 11.4021 13 12 13Z'/>\
-    </mask>\
-    <path d='M7.29737 9.70263L8.00448 10.4097L8.45415 9.96006L8.23762 9.36213L7.29737 9.70263ZM2.5 14.5L1.79289 13.7929L1.08579 14.5L1.79289 15.2071L2.5 14.5ZM5.5 17.5L4.79289 18.2071L5.5 18.9142L6.20711 18.2071L5.5 17.5ZM6 17L6.70711 17.7071L7 17.4142L7 17L6 17ZM6 16V15H5L5 16L6 16ZM7 16V17H8V16H7ZM7 15V14H6V15H7ZM8 15V16H9L9 15L8 15ZM8 14V13H7L7 14L8 14ZM9 14V15H9.41421L9.70711 14.7071L9 14ZM10.2974 12.7026L10.6379 11.7624L10.0399 11.5458L9.59027 11.9955L10.2974 12.7026ZM16 8C16 10.2091 14.2091 12 12 12V14C15.3137 14 18 11.3137 18 8H16ZM12 4C14.2091 4 16 5.79086 16 8H18C18 4.68629 15.3137 2 12 2V4ZM8 8C8 5.79086 9.79086 4 12 4V2C8.68629 2 6 4.68629 6 8H8ZM8.23762 9.36213C8.08414 8.9383 8 8.48008 8 8H6C6 8.71562 6.12572 9.4041 6.35713 10.0431L8.23762 9.36213ZM3.20711 15.2071L8.00448 10.4097L6.59027 8.99552L1.79289 13.7929L3.20711 15.2071ZM6.20711 16.7929L3.20711 13.7929L1.79289 15.2071L4.79289 18.2071L6.20711 16.7929ZM5.29289 16.2929L4.79289 16.7929L6.20711 18.2071L6.70711 17.7071L5.29289 16.2929ZM5 16L5 17L7 17L7 16L5 16ZM7 15H6V17H7V15ZM6 15V16H8V15H6ZM8 14H7V16H8V14ZM7 14L7 15L9 15L9 14L7 14ZM9 13H8V15H9V13ZM9.59027 11.9955L8.29289 13.2929L9.70711 14.7071L11.0045 13.4097L9.59027 11.9955ZM12 12C11.5199 12 11.0617 11.9159 10.6379 11.7624L9.95688 13.6429C10.5959 13.8743 11.2844 14 12 14V12Z' fill='black' mask='url(#path-1-inside-1_9139_69160)'/>\
-    <circle cx='13' cy='7' r='1' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_NEW_PARAGRAPH = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <mask id='path-1-inside-1_9139_69160' fill='white'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M12 13C14.7614 13 17 10.7614 17 8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8C7 8.59785 7.10493 9.1712 7.29737 9.70263L2.5 14.5L5.5 17.5L6 17L6 16H7V15H8L8 14H9L10.2974 12.7026C10.8288 12.8951 11.4021 13 12 13Z'/>\
-    </mask>\
-    <path d='M7.29737 9.70263L8.00448 10.4097L8.45415 9.96006L8.23762 9.36213L7.29737 9.70263ZM2.5 14.5L1.79289 13.7929L1.08579 14.5L1.79289 15.2071L2.5 14.5ZM5.5 17.5L4.79289 18.2071L5.5 18.9142L6.20711 18.2071L5.5 17.5ZM6 17L6.70711 17.7071L7 17.4142L7 17L6 17ZM6 16V15H5L5 16L6 16ZM7 16V17H8V16H7ZM7 15V14H6V15H7ZM8 15V16H9L9 15L8 15ZM8 14V13H7L7 14L8 14ZM9 14V15H9.41421L9.70711 14.7071L9 14ZM10.2974 12.7026L10.6379 11.7624L10.0399 11.5458L9.59027 11.9955L10.2974 12.7026ZM16 8C16 10.2091 14.2091 12 12 12V14C15.3137 14 18 11.3137 18 8H16ZM12 4C14.2091 4 16 5.79086 16 8H18C18 4.68629 15.3137 2 12 2V4ZM8 8C8 5.79086 9.79086 4 12 4V2C8.68629 2 6 4.68629 6 8H8ZM8.23762 9.36213C8.08414 8.9383 8 8.48008 8 8H6C6 8.71562 6.12572 9.4041 6.35713 10.0431L8.23762 9.36213ZM3.20711 15.2071L8.00448 10.4097L6.59027 8.99552L1.79289 13.7929L3.20711 15.2071ZM6.20711 16.7929L3.20711 13.7929L1.79289 15.2071L4.79289 18.2071L6.20711 16.7929ZM5.29289 16.2929L4.79289 16.7929L6.20711 18.2071L6.70711 17.7071L5.29289 16.2929ZM5 16L5 17L7 17L7 16L5 16ZM7 15H6V17H7V15ZM6 15V16H8V15H6ZM8 14H7V16H8V14ZM7 14L7 15L9 15L9 14L7 14ZM9 13H8V15H9V13ZM9.59027 11.9955L8.29289 13.2929L9.70711 14.7071L11.0045 13.4097L9.59027 11.9955ZM12 12C11.5199 12 11.0617 11.9159 10.6379 11.7624L9.95688 13.6429C10.5959 13.8743 11.2844 14 12 14V12Z' fill='black' mask='url(#path-1-inside-1_9139_69160)'/>\
-    <circle cx='13' cy='7' r='1' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_PARAGRAPH = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M8.5 11C8.66976 11 8.8367 10.9879 9 10.9646V16H10V5H12V16H13V5H14V4C12.165 4 10.2782 4 8.5 4C6.567 4 5 5.567 5 7.5C5 9.433 6.567 11 8.5 11Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_RIGHT_ARROW = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M9 13V16L16.3333 10.5L9 5V8H3V13H9ZM8 3L18 10.5L8 18V14H2V7H8V3Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_RIGHT_POINTER = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M2.62769 3.34302L18.7311 10.5001L2.62769 17.6572L7.39907 10.5001L2.62769 3.34302ZM5.3723 5.65716L8.60092 10.5001L5.3723 15.343L16.2689 10.5001L5.3723 5.65716Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_STAR = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M11.8885 8.11146L10 2L8.11146 8.11146H2L6.94427 11.8885L5.05573 18L10 14.2229L14.9443 18L13.0557 11.8885L18 8.11146H11.8885ZM15.0437 9.11146H11.1509L10 5.38705L8.8491 9.11146H4.9563L8.10564 11.5173L6.93486 15.3061L10 12.9645L13.0651 15.3061L11.8944 11.5173L15.0437 9.11146Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_NOTE = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M15 5H5L5 15H12V13C12 12.4477 12.4477 12 13 12H15V5ZM14.5858 13L13 14.5858V13H14.5858ZM4 15C4 15.5523 4.44772 16 5 16H12.5858C12.851 16 13.1054 15.8946 13.2929 15.7071L15.7071 13.2929C15.8946 13.1054 16 12.851 16 12.5858V5C16 4.44771 15.5523 4 15 4H5C4.44772 4 4 4.44772 4 5V15Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_UP_ARROW = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path fill-rule='evenodd' clip-rule='evenodd' d='M13 11L16 11L10.5 3.66667L5 11L8 11L8 17L13 17L13 11ZM3 12L10.5 2L18 12L14 12L14 18L7 18L7 12L3 12Z' fill='black'/>\
-    </svg>";
-    
-    let SVG_ICON_UP_LEFT_ARROW = "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\
-    <path d='M14.5 4.5H4.5V14.5L7.5 11.5L12.5 16.5L16.5 12.5L11.5 7.5L14.5 4.5Z' stroke='black'/>\
-    </svg>";
-	
-	let NOTE_ICONS_IMAGES = {
-		Check:          getSvgImage(SVG_ICON_CHECK),
-		Circle:         getSvgImage(SVG_ICON_CIRCLE),
-		Comment:        getSvgImage(SVG_ICON_COMMENT),
-		Cross:          getSvgImage(SVG_ICON_CROSS),
-		Help:           getSvgImage(SVG_ICON_HELP),
-		Insert:         getSvgImage(SVG_ICON_INSERT),
-		Key:            getSvgImage(SVG_ICON_KEY),
-		NewParagraph:   getSvgImage(SVG_ICON_NEW_PARAGRAPH),
-		Note:           getSvgImage(SVG_ICON_NOTE),
-		Paragraph:      getSvgImage(SVG_ICON_PARAGRAPH),
-		RightArrow:     getSvgImage(SVG_ICON_RIGHT_ARROW),
-		RightPointer:   getSvgImage(SVG_ICON_RIGHT_POINTER),
-		Star:           getSvgImage(SVG_ICON_STAR),
-		UpArrow:        getSvgImage(SVG_ICON_UP_ARROW),
-		UpLeftArrow:    getSvgImage(SVG_ICON_UP_LEFT_ARROW)
-	}
-    
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(2.238,6.8);
+        ctx.lineTo(1,9.8);
+        ctx.lineTo(4.714,14);
+        ctx.bezierCurveTo(9.048,7.4,10.286,6.2,14,2);
+        ctx.bezierCurveTo(11.524000000000001,2,6.778,6.8,4.714,9.8);
+        ctx.lineTo(2.2380000000000004,6.800000000000001);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(9.536,5.147);
+        ctx.bezierCurveTo(7.808999999999999,6.698,6.1339999999999995,8.619,5.1259999999999994,10.083);
+        ctx.lineTo(4.749999999999999,10.629);
+        ctx.lineTo(2.3819999999999992,7.760999999999999);
+        ctx.lineTo(1.5819999999999992,9.702);
+        ctx.lineTo(4.655999999999999,13.179);
+        ctx.bezierCurveTo(8.244,7.748,9.668999999999999,6.122,12.439,3.005000000000001);
+        ctx.bezierCurveTo(12.314,3.072000000000001,12.185,3.145000000000001,12.052,3.225000000000001);
+        ctx.bezierCurveTo(11.263,3.700000000000001,10.399,4.372000000000001,9.536,5.147000000000001);
+        ctx.closePath();
+        ctx.moveTo(11.536,2.3680000000000003);
+        ctx.bezierCurveTo(12.383,1.8580000000000003,13.241,1.5000000000000004,14,1.5000000000000004);
+        ctx.lineTo(15.11,1.5000000000000004);
+        ctx.lineTo(14.373999999999999,2.3310000000000004);
+        ctx.bezierCurveTo(13.999999999999998,2.7550000000000003,13.650999999999998,3.1480000000000006,13.320999999999998,3.5180000000000007);
+        ctx.bezierCurveTo(10.387999999999998,6.8180000000000005,9.011,8.368,5.131999999999998,14.274000000000001);
+        ctx.lineTo(4.772999999999998,14.821000000000002);
+        ctx.lineTo(0.419,9.898);
+        ctx.lineTo(2.093,5.8389999999999995);
+        ctx.lineTo(4.686,8.979);
+        ctx.bezierCurveTo(5.75,7.54,7.289,5.822,8.867,4.404);
+        ctx.bezierCurveTo(9.758000000000001,3.604,10.674000000000001,2.888,11.536000000000001,2.37);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconCircle(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(16,0);
+        ctx.lineTo(16,16);
+        ctx.lineTo(0,16);
+        ctx.closePath();
+        ctx.clip();
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(8,13);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.moveTo(8,15);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,7,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,7,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(8,15);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,7,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,7,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.moveTo(8,16);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,8,1.5707963267948966,4.71238898038469,0);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,8,-1.5707963267948966,1.5707963267948966,0);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(8,12);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,4,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,4,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.moveTo(8,13);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,1.5707963267948966,4.71238898038469,0);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.translate(8,8);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,-1.5707963267948966,1.5707963267948966,0);
+        ctx.rotate(0);
+        ctx.translate(-8,-8);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconComment(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(1,2);
+        ctx.lineTo(15,2);
+        ctx.lineTo(15,12);
+        ctx.lineTo(7.5,12.5);
+        ctx.lineTo(5.5,14.5);
+        ctx.lineTo(3.5,12.5);
+        ctx.lineTo(1,12);
+        ctx.lineTo(1,2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(3,4);
+        ctx.lineTo(13,4);
+        ctx.lineTo(13,5);
+        ctx.lineTo(3,5);
+        ctx.lineTo(3,4);
+        ctx.closePath();
+        ctx.moveTo(3,6);
+        ctx.lineTo(13,6);
+        ctx.lineTo(13,7);
+        ctx.lineTo(3,7);
+        ctx.lineTo(3,6);
+        ctx.closePath();
+        ctx.moveTo(10,8);
+        ctx.lineTo(3,8);
+        ctx.lineTo(3,9);
+        ctx.lineTo(10,9);
+        ctx.lineTo(10,8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(3,13);
+        ctx.lineTo(5.5,15.5);
+        ctx.lineTo(8,13);
+        ctx.lineTo(15,13);
+        ctx.translate(15,12);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,1.5707963267948966,0,1);
+        ctx.rotate(0);
+        ctx.translate(-15,-12);
+        ctx.lineTo(16,2);
+        ctx.translate(15,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0,-1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-15,-2);
+        ctx.lineTo(1,1);
+        ctx.translate(1,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-1.5707963267948966,-3.141592653589793,1);
+        ctx.rotate(0);
+        ctx.translate(-1,-2);
+        ctx.lineTo(0,12);
+        ctx.translate(1,12);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,3.141592653589793,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-1,-12);
+        ctx.lineTo(3,13);
+        ctx.closePath();
+        ctx.moveTo(5.5,14.086);
+        ctx.lineTo(3.414,12);
+        ctx.lineTo(1,12);
+        ctx.lineTo(1,2);
+        ctx.lineTo(15,2);
+        ctx.lineTo(15,12);
+        ctx.lineTo(7.586,12);
+        ctx.lineTo(5.5,14.086);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconCross(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(3.404,2.697);
+        ctx.lineTo(2.697,3.404);
+        ctx.lineTo(7.293,8);
+        ctx.lineTo(2.697,12.596);
+        ctx.lineTo(3.404,13.303);
+        ctx.lineTo(8,8.707);
+        ctx.lineTo(12.596,13.303);
+        ctx.lineTo(13.303,12.596);
+        ctx.lineTo(8.707,8);
+        ctx.lineTo(13.303,3.404);
+        ctx.lineTo(12.596,2.697);
+        ctx.lineTo(8,7.293);
+        ctx.lineTo(3.404,2.697);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(1.282,3.404);
+        ctx.lineTo(3.404,1.282);
+        ctx.lineTo(8,5.88);
+        ctx.lineTo(12.596,1.2829999999999995);
+        ctx.lineTo(14.717,3.4049999999999994);
+        ctx.lineTo(10.121,8);
+        ctx.lineTo(14.717,12.596);
+        ctx.lineTo(12.597000000000001,14.717);
+        ctx.lineTo(8,10.121);
+        ctx.lineTo(3.404,14.717);
+        ctx.lineTo(1.282,12.597000000000001);
+        ctx.lineTo(5.88,8);
+        ctx.lineTo(1.282,3.404);
+        ctx.closePath();
+        ctx.moveTo(2.697,3.404);
+        ctx.lineTo(7.293,8);
+        ctx.lineTo(2.697,12.596);
+        ctx.lineTo(3.404,13.303);
+        ctx.lineTo(8,8.707);
+        ctx.lineTo(12.596,13.303);
+        ctx.lineTo(13.303,12.596);
+        ctx.lineTo(8.707,8);
+        ctx.lineTo(13.303,3.404);
+        ctx.lineTo(12.596,2.697);
+        ctx.lineTo(8,7.293);
+        ctx.lineTo(3.404,2.697);
+        ctx.lineTo(2.697,3.404);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconCrossHairs(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6,6);
+        ctx.lineTo(6,4);
+        ctx.lineTo(9,4);
+        ctx.lineTo(9,6);
+        ctx.lineTo(11,6);
+        ctx.lineTo(11,9);
+        ctx.lineTo(9,9);
+        ctx.lineTo(9,11);
+        ctx.lineTo(6,11);
+        ctx.lineTo(6,9);
+        ctx.lineTo(4,9);
+        ctx.lineTo(4,6);
+        ctx.lineTo(6,6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(14,7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,0,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,3.141592653589793,6.283185307179586,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.moveTo(13,7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,5.5,0,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,5.5,3.141592653589793,6.283185307179586,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6,11);
+        ctx.lineTo(6,9);
+        ctx.lineTo(4,9);
+        ctx.lineTo(4,6);
+        ctx.lineTo(6,6);
+        ctx.lineTo(6,4);
+        ctx.lineTo(9,4);
+        ctx.lineTo(9,6);
+        ctx.lineTo(11,6);
+        ctx.lineTo(11,9);
+        ctx.lineTo(9,9);
+        ctx.lineTo(9,11);
+        ctx.lineTo(6,11);
+        ctx.closePath();
+        ctx.moveTo(7,8);
+        ctx.lineTo(5,8);
+        ctx.lineTo(5,7);
+        ctx.lineTo(7,7);
+        ctx.lineTo(7,5);
+        ctx.lineTo(8,5);
+        ctx.lineTo(8,7);
+        ctx.lineTo(10,7);
+        ctx.lineTo(10,8);
+        ctx.lineTo(8,8);
+        ctx.lineTo(8,10);
+        ctx.lineTo(7,10);
+        ctx.lineTo(7,8);
+        ctx.closePath();
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7.5,13);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,5.5,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,5.5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.moveTo(7.5,12);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,4.5,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,4.5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7.5,15);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.moveTo(7.5,14);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,1.5707963267948966,4.71238898038469,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconHelp(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(15,7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,0,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,3.141592653589793,6.283185307179586,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(8,11);
+        ctx.lineTo(8,10);
+        ctx.lineTo(7,10);
+        ctx.lineTo(7,11);
+        ctx.lineTo(8,11);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(15,7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,0,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,7.5,3.141592653589793,6.283185307179586,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.moveTo(14,7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,0,3.141592653589793,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.translate(7.5,7.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,6.5,3.141592653589793,6.283185307179586,1);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-7.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7.207,4);
+        ctx.translate(7.207000000000001,5.207000000000001);
+        ctx.rotate(0);
+        ctx.arc(0,0,1.207,-1.5707963267948968,-3.141592653589793,1);
+        ctx.rotate(0);
+        ctx.translate(-7.207000000000001,-5.207000000000001);
+        ctx.lineTo(6,5.5);
+        ctx.lineTo(5,5.5);
+        ctx.lineTo(5,5.207);
+        ctx.translate(7.207000000000001,5.207000000000001);
+        ctx.rotate(0);
+        ctx.arc(0,0,2.207,3.141592653589793,4.71238898038469,0);
+        ctx.rotate(0);
+        ctx.translate(-7.207000000000001,-5.207000000000001);
+        ctx.lineTo(7.793,3);
+        ctx.translate(7.792999999999999,5.207000000000001);
+        ctx.rotate(0);
+        ctx.arc(0,0,2.207,-1.5707963267948966,0,0);
+        ctx.rotate(0);
+        ctx.translate(-7.792999999999999,-5.207000000000001);
+        ctx.lineTo(10,5.5);
+        ctx.translate(7.5,5.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,2.5,0,0.9272952180016123,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-5.5);
+        ctx.lineTo(8.6,7.8);
+        ctx.translate(9.5,9);
+        ctx.rotate(0);
+        ctx.arc(0,0,1.5,-2.2142974355881813,-3.1415926535897936,1);
+        ctx.rotate(0);
+        ctx.translate(-9.5,-9);
+        ctx.lineTo(7,9);
+        ctx.translate(9.5,9);
+        ctx.rotate(0);
+        ctx.arc(0,0,2.5,3.141592653589793,4.068887871591405,0);
+        ctx.rotate(0);
+        ctx.translate(-9.5,-9);
+        ctx.lineTo(8.4,6.7);
+        ctx.translate(7.499999999999999,5.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,1.5,0.927295218001612,-3.3306690738754696e-16,1);
+        ctx.rotate(0);
+        ctx.translate(-7.499999999999999,-5.5);
+        ctx.lineTo(9,5.207);
+        ctx.translate(7.792999999999999,5.207000000000001);
+        ctx.rotate(0);
+        ctx.arc(0,0,1.207,0,-1.5707963267948963,1);
+        ctx.rotate(0);
+        ctx.translate(-7.792999999999999,-5.207000000000001);
+        ctx.lineTo(7.207,4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconInsert(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7.5,1);
+        ctx.lineTo(0.5,14);
+        ctx.lineTo(15.5,14);
+        ctx.lineTo(7.5,1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7.5,3);
+        ctx.lineTo(13.687000000000001,13);
+        ctx.lineTo(2.313,13);
+        ctx.lineTo(7.5,3);
+        ctx.closePath();
+        ctx.moveTo(7.5,1);
+        ctx.lineTo(0.5,14);
+        ctx.lineTo(15.5,14);
+        ctx.lineTo(7.5,1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconKey(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(10,11);
+        ctx.translate(9.998041619289044,6.000000383525516);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,1.570404650642691,2.7940377548872117,1);
+        ctx.rotate(0);
+        ctx.translate(-9.998041619289044,-6.000000383525516);
+        ctx.lineTo(0.5,12.5);
+        ctx.lineTo(3.5,15.5);
+        ctx.lineTo(4,15);
+        ctx.lineTo(4,14);
+        ctx.lineTo(5,14);
+        ctx.lineTo(5,13);
+        ctx.lineTo(6,13);
+        ctx.lineTo(6,12);
+        ctx.lineTo(7,12);
+        ctx.lineTo(8.297,10.703);
+        ctx.translate(9.992847608690775,6.010005125924621);
+        ctx.rotate(0);
+        ctx.arc(0,0,4.99,1.9175528974671896,1.5693629813523524,1);
+        ctx.rotate(0);
+        ctx.translate(-9.992847608690775,-6.010005125924621);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6.454,7.96);
+        ctx.lineTo(1.9139999999999997,12.5);
+        ctx.lineTo(3,13.586);
+        ctx.lineTo(3,13);
+        ctx.lineTo(4,13);
+        ctx.lineTo(4,12);
+        ctx.lineTo(5,12);
+        ctx.lineTo(5,11);
+        ctx.lineTo(6.586,11);
+        ctx.lineTo(8.04,9.546);
+        ctx.lineTo(8.638,9.761999999999999);
+        ctx.translate(9.99924969497314,6.000750305026858);
+        ctx.rotate(0);
+        ctx.arc(0,0,4,1.9180454596081746,2.7943435207765153,1);
+        ctx.rotate(0);
+        ctx.translate(-9.99924969497314,-6.000750305026858);
+        ctx.lineTo(6.454,7.959999999999998);
+        ctx.closePath();
+        ctx.moveTo(7,12);
+        ctx.lineTo(6,12);
+        ctx.lineTo(6,13);
+        ctx.lineTo(5,13);
+        ctx.lineTo(5,14);
+        ctx.lineTo(4,14);
+        ctx.lineTo(4,15);
+        ctx.lineTo(3.5,15.5);
+        ctx.lineTo(0.5,12.5);
+        ctx.lineTo(5.297,7.703);
+        ctx.translate(9.998562118716425,6.001437881283573);
+        ctx.rotate(0);
+        ctx.arc(0,0,5,2.7943435207765153,1.9180454596081749,0);
+        ctx.rotate(0);
+        ctx.translate(-9.998562118716425,-6.001437881283573);
+        ctx.lineTo(7,12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(12,5);
+        ctx.translate(11,5);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-11,-5);
+        ctx.translate(11,5);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,3.141592653589793,6.283185307179586,0);
+        ctx.rotate(0);
+        ctx.translate(-11,-5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconNewParagraph(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(16,0);
+        ctx.lineTo(16,16);
+        ctx.lineTo(0,16);
+        ctx.closePath();
+        ctx.clip();
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(1,6.464);
+        ctx.translate(1.9999999430613173,6.4643374572001395);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-3.1412551963833595,-2.273128847087377,0);
+        ctx.rotate(0);
+        ctx.translate(-1.9999999430613173,-6.4643374572001395);
+        ctx.lineTo(6.854,1.0470000000000006);
+        ctx.translate(7.5,1.8103374090138649);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-2.273128921679027,-0.8684637319107662,0);
+        ctx.rotate(0);
+        ctx.translate(-7.5,-1.8103374090138649);
+        ctx.lineTo(13.646,5.7010000000000005);
+        ctx.translate(13.000000056938683,6.4643374572001395);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-0.8684638065025254,-0.0003374572065435455,0);
+        ctx.rotate(0);
+        ctx.translate(-13.000000056938683,-6.4643374572001395);
+        ctx.lineTo(14,15);
+        ctx.translate(13,15);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0,1.5707963267948966,0);
+        ctx.rotate(0);
+        ctx.translate(-13,-15);
+        ctx.lineTo(2,16);
+        ctx.translate(2,15);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,1.5707963267948966,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-2,-15);
+        ctx.lineTo(1,6.464);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(2,5.464);
+        ctx.lineTo(7.5,1);
+        ctx.lineTo(13,5.464);
+        ctx.lineTo(13,15);
+        ctx.lineTo(2,15);
+        ctx.lineTo(2,5.464);
+        ctx.closePath();
+        ctx.moveTo(1.354,4.7);
+        ctx.translate(1.9999997806095724,5.463337594680352);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-2.2731286342695554,-3.1422550589578835,1);
+        ctx.rotate(0);
+        ctx.translate(-1.9999997806095724,-5.463337594680352);
+        ctx.lineTo(1,15);
+        ctx.translate(2,15);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,3.141592653589793,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-2,-15);
+        ctx.lineTo(13,16);
+        ctx.translate(13,15);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,1.5707963267948966,0,1);
+        ctx.rotate(0);
+        ctx.translate(-13,-15);
+        ctx.lineTo(14,5.464);
+        ctx.translate(13.000000056938683,5.4643374572001395);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-0.0003374572064335634,-0.8684638065024154,1);
+        ctx.rotate(0);
+        ctx.translate(-13.000000056938683,-5.4643374572001395);
+        ctx.lineTo(8.146,0.237);
+        ctx.translate(7.500000000000001,1.0003374090138646);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-0.8684637319107666,-2.2731289216790262,1);
+        ctx.rotate(0);
+        ctx.translate(-7.500000000000001,-1.0003374090138646);
+        ctx.lineTo(1.354,4.7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6.5,6);
+        ctx.bezierCurveTo(5.12,6,4,6.654,4,8);
+        ctx.bezierCurveTo(4,9.139,5.12,10,6.5,10);
+        ctx.lineTo(7,10);
+        ctx.lineTo(7,14);
+        ctx.lineTo(8,14);
+        ctx.lineTo(8,7);
+        ctx.lineTo(9,7);
+        ctx.lineTo(9,14);
+        ctx.lineTo(10,14);
+        ctx.lineTo(10,7);
+        ctx.lineTo(11,7);
+        ctx.lineTo(11,6);
+        ctx.lineTo(6.5,6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconNote(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(1,2);
+        ctx.translate(2,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,3.141592653589793,4.71238898038469,0);
+        ctx.rotate(0);
+        ctx.translate(-2,-2);
+        ctx.lineTo(14,1);
+        ctx.translate(14,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-1.5707963267948966,0,0);
+        ctx.rotate(0);
+        ctx.translate(-14,-2);
+        ctx.lineTo(15,11.086);
+        ctx.translate(14.00000002280587,11.085786430950666);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0.00021356905077231963,0.785549195647058,0);
+        ctx.rotate(0);
+        ctx.translate(-14.00000002280587,-11.085786430950666);
+        ctx.lineTo(11.793000000000001,14.707);
+        ctx.translate(11.085786430950666,14.00000002280587);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0.7852471311476532,1.570582757743939,0);
+        ctx.rotate(0);
+        ctx.translate(-11.085786430950666,-14.00000002280587);
+        ctx.lineTo(2,15);
+        ctx.translate(2,14);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,1.5707963267948966,3.141592653589793,0);
+        ctx.rotate(0);
+        ctx.translate(-2,-14);
+        ctx.lineTo(1,2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(14,2);
+        ctx.lineTo(14,11);
+        ctx.lineTo(12,11);
+        ctx.translate(12,12);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-1.5707963267948966,-3.141592653589793,1);
+        ctx.rotate(0);
+        ctx.translate(-12,-12);
+        ctx.lineTo(11,14);
+        ctx.lineTo(2,14);
+        ctx.lineTo(2,2);
+        ctx.lineTo(14,2);
+        ctx.closePath();
+        ctx.moveTo(13.586,12);
+        ctx.lineTo(12,13.586);
+        ctx.lineTo(12,12);
+        ctx.lineTo(13.586,12);
+        ctx.closePath();
+        ctx.moveTo(1,14);
+        ctx.translate(2,14);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,3.141592653589793,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-2,-14);
+        ctx.lineTo(11.586,15);
+        ctx.translate(11.585786430950666,14.00000002280587);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,1.570582757743939,0.7852471311476533,1);
+        ctx.rotate(0);
+        ctx.translate(-11.585786430950666,-14.00000002280587);
+        ctx.lineTo(14.707,12.293000000000001);
+        ctx.translate(14.00000002280587,11.585786430950666);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0.7855491956472431,0.000213569050957374,1);
+        ctx.rotate(0);
+        ctx.translate(-14.00000002280587,-11.585786430950666);
+        ctx.lineTo(15,2);
+        ctx.translate(14,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,0,-1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-14,-2);
+        ctx.lineTo(2,1);
+        ctx.translate(2,2);
+        ctx.rotate(0);
+        ctx.arc(0,0,1,-1.5707963267948966,-3.141592653589793,1);
+        ctx.rotate(0);
+        ctx.translate(-2,-2);
+        ctx.lineTo(1,14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconParagraph(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(11,2);
+        ctx.lineTo(7,2);
+        ctx.lineTo(7,3);
+        ctx.bezierCurveTo(5.5,3,4,3.691,4,5.5);
+        ctx.bezierCurveTo(4,7.5,5.62,8,7,8);
+        ctx.lineTo(7,14);
+        ctx.lineTo(11,14);
+        ctx.lineTo(11,2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6.5,9);
+        ctx.bezierCurveTo(6.67,9,6.837,8.988,7,8.965);
+        ctx.lineTo(7,14);
+        ctx.lineTo(11,14);
+        ctx.lineTo(11,3);
+        ctx.lineTo(12,3);
+        ctx.lineTo(12,2);
+        ctx.lineTo(6.5,2);
+        ctx.translate(6.5,5.5);
+        ctx.rotate(0);
+        ctx.arc(0,0,3.5,-1.5707963267948966,1.5707963267948966,1);
+        ctx.rotate(0);
+        ctx.translate(-6.5,-5.5);
+        ctx.closePath();
+        ctx.moveTo(10,13);
+        ctx.lineTo(8,13);
+        ctx.lineTo(8,3);
+        ctx.lineTo(10,3);
+        ctx.lineTo(10,13);
+        ctx.closePath();
+        ctx.moveTo(7,8);
+        ctx.bezierCurveTo(5.62,8,4,7.5,4,5.5);
+        ctx.bezierCurveTo(4,3.691,5.5,3,7,3);
+        ctx.lineTo(7,8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconRightArrow(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(6,11);
+        ctx.lineTo(0,11);
+        ctx.lineTo(0,4);
+        ctx.lineTo(6,4);
+        ctx.lineTo(6,0);
+        ctx.lineTo(16,7.5);
+        ctx.lineTo(6,15);
+        ctx.lineTo(6,11);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(7,10);
+        ctx.lineTo(7,13);
+        ctx.lineTo(14.333,7.5);
+        ctx.lineTo(7,2);
+        ctx.lineTo(7,5);
+        ctx.lineTo(1,5);
+        ctx.lineTo(1,10);
+        ctx.lineTo(7,10);
+        ctx.closePath();
+        ctx.moveTo(6,0);
+        ctx.lineTo(16,7.5);
+        ctx.lineTo(6,15);
+        ctx.lineTo(6,11);
+        ctx.lineTo(0,11);
+        ctx.lineTo(0,4);
+        ctx.lineTo(6,4);
+        ctx.lineTo(6,0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconRightPointer(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0.628,0.343);
+        ctx.lineTo(15.73,7.5);
+        ctx.lineTo(0.628,14.657);
+        ctx.lineTo(5.399,7.5);
+        ctx.lineTo(0.628,0.343);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0.628,0.343);
+        ctx.lineTo(15.73,7.5);
+        ctx.lineTo(0.628,14.657);
+        ctx.lineTo(5.399,7.5);
+        ctx.lineTo(0.628,0.343);
+        ctx.closePath();
+        ctx.moveTo(3.3720000000000003,2.657);
+        ctx.lineTo(6.601,7.5);
+        ctx.lineTo(3.372,12.343);
+        ctx.lineTo(13.27,7.5);
+        ctx.lineTo(3.372,2.657);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconStar(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(9.152,6.348);
+        ctx.lineTo(7.5,1);
+        ctx.lineTo(5.848,6.348);
+        ctx.lineTo(0.5,6.348);
+        ctx.lineTo(4.826,9.652);
+        ctx.lineTo(3.174,15);
+        ctx.lineTo(7.5,11.695);
+        ctx.lineTo(11.826,15);
+        ctx.lineTo(10.174000000000001,9.652000000000001);
+        ctx.lineTo(14.5,6.348);
+        ctx.lineTo(9.152,6.348);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(9.152,6.348);
+        ctx.lineTo(7.5,1);
+        ctx.lineTo(5.848,6.348);
+        ctx.lineTo(0.5,6.348);
+        ctx.lineTo(4.826,9.652);
+        ctx.lineTo(3.174,15);
+        ctx.lineTo(7.5,11.695);
+        ctx.lineTo(11.826,15);
+        ctx.lineTo(10.174000000000001,9.652000000000001);
+        ctx.lineTo(14.5,6.348);
+        ctx.lineTo(9.152,6.348);
+        ctx.closePath();
+        ctx.moveTo(11.913,7.223);
+        ctx.lineTo(8.507,7.223);
+        ctx.lineTo(7.5,3.963);
+        ctx.lineTo(6.493,7.223);
+        ctx.lineTo(3.087,7.223);
+        ctx.lineTo(5.8420000000000005,9.328);
+        ctx.lineTo(4.8180000000000005,12.642999999999999);
+        ctx.lineTo(7.5,10.593);
+        ctx.lineTo(10.182,12.643);
+        ctx.lineTo(9.158000000000001,9.328000000000001);
+        ctx.lineTo(11.913,7.223000000000001);
+        ctx.closePath();
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconUpArrow(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(16,0);
+        ctx.lineTo(16,16);
+        ctx.lineTo(0,16);
+        ctx.closePath();
+        ctx.clip();
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(0,10);
+        ctx.lineTo(7.5,0);
+        ctx.lineTo(15,10);
+        ctx.lineTo(11,10);
+        ctx.lineTo(11,16);
+        ctx.lineTo(4,16);
+        ctx.lineTo(4,10);
+        ctx.lineTo(0,10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(10,9);
+        ctx.lineTo(13,9);
+        ctx.lineTo(7.5,1.667);
+        ctx.lineTo(2,9);
+        ctx.lineTo(5,9);
+        ctx.lineTo(5,15);
+        ctx.lineTo(10,15);
+        ctx.lineTo(10,9);
+        ctx.closePath();
+        ctx.moveTo(0,10);
+        ctx.lineTo(7.5,0);
+        ctx.lineTo(15,10);
+        ctx.lineTo(11,10);
+        ctx.lineTo(11,16);
+        ctx.lineTo(4,16);
+        ctx.lineTo(4,10);
+        ctx.lineTo(0,10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.restore();
+
+        ctx.restore();
+    }
+    function drawIconUpLeftArrow(ctx, x, y, xScale, yScale, rotationAngle) {
+        ctx.save();
+        ctx.translate(x + 8 * xScale, y + 8 * yScale);
+        ctx.rotate(rotationAngle);
+        ctx.translate(-8 * xScale, -8 * yScale);
+        ctx.scale(xScale, yScale);
+
+        ctx.strokeStyle="rgba(0,0,0,0)";
+        ctx.miterLimit=4;
+        ctx.font="15px ''";
+        ctx.fillStyle="rgba(0,0,0,0)";
+        ctx.font="   15px ''";
+        ctx.save();
+        ctx.fillStyle=ctx.iconFill;
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(11.5,1.5);
+        ctx.lineTo(1.5,1.5);
+        ctx.lineTo(1.5,11.5);
+        ctx.lineTo(4.5,8.5);
+        ctx.lineTo(9.5,13.5);
+        ctx.lineTo(13.5,9.5);
+        ctx.lineTo(8.5,4.5);
+        ctx.lineTo(11.5,1.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle="#000";
+        ctx.font="   15px ''";
+        ctx.beginPath();
+        ctx.moveTo(1,1);
+        ctx.lineTo(12.707,1);
+        ctx.lineTo(9.207,4.5);
+        ctx.lineTo(14.207,9.5);
+        ctx.lineTo(9.5,14.207);
+        ctx.lineTo(4.5,9.207);
+        ctx.lineTo(1,12.707);
+        ctx.lineTo(1,1);
+        ctx.closePath();
+        ctx.moveTo(2,2);
+        ctx.lineTo(2,10.293);
+        ctx.lineTo(4.5,7.792999999999999);
+        ctx.lineTo(9.5,12.793);
+        ctx.lineTo(12.793,9.5);
+        ctx.lineTo(7.792999999999999,4.5);
+        ctx.lineTo(10.293,2);
+        ctx.lineTo(2,2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
 })();
 

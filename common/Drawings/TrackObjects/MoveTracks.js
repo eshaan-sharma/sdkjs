@@ -251,7 +251,16 @@ function MoveShapeImageTrack(originalObject)
         }
         this.overlayObject.draw(overlay);
     };
+	this.checkDrawingPartWithHistory = function () {
+		if (this.originalObject.checkDrawingPartWithHistory) {
 
+			const newObject = this.originalObject.checkDrawingPartWithHistory();
+			if (newObject) {
+				this.originalObject = newObject;
+				this.originalShape = newObject;
+			}
+		}
+	};
     this.trackEnd = function(bWord, bNoResetCnx)
     {
         if(!this.bIsTracked)
@@ -574,7 +583,11 @@ function MoveGroupTrack(originalObject)
         bounds_checker.Bounds.extY = this.originalObject.extY;
         return bounds_checker.Bounds;
     };
-
+	this.checkDrawingPartWithHistory = function () {
+		if (this.originalObject.checkDrawingPartWithHistory) {
+			this.originalObject.checkDrawingPartWithHistory();
+		}
+	};
     this.trackEnd = function(bWord)
     {
         if(!this.bIsTracked){
@@ -659,23 +672,24 @@ function MoveComment(comment)
         boundsChecker.Bounds.extY = H;
         return boundsChecker.Bounds;
     };
+	this.checkDrawingPartWithHistory = function () {};
 }
 
 function MoveAnnotationTrack(originalObject)
 {
     this.bIsTracked     = false;
     this.originalObject = originalObject;
-    this.x              = originalObject._pagePos.x;
-    this.y              = originalObject._pagePos.y;
-    this.viewer         = editor.getDocumentRenderer();
+    this.x              = originalObject._origRect[0];
+    this.y              = originalObject._origRect[1];
+    this.viewer         = Asc.editor.getDocumentRenderer();
     this.objectToDraw   = originalObject.LazyCopy();
     this.pageIndex      = originalObject.GetPage();
 
     this.track = function(dx, dy, pageIndex)
     {
         this.bIsTracked = true;
-        this.x = this.originalObject._pagePos.x + dx * AscCommon.g_dKoef_mm_to_pix;
-        this.y = this.originalObject._pagePos.y + dy * AscCommon.g_dKoef_mm_to_pix;
+        this.x = originalObject._origRect[0] + dx * g_dKoef_mm_to_pt;
+        this.y = originalObject._origRect[1] + dy * g_dKoef_mm_to_pt;
         this.pageIndex = pageIndex;
 
         this.initCanvas();
@@ -685,8 +699,8 @@ function MoveAnnotationTrack(originalObject)
 
         if (bStart || nPage != this.objectToDraw.GetPage()) {
             let page = this.viewer.drawingPages[nPage];
-            let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
-            let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+            let w = AscCommon.AscBrowser.convertToRetinaValue(page.W, true);
+            let h = AscCommon.AscBrowser.convertToRetinaValue(page.H, true);
 
             this.tmpCanvas = document.createElement('canvas');
             this.tmpCanvas.width = w;
@@ -723,8 +737,8 @@ function MoveAnnotationTrack(originalObject)
 			xCenter = (this.viewer.documentWidth >> 1) - (this.viewer.scrollX) >> 0;
 		}
 
-        let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
-        let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+        let w = AscCommon.AscBrowser.convertToRetinaValue(page.W, true);
+        let h = AscCommon.AscBrowser.convertToRetinaValue(page.H, true);
         
         let tmpCanvasCtx = this.tmpCanvas.getContext('2d');
         tmpCanvasCtx.clearRect(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
@@ -746,7 +760,8 @@ function MoveAnnotationTrack(originalObject)
             case AscPDF.ANNOTATIONS_TYPES.Polygon:
             case AscPDF.ANNOTATIONS_TYPES.PolyLine:
             case AscPDF.ANNOTATIONS_TYPES.FreeText:
-            case AscPDF.ANNOTATIONS_TYPES.Circle: {
+            case AscPDF.ANNOTATIONS_TYPES.Circle:
+            case AscPDF.ANNOTATIONS_TYPES.Stamp: {
                 let nScale  = AscCommon.AscBrowser.retinaPixelRatio * this.viewer.zoom;
                 oGraphicsWord   = new AscCommon.CGraphics();
 
@@ -790,6 +805,7 @@ function MoveAnnotationTrack(originalObject)
     {
         return {x: this.x, y: this.y};
     };
+	this.checkDrawingPartWithHistory = function () {};
     
     this.initCanvas(true);
 }
@@ -903,6 +919,7 @@ function MoveChartObjectTrack(oObject, oChartSpace)
         boundsChecker.Bounds.extY = oObject.extY;
         return boundsChecker.Bounds;
     };
+	this.checkDrawingPartWithHistory = function () {};
 }
 
 
@@ -1001,6 +1018,7 @@ function MoveChartObjectTrack(oObject, oChartSpace)
         oBounds.extY = oBounds.max_y - oBounds.min_y;
         return oBounds;
     };
+	CGuideTrack.prototype.checkDrawingPartWithHistory = function () {};
 
     //--------------------------------------------------------export----------------------------------------------------
     window['AscFormat'] = window['AscFormat'] || {};

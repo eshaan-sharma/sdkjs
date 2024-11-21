@@ -66,14 +66,26 @@ CPDFGraphics.prototype.Clip = function() {
 };
 CPDFGraphics.prototype.SetIntegerGrid = function(bInteger) {
     this.bIntegerGrid = bInteger;
+
+    if (true == bInteger) {
+        this.bIntegerGrid = true;
+        this.m_oContext.setTransform(1,0,0,1,0,0);
+    }
+    else {
+        this.bIntegerGrid = false;
+    }
 };
 CPDFGraphics.prototype.GetIntegerGrid = function() {
     return this.bIntegerGrid;
 };
 
-CPDFGraphics.prototype.SetStrokeStyle = function(r,g,b) {
+CPDFGraphics.prototype.SetStrokeStyle = function(r,g,b,a) {
+    if (a == undefined) {
+        a == 255;
+    }
+
     if (this.m_oContext)
-        this.m_oContext.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
+        this.m_oContext.strokeStyle = "rgb(" + r + "," + g + "," + b + "," + a / 255 +")";
 
     this.strokeStyle = {
         r: r,
@@ -244,14 +256,28 @@ CPDFGraphics.prototype.FillRect = function(x, y, w, h) {
         ctx.restore();
     }
 };
-CPDFGraphics.prototype.DrawImageXY = function(image, dx, dy) {
-    let _x, _y;
+CPDFGraphics.prototype.DrawImageXY = function(image, dx, dy, rot) {
     let tr = this.GetTransform();
 
-    _x = (tr.TransformPointX(dx,dy) >> 0);
-    _y = (tr.TransformPointY(dx,dy) >> 0);
+    let _x = Math.floor(tr.TransformPointX(dx, dy));
+    let _y = Math.floor(tr.TransformPointY(dx, dy));
 
-    this.m_oContext.drawImage(image, _x, _y);
+    let context = this.m_oContext;
+
+    context.save();
+    context.translate(_x, _y);
+
+    if (rot && rot !== 0) {
+        let W = image.width;
+        let H = image.height;
+
+        context.translate(Math.floor(W / 2), Math.floor(H / 2));
+        context.rotate(rot);
+        context.translate(Math.floor(-W / 2), Math.floor(-H / 2));
+    }
+
+    context.drawImage(image, 0, 0);
+    context.restore();
 };
 CPDFGraphics.prototype.DrawImage = function(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
     let ctx = this.GetContext();
@@ -347,6 +373,89 @@ CPDFGraphics.prototype.VerLine = function(y1, y2, x) {
 
     ctx.moveTo(nLineOffsetX + _x, _y1);
     ctx.lineTo(nLineOffsetX + _x, _y2);
+};
+CPDFGraphics.prototype.DrawLockObjectRect = function(lock_type, x, y, w, h) {
+    if (Asc.editor.isViewMode || this.IsThumbnail || this.IsDemonstrationMode || lock_type === AscCommon.c_oAscLockTypes.kLockTypeNone)
+        return;
+
+    if (Asc.editor.WordControl) {
+        if (lock_type === AscCommon.c_oAscLockTypes.kLockTypeMine && true === AscCommon.CollaborativeEditing.Is_Fast())
+            return;
+        if (Asc.editor.WordControl.m_oDrawingDocument.IsLockObjectsEnable === false && lock_type === AscCommon.c_oAscLockTypes.kLockTypeMine)
+            return;
+    }
+
+    if (lock_type === AscCommon.c_oAscLockTypes.kLockTypeMine) {
+        this.SetStrokeStyle(22, 156, 0, 255);
+    }
+    else {
+        this.SetStrokeStyle(238, 53, 37, 255);
+    }
+
+
+    let ctx = this.m_oContext;
+    let bIsInt = this.m_bIntegerGrid;
+    if (!bIsInt)
+        this.SetIntegerGrid(true);
+
+    ctx.lineWidth = 1;
+
+    let w_dot = 2;
+    let w_dist = 2;
+
+    let eps = 5;
+
+    let tr = this.GetTransform();
+
+    let _x = (tr.TransformPointX(x, y) >> 0) - eps + 0.5;
+    let _y = (tr.TransformPointY(x, y) >> 0) - eps + 0.5;
+
+    let _r = (tr.TransformPointX(x + w, y + h) >> 0) + eps + 0.5;
+    let _b = (tr.TransformPointY(x + w, y + h) >> 0) + eps + 0.5;
+
+    this.BeginPath();
+
+    for (let i = _x; i < _r; i += w_dist) {
+        ctx.moveTo(i, _y);
+        i += w_dot;
+
+        if (i > _r)
+            i = _r;
+
+        ctx.lineTo(i, _y);
+    }
+    for (let i = _y; i < _b; i += w_dist) {
+        ctx.moveTo(_r, i);
+        i += w_dot;
+
+        if (i > _b)
+            i = _b;
+
+        ctx.lineTo(_r, i);
+    }
+    for (let i = _r; i > _x; i -= w_dist) {
+        ctx.moveTo(i, _b);
+        i -= w_dot;
+
+        if (i < _x)
+            i = _x;
+
+        ctx.lineTo(i, _b);
+    }
+    for (let i = _b; i > _y; i -= w_dist) {
+        ctx.moveTo(_x, i);
+        i -= w_dot;
+
+        if (i < _y)
+            i = _y;
+
+        ctx.lineTo(_x, i);
+    }
+
+    ctx.stroke();
+
+    if (!bIsInt)
+        this.SetIntegerGrid(false);
 };
 
     //------------------------------------------------------------export----------------------------------------------------

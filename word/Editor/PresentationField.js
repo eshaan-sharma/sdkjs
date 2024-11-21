@@ -243,6 +243,17 @@
                     }
                 }
             }
+            else if("categoryname" === sFieldType)
+            {
+                if(this.Paragraph && this.Paragraph.Parent)
+                {
+                    oStylesObject = this.Paragraph.Parent.Get_Styles();
+                    if(oStylesObject.shape && oStylesObject.shape.getCategoryName && oStylesObject.shape.getCategoryName())
+                    {
+                        sStr = oStylesObject.shape.getCategoryName();
+                    }
+                }
+            }
             else if("percentage" === sFieldType)
             {
                 if(this.Paragraph && this.Paragraph.Parent)

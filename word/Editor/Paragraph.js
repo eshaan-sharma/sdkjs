@@ -150,7 +150,7 @@ function Paragraph(Parent, bFromPresentation)
 
     this.SearchResults = {};
 
-    this.SpellChecker  = new AscCommonWord.CParagraphSpellChecker(this);
+    this.SpellChecker  = new AscWord.CParagraphSpellChecker(this);
 
     this.NearPosArray  = [];
 
@@ -1368,13 +1368,23 @@ Paragraph.prototype.ConvertParaContentPosToRangePos = function(oContentPos)
 	for (var nPos = 0; nPos < nCurPos; ++nPos)
 	{
 		if (this.Content[nPos] instanceof CParagraphContentWithContentBase)
+		{
+			if (nPos != 0 && this.Content[nPos] instanceof ParaRun)
+				nRangePos++;
+			
 			nRangePos += this.Content[nPos].ConvertParaContentPosToRangePos(null);
+		}
 	}
 
 	if (this.Content[nCurPos])
 	{
-		if (this.Content[nPos] instanceof CParagraphContentWithContentBase)
+		if (this.Content[nCurPos] instanceof CParagraphContentWithContentBase)
+		{
+			if (nCurPos != 0 && this.Content[nCurPos] instanceof ParaRun)
+				nRangePos++;
+
 			nRangePos += this.Content[nCurPos].ConvertParaContentPosToRangePos(oContentPos, 1);
+		}
 	}
 		
 	return nRangePos;
@@ -1441,10 +1451,9 @@ Paragraph.prototype.CheckNotInlineObject = function(nMathPos, nDirection)
 			}
 			else
 			{
-				if (undefined !== this.Get_CompiledPr2(false).ParaPr.Bullet)
-				{
+				let oBullet = this.Get_CompiledPr2(false).ParaPr.Bullet;
+				if (oBullet && !oBullet.isNone())
 					return false;
-				}
 			}
 		}
 
@@ -3810,6 +3819,9 @@ Paragraph.prototype.private_DrawLineNumber = function(X, Y, oContext, nLineNumbe
 	var nCountBy  = oSectPr.GetLineNumbersCountBy();
 	var nDistance = oSectPr.GetLineNumbersDistance();
 	var nRestart  = oSectPr.GetLineNumbersRestart();
+	
+	if (undefined === nCountBy || nCountBy <= 0)
+		return;
 
 	var _nLineNumber = this.LineNumbersInfo.StartNum + nStart + nCurLine; // nStart - 1 + nCurLine + 1
 
@@ -3836,7 +3848,7 @@ Paragraph.prototype.private_DrawLineNumber = function(X, Y, oContext, nLineNumbe
 		_nLineNumber = nLinesCount + nStart + _nCurLine;  // nStart - 1 + nCurLine + 1
 	}
 
-	if (nCountBy && nCountBy > 1 && 0 !== _nLineNumber % nCountBy)
+	if (nCountBy > 1 && 0 !== _nLineNumber % nCountBy)
 		return;
 
 	var nLineNumDistance = undefined === nDistance ? (this.ColumnsCount > 1 ? AscCommon.TwipsToMM(180) : AscCommon.TwipsToMM(360)) : AscCommon.TwipsToMM(nDistance);
@@ -8575,7 +8587,33 @@ Paragraph.prototype.RemoveSelection = function()
 	this.Selection.StartPos = 0;
 	this.Selection.EndPos   = 0;
 };
-Paragraph.prototype.DrawSelectionOnPage = function(CurPage)
+(function()
+{
+	function drawSelectionOnPage(drawingDocument, clipInfo, page, x, y, w, h, draw2)
+	{
+		if (clipInfo)
+		{
+			let x0 = clipInfo.correctX0(x);
+			let x1 = clipInfo.correctX1(x + w)
+			let y0 = clipInfo.correctY0(y);
+			let y1 = clipInfo.correctY1(y + h);
+			x      = x0;
+			w      = Math.max(0, x1 - x0)
+			y      = y0;
+			h      = Math.max(0, y1 - y0);
+		}
+		
+		if (w < 0.001 || h < 0.001)
+			return;
+		
+		if (draw2)
+			drawingDocument.AddPageSelection2(page, x, y, w, h);
+		else
+			drawingDocument.AddPageSelection(page, x, y, w, h);
+	}
+	AscWord.drawSelectionOnPage = drawSelectionOnPage;
+})();
+Paragraph.prototype.DrawSelectionOnPage = function(CurPage, clipInfo)
 {
 	if (!this.IsRecalculated())
 		return;
@@ -8697,14 +8735,12 @@ Paragraph.prototype.DrawSelectionOnPage = function(CurPage)
 							{
 								var oRect = arrRects[nIndex];
 								
-								if (oRect.W > 0.001 && oRect.H > 0.001)
-									drawingDocument.AddPageSelection(PageAbs, oRect.X, oRect.Y, oRect.W, oRect.H);
+								AscWord.drawSelectionOnPage(drawingDocument, clipInfo, PageAbs, oRect.X, oRect.Y, oRect.W, oRect.H);
 							}
 						}
 						else
 						{
-							if (_w > 0.001)
-								drawingDocument.AddPageSelection(PageAbs, _x, _y, _w, _h);
+							AscWord.drawSelectionOnPage(drawingDocument, clipInfo, PageAbs, _x, _y, _w, _h);
 						}
 					}
 				}
@@ -8762,11 +8798,11 @@ Paragraph.prototype.DrawSelectionOnPage = function(CurPage)
 				}
 			}
 			
-			drawingDocument.AddPageSelection(PageAbs, SelectX, SelectY, SelectW, SelectH);
-
+			AscWord.drawSelectionOnPage(drawingDocument, clipInfo, PageAbs, SelectX, SelectY, SelectW, SelectH);
+			
 			if (selectionflag_NumberingCur === this.Selection.Flag && drawingDocument.AddPageSelection2)
-				drawingDocument.AddPageSelection2(PageAbs, SelectX, SelectY, SelectW2, SelectH);
-
+				AscWord.drawSelectionOnPage(drawingDocument, clipInfo, PageAbs, SelectX, SelectY, SelectW2, SelectH, true);
+			
 			break;
 		}
 	}
@@ -9480,6 +9516,15 @@ Paragraph.prototype.CheckHitInParaEnd = function(X, Y, CurPage)
 	var oContentPos = this.getSearchPosByXY(X, Y, CurPage, false, true).getInTextPos();
 	return (oContentPos.Get(0) === (this.Content.length - 1));
 };
+Paragraph.prototype.GetRunElementByXY = function(x, y, curPage)
+{
+	let searchPos = this.getSearchPosByXY(x, y, curPage, false, true);
+	if (!searchPos.isInText())
+		return null;
+	
+	let contentPos = searchPos.getInTextPos();
+	return this.Get_RunElementByPos(contentPos);
+};
 /**
  * Задаем сохраненное значение нумерации для данного параграфа (используется при печати выделенного фрагмента)
  * @param arrNumInfo
@@ -9820,8 +9865,9 @@ Paragraph.prototype.Remove_StartTabs = function(TabsCounter)
  * Применяем заданную нумерацию к данному параграфу (учитываем отступы, количество табов в начале параграфа и т.д.)
  * @param sNumId {string}
  * @param nLvl {number} 0..8
+ * @param checkIndents {boolean} - Подбирать ли уровень по отступам
  */
-Paragraph.prototype.ApplyNumPr = function(sNumId, nLvl)
+Paragraph.prototype.ApplyNumPr = function(sNumId, nLvl, checkIndents)
 {
 	var ParaPr    = this.Get_CompiledPr2(false).ParaPr;
 	var NumPr_old = this.GetNumPr();
@@ -9934,24 +9980,30 @@ Paragraph.prototype.ApplyNumPr = function(sNumId, nLvl)
 			// Если выделено несколько параграфов, тогда уже по сдвигу X определяем уровень данной нумерации
 
 			var LvlFound  = -1;
-			for (var LvlIndex = 0; LvlIndex < 9; ++LvlIndex)
+			if (false !== checkIndents)
 			{
-				var oNumLvl = oNum.GetLvl(LvlIndex);
-				if (oNumLvl)
+				for (var LvlIndex = 0; LvlIndex < 9; ++LvlIndex)
 				{
-					var oNumParaPr = oNumLvl.GetParaPr();
-
-					if (undefined != oNumParaPr.Ind && undefined != oNumParaPr.Ind.Left && X <= oNumParaPr.Ind.Left)
+					var oNumLvl = oNum.GetLvl(LvlIndex);
+					if (oNumLvl)
 					{
-						LvlFound = LvlIndex;
-						break;
+						var oNumParaPr = oNumLvl.GetParaPr();
+						
+						if (undefined != oNumParaPr.Ind && undefined != oNumParaPr.Ind.Left && X <= oNumParaPr.Ind.Left)
+						{
+							LvlFound = LvlIndex;
+							break;
+						}
 					}
 				}
+				if (-1 === LvlFound)
+					LvlFound = 0;
 			}
-
-			if (-1 === LvlFound)
-				LvlFound = 0;
-
+			else
+			{
+				LvlFound = undefined !== nLvl ? nLvl : 0;
+			}
+			
 			if (this.Pr.Ind && (undefined !== this.Pr.Ind || undefined !== this.Pr.Ind.Left))
 			{
 				AscCommon.History.Add(new CChangesParagraphIndFirst(this, this.Pr.Ind.FirstLine, undefined));
@@ -12157,6 +12209,21 @@ Paragraph.prototype.Get_Layout = function(ContentPos, Drawing)
 	}
 
 	return null;
+};
+Paragraph.prototype.GetLayout = function(contentPos, useWrap)
+{
+	let drawing = {
+		Use_TextWrap : function()
+		{
+			return useWrap;
+		},
+		IsLayoutInCell : function()
+		{
+			return false;
+		}
+	};
+	
+	return this.Get_Layout(contentPos, drawing);
 };
 Paragraph.prototype.Get_AnchorPos = function(Drawing)
 {
@@ -14499,7 +14566,7 @@ Paragraph.prototype.GetCurrentComments = function(oComments)
 // SpellCheck
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * @returns {AscCommonWord.CParagraphSpellChecker}
+ * @returns {AscWord.CParagraphSpellChecker}
  */
 Paragraph.prototype.GetSpellChecker = function()
 {
@@ -18353,8 +18420,28 @@ Paragraph.prototype.Document_Is_SelectionLocked = function(CheckType)
 	var arrContentControls = this.GetSelectedContentControls();
 	for (var nIndex = 0, nCount = arrContentControls.length; nIndex < nCount; ++nIndex)
 	{
-		if (arrContentControls[nIndex].IsSelectionUse() === isSelectionUse)
-			arrContentControls[nIndex].Document_Is_SelectionLocked(CheckType);
+		let cc     = arrContentControls[nIndex];
+		let paraCC = cc.GetParagraph();
+		if (!paraCC)
+			continue;
+		
+		if (paraCC !== this)
+		{
+			// Проверяем типы, при которых произойдет удаление элемента, содержащего данный контрол
+			if (CheckType !== AscCommon.changestype_Paragraph_AddText
+				&& CheckType !== AscCommon.changestype_Remove
+				&& CheckType !== AscCommon.changestype_Delete
+				&& CheckType !== AscCommon.changestype_Document_Content
+				&& CheckType !== AscCommon.changestype_Paragraph_Content)
+				continue;
+			
+			if (Asc.c_oAscSdtLockType.SdtLocked === cc.GetContentControlLock() || Asc.c_oAscSdtLockType.SdtContentLocked === cc.GetContentControlLock())
+				AscCommon.CollaborativeEditing.Add_CheckLock(true);
+		}
+		else if (cc.IsSelectionUse() === isSelectionUse)
+		{
+			cc.Document_Is_SelectionLocked(CheckType);
+		}
 	}
 
 	// Проверка для специального случая, когда мы переносим текст из параграфа в него самого. В такой ситуации надо

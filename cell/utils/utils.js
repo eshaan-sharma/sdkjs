@@ -436,6 +436,12 @@
 		Range.prototype.compareByLeftTop = function (a, b) {
 			return Range.prototype.compareCell(a.c1, a.r1, b.c1, b.r1);
 		};
+		Range.prototype.compareByRightTop = function (a, b) {
+			return Range.prototype.compareCell(a.c2, a.r1, b.c2, b.r1);
+		};
+		Range.prototype.compareByLeftBottom = function (a, b) {
+			return Range.prototype.compareCell(a.c1, a.r2, b.c1, b.r2);
+		};
 		Range.prototype.compareByRightBottom = function (a, b) {
 			return Range.prototype.compareCell(a.c2, a.r2, b.c2, b.r2);
 		};
@@ -2067,6 +2073,9 @@
 		}
 
 		function getFragmentsText(f) {
+			if (!f) {
+				return "";
+			}
 			return f.reduce(function (pv, cv) {
 				if (null === cv.getFragmentText()) {
 					cv.initText();
@@ -2076,6 +2085,9 @@
 		}
 
 		function getFragmentsLength(f) {
+			if (!f) {
+				return;
+			}
 			return f.length > 0 ? f.reduce(function (pv, cv) {
 				if (null === cv.getFragmentText()) {
 					cv.initText();
@@ -2085,18 +2097,27 @@
 		}
 
 		function getFragmentsCharCodes(f) {
+			if (!f) {
+				return;
+			}
 			return f.reduce(function (pv, cv) {
 				return pv.concat(cv.getCharCodes());
 			}, []);
 		}
 
 		function getFragmentsCharCodesLength(f) {
+			if (!f) {
+				return 0;
+			}
 			return f.length > 0 ? f.reduce(function (pv, cv) {
 				return pv + cv.getCharCodes().length;
 			}, 0) : 0;
 		}
 
 		function getFragmentsTextFromCode(f) {
+			if (!f) {
+				return "";
+			}
 			return f.reduce(function (pv, cv) {
 				if (null === cv.getFragmentText()) {
 					cv.initText();
@@ -2385,6 +2406,14 @@
 					var oMatrix = new AscCommon.CMatrix();
 					oMatrix.tx = rect._x;
 					oMatrix.ty = rect._y;
+					//TODO !!!rtl print
+					let api = window.Asc.editor;
+					let wb = api && api.wb;
+					let ws = wb.getWorksheet();
+					if (ws && ws.getRightToLeft()) {
+						oMatrix.sx = -1;
+						oMatrix.tx = (ws.getCtxWidth() * vector_koef) - oMatrix.tx;
+					}
 					graphics.transform3(oMatrix);
 					var shapeDrawer = new AscCommon.CShapeDrawer();
 					shapeDrawer.Graphics = graphics;
@@ -3092,6 +3121,7 @@
 			this.zoomScale = 100;
 
 			this.showZeros = null;
+			this.rightToLeft = null;
 			this.showFormulas = null;
 
 			this.topLeftCell = null;
@@ -3114,6 +3144,7 @@
 				}
 				result.showZeros = this.showZeros;
 				result.topLeftCell = this.topLeftCell;
+				result.rightToLeft = this.rightToLeft;
 				result.showFormulas = this.showFormulas;
 				return result;
 			},
@@ -3140,6 +3171,9 @@
 			asc_getShowFormulas: function () {
 				return false !== this.showFormulas;
 			},
+			asc_getRightToLeft: function () {
+				return this.rightToLeft;
+			},
 			asc_setShowGridLines: function (val) {
 				this.showGridLines = val;
 			},
@@ -3154,6 +3188,9 @@
 			},
 			asc_setShowFormulas: function (val) {
 				this.showFormulas = val;
+			},
+			asc_setRightToLeft: function (val) {
+				this.rightToLeft = val;
 			}
 		};
 
@@ -3203,6 +3240,8 @@
 			this.bChangeColorScheme = false;
 			this.bChangeActive = false;
 			this.activeSheet = null;
+			this.onSlicer = {};
+			this.onSlicerCache = {};
 		}
 
 		/** @constructor */
@@ -3892,8 +3931,8 @@
 			}
 		};
 
-		cDate.prototype.getDateString = function (api) {
-			return api.asc_getLocaleExample(AscCommon.getShortDateFormat(), this.getExcelDate());
+		cDate.prototype.getDateString = function (api, bLocal) {
+			return api.asc_getLocaleExample(AscCommon.getShortDateFormat(), this.getExcelDate(bLocal));
 		};
 		cDate.prototype.getTimeString = function (api) {
 			return api.asc_getLocaleExample(AscCommon.getShortTimeFormat(), this.getExcelDateWithTime() - this.getTimezoneOffset() / (60 * 24));
@@ -4070,6 +4109,8 @@
 		prot["asc_setShowRowColHeaders"] = prot.asc_setShowRowColHeaders;
 		prot["asc_setShowZeros"] = prot.asc_setShowZeros;
 		prot["asc_setShowFormulas"] = prot.asc_setShowFormulas;
+		prot["asc_setRightToLeft"] = prot.asc_setRightToLeft;
+		prot["asc_getRightToLeft"] = prot.asc_getRightToLeft;
 
 		window["AscCommonExcel"].asc_CPane = asc_CPane;
 		window["AscCommonExcel"].asc_CSheetPr = asc_CSheetPr;

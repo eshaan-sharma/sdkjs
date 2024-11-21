@@ -441,6 +441,8 @@ CDocumentContentBase.prototype.MoveCursorToNearestPos = function(oNearestPos)
 		var oTopDocument = oParent.Is_TopDocument(true);
 		if (oTopDocument)
 			oTopDocument.RemoveSelection();
+		else
+			this.RemoveSelection();
 	}
 
 	oPara.Set_ParaContentPos(oNearestPos.ContentPos, true, -1, -1);
@@ -813,13 +815,15 @@ CDocumentContentBase.prototype.private_Remove = function(Count, isRemoveWholeEle
 				let isParagraphMarkRemove = this.Content[StartPos].IsParagraph() && this.Content[StartPos].IsSelectedOnlyParagraphMark();
 
 				this.CurPos.ContentPos = StartPos;
-				if (Count < 0 && this.Content[StartPos].IsTable() && true === this.Content[StartPos].IsCellSelection() && true !== bOnTextAdd)
+				if (this.Content[StartPos].IsTable()
+					&& true === this.Content[StartPos].IsCellSelection()
+					&& ((!bOnTextAdd && Count < 0) || isRemoveOnDrag))
 				{
 					this.RemoveTableCells();
 				}
 				else if (false === this.Content[StartPos].Remove(Count, isRemoveWholeElement, bRemoveOnlySelection, bOnTextAdd))
 				{
-					if (!bOnTextAdd && (isParagraphMarkRemove || ((isRemoveOnDrag || Count > 0 || StartPos < this.Content.length - 1) && this.Content[StartPos].IsEmpty())))
+					if ((!bOnTextAdd || isRemoveOnDrag) && (isParagraphMarkRemove || ((isRemoveOnDrag || Count > 0 || StartPos < this.Content.length - 1) && this.Content[StartPos].IsEmpty())))
 					{
 						// В ворде параграфы объединяются только когда у них все настройки совпадают.
 						// (почему то при изменении и обратном изменении настроек параграфы перестают объединятся)
@@ -2537,6 +2541,25 @@ CDocumentContentBase.prototype.OnContentChange = function()
 		&& this.GetLogicDocument().IsDocumentEditor())
 	{
 		this.GetLogicDocument().CheckShapeAutoFit(shape);
+	}
+	else if (shape && shape.OnContentChange) {
+		shape.OnContentChange();
+	}
+};
+CDocumentContentBase.prototype.OnTextPrChange = function()
+{
+	if (this.Parent && this.Parent.OnTextPrChange)
+		this.Parent.OnTextPrChange();
+	
+	let shape = this.Is_DrawingShape(true);
+	if (shape
+		&& this.GetLogicDocument()
+		&& this.GetLogicDocument().IsDocumentEditor())
+	{
+		this.GetLogicDocument().CheckShapeAutoFit(shape);
+	}
+	else if (shape && shape.OnTextPrChange) {
+		shape.OnTextPrChange();
 	}
 };
 

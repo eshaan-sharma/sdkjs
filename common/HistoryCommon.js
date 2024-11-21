@@ -1706,16 +1706,12 @@
 	window['AscDFH'].historyitem_type_PtLst                  = 2004 << 16;
 	window['AscDFH'].historyitem_type_DataModel              = 2005 << 16;
 	window['AscDFH'].historyitem_type_CxnLst                 = 2006 << 16;
-	window['AscDFH'].historyitem_type_ExtLst                 = 2007 << 16;
 	window['AscDFH'].historyitem_type_BgFormat               = 2008 << 16;
 	window['AscDFH'].historyitem_type_Whole                  = 2009 << 16;
 	window['AscDFH'].historyitem_type_Cxn                    = 2010 << 16;
-	window['AscDFH'].historyitem_type_Ext                    = 2011 << 16;
 	window['AscDFH'].historyitem_type_LayoutDef              = 2012 << 16;
 	window['AscDFH'].historyitem_type_CatLst                 = 2013 << 16;
 	window['AscDFH'].historyitem_type_SCat                   = 2014 << 16;
-	window['AscDFH'].historyitem_type_ClrData                = 2015 << 16;
-	window['AscDFH'].historyitem_type_Desc                   = 2016 << 16;
 	window['AscDFH'].historyitem_type_LayoutNode             = 2017 << 16;
 	window['AscDFH'].historyitem_type_Alg                    = 2018 << 16;
 	window['AscDFH'].historyitem_type_Param                  = 2019 << 16;
@@ -1734,31 +1730,13 @@
 	window['AscDFH'].historyitem_type_AdjLst                 = 2033 << 16;
 	window['AscDFH'].historyitem_type_Adj                    = 2034 << 16;
 	window['AscDFH'].historyitem_type_VarLst                 = 2035 << 16;
-	window['AscDFH'].historyitem_type_AnimLvl                = 2036 << 16;
-	window['AscDFH'].historyitem_type_AnimOne                = 2037 << 16;
-	window['AscDFH'].historyitem_type_BulletEnabled          = 2038 << 16;
-	window['AscDFH'].historyitem_type_ChMax                  = 2039 << 16;
-	window['AscDFH'].historyitem_type_ChPref                 = 2040 << 16;
-	window['AscDFH'].historyitem_type_DiagramDirection       = 2041 << 16;
 	window['AscDFH'].historyitem_type_DiagramTitle           = 2042 << 16;
-	window['AscDFH'].historyitem_type_LayoutDefHdrLst        = 2043 << 16;
-	window['AscDFH'].historyitem_type_LayoutDefHdr           = 2044 << 16;
-	window['AscDFH'].historyitem_type_RelIds                 = 2045 << 16;
 	window['AscDFH'].historyitem_type_ColorsDef              = 2047 << 16;
 	window['AscDFH'].historyitem_type_ColorDefStyleLbl       = 2048 << 16;
 	window['AscDFH'].historyitem_type_ClrLst                 = 2049 << 16;
-	window['AscDFH'].historyitem_type_EffectClrLst           = 2050 << 16;
-	window['AscDFH'].historyitem_type_FillClrLst             = 2051 << 16;
-	window['AscDFH'].historyitem_type_LinClrLst              = 2052 << 16;
-	window['AscDFH'].historyitem_type_TxEffectClrLst         = 2053 << 16;
-	window['AscDFH'].historyitem_type_TxFillClrLst           = 2054 << 16;
-	window['AscDFH'].historyitem_type_TxLinClrLst            = 2056 << 16;
-	window['AscDFH'].historyitem_type_ColorsDefHdr           = 2057 << 16;
-	window['AscDFH'].historyitem_type_ColorsDefHdrLst        = 2058 << 16;
 	window['AscDFH'].historyitem_type_StyleDef               = 2059 << 16;
 	window['AscDFH'].historyitem_type_Scene3d                = 2060 << 16;
 	window['AscDFH'].historyitem_type_StyleDefStyleLbl       = 2061 << 16;
-	window['AscDFH'].historyitem_type_Scene3d                = 2062 << 16;
 	window['AscDFH'].historyitem_type_Backdrop               = 2063 << 16;
 	window['AscDFH'].historyitem_type_BackdropNorm           = 2064 << 16;
 	window['AscDFH'].historyitem_type_BackdropUp             = 2065 << 16;
@@ -1767,35 +1745,15 @@
 	window['AscDFH'].historyitem_type_LightRig               = 2068 << 16;
 	window['AscDFH'].historyitem_type_Sp3d                   = 2069 << 16;
 	window['AscDFH'].historyitem_type_Bevel                  = 2070 << 16;
-	window['AscDFH'].historyitem_type_BevelB                 = 2071 << 16;
-	window['AscDFH'].historyitem_type_BevelT                 = 2072 << 16;
-	window['AscDFH'].historyitem_type_TxPr                   = 2073 << 16;
-	window['AscDFH'].historyitem_type_FlatTx                 = 2074 << 16;
-	window['AscDFH'].historyitem_type_StyleDefHdrLst         = 2075 << 16;
-	window['AscDFH'].historyitem_type_StyleDefHdr            = 2076 << 16;
 	window['AscDFH'].historyitem_type_BackdropAnchor         = 2077 << 16;
-	window['AscDFH'].historyitem_type_StyleData              = 2078 << 16;
 	window['AscDFH'].historyitem_type_SampData               = 2079 << 16;
 	window['AscDFH'].historyitem_type_ForEach                = 2080 << 16;
-	window['AscDFH'].historyitem_type_ResizeHandles          = 2081 << 16;
-	window['AscDFH'].historyitem_type_OrgChart               = 2082 << 16;
-	window['AscDFH'].historyitem_type_HierBranch             = 2083 << 16;
 	window['AscDFH'].historyitem_type_ParameterVal           = 2084 << 16;
 	window['AscDFH'].historyitem_type_Coordinate             = 2085 << 16;
-	window['AscDFH'].historyitem_type_ExtrusionClr           = 2086 << 16;
-	window['AscDFH'].historyitem_type_ContourClr             = 2087 << 16;
 	window['AscDFH'].historyitem_type_SmartArt               = 2088 << 16;
-	window['AscDFH'].historyitem_type_CCommonDataClrList     = 2089 << 16;
-	window['AscDFH'].historyitem_type_BuNone                 = 2090 << 16;
 	window['AscDFH'].historyitem_type_SmartArtDrawing        = 2091 << 16;
 	window['AscDFH'].historyitem_type_DiagramData            = 2092 << 16;
-	window['AscDFH'].historyitem_type_FunctionValue          = 2093 << 16;
-	window['AscDFH'].historyitem_type_PointInfo              = 2094 << 16;
-	window['AscDFH'].historyitem_type_ShapeSmartArtInfo      = 2095 << 16;
-	window['AscDFH'].historyitem_type_SmartArtTree           = 2096 << 16;
-	window['AscDFH'].historyitem_type_SmartArtNode           = 2097 << 16;
-	window['AscDFH'].historyitem_type_SmartArtNodeData       = 2098 << 16;
-	window['AscDFH'].historyitem_type_BuBlip                 = 2099 << 16;
+	window['AscDFH'].historyitem_type_CCommonDataListNoId    = 2093 << 16;
 
 	window['AscDFH'].historyitem_type_VMLArc                 = 2099 << 16;
 	window['AscDFH'].historyitem_type_VMLCurve               = 2100 << 16;
@@ -1823,19 +1781,35 @@
 	window['AscDFH'].historyitem_type_OForm_FieldMaster      = 2202 << 16;
 	window['AscDFH'].historyitem_type_OForm_Document         = 2203 << 16;
 	window['AscDFH'].historyitem_type_OForm_FieldGroup       = 2204 << 16;
-
+	
 	window['AscDFH'].historyitem_type_PDF_Document			= 2210 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Form				= 2211 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Comment			= 2212 << 16;
-	window['AscDFH'].historyitem_type_Pdf_Ink				= 2213 << 16;
-	window['AscDFH'].historyitem_type_Pdf_Annot				= 2214 << 16;
-	window['AscDFH'].historyitem_type_Pdf_Pushbutton		= 2215 << 16;
-	window['AscDFH'].historyitem_type_Pdf_Line				= 2216 << 16;
-	window['AscDFH'].historyitem_type_Pdf_List_Form			= 2217 << 16;
-	window['AscDFH'].historyitem_Pdf_FreeText				= 2218 << 16;
-	window['AscDFH'].historyitem_Pdf_Drawing				= 2219 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot				= 2213 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Ink			= 2214 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Line		= 2215 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_FreeText	= 2216 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Text		= 2217 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Circle		= 2218 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Square		= 2219 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Polygon		= 2220 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Polyline	= 2221 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Highlight	= 2222 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Underline	= 2223 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Strikeout	= 2224 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Squiggly	= 2225 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Caret		= 2226 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Pushbutton		= 2227 << 16;
+	window['AscDFH'].historyitem_type_Pdf_List_Form			= 2228 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Drawing			= 2229 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Page				= 2230 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Stamp		= 2230 << 16;
+	
+	window['AscDFH'].historyitem_type_CustomProperties      = 2301 << 16;
 
+	window['AscDFH'].historyitem_type_CEffectProperties      = 2302 << 16;
 
+	
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2543,6 +2517,7 @@
 	window['AscDFH'].historyitem_ChartSpace_RemoveUserShape   = window['AscDFH'].historyitem_type_ChartSpace | 19;
 	window['AscDFH'].historyitem_ChartSpace_ChartStyle        = window['AscDFH'].historyitem_type_ChartSpace | 20;
 	window['AscDFH'].historyitem_ChartSpace_ChartColors       = window['AscDFH'].historyitem_type_ChartSpace | 21;
+	window['AscDFH'].historyitem_ChartSpace_SetChartData      = window['AscDFH'].historyitem_type_ChartSpace | 22;
 
 	window['AscDFH'].historyitem_Legend_SetLayout      = window['AscDFH'].historyitem_type_Legend | 1;
 	window['AscDFH'].historyitem_Legend_AddLegendEntry = window['AscDFH'].historyitem_type_Legend | 2;
@@ -2550,6 +2525,7 @@
 	window['AscDFH'].historyitem_Legend_SetOverlay     = window['AscDFH'].historyitem_type_Legend | 4;
 	window['AscDFH'].historyitem_Legend_SetSpPr        = window['AscDFH'].historyitem_type_Legend | 5;
 	window['AscDFH'].historyitem_Legend_SetTxPr        = window['AscDFH'].historyitem_type_Legend | 6;
+	window['AscDFH'].historyitem_Legend_SetAlign       = window['AscDFH'].historyitem_type_Legend | 7;
 
 	window['AscDFH'].historyitem_Layout_SetH            = window['AscDFH'].historyitem_type_Layout | 1;
 	window['AscDFH'].historyitem_Layout_SetHMode        = window['AscDFH'].historyitem_type_Layout | 2;
@@ -2594,17 +2570,18 @@
 	window['AscDFH'].historyitem_Marker_SetSpPr   = window['AscDFH'].historyitem_type_Marker | 2;
 	window['AscDFH'].historyitem_Marker_SetSymbol = window['AscDFH'].historyitem_type_Marker | 3;
 
-	window['AscDFH'].historyitem_PlotArea_AddChart    = window['AscDFH'].historyitem_type_PlotArea | 1;
-	window['AscDFH'].historyitem_PlotArea_SetCatAx    = window['AscDFH'].historyitem_type_PlotArea | 2;
-	window['AscDFH'].historyitem_PlotArea_SetDateAx   = window['AscDFH'].historyitem_type_PlotArea | 3;
-	window['AscDFH'].historyitem_PlotArea_SetDTable   = window['AscDFH'].historyitem_type_PlotArea | 4;
-	window['AscDFH'].historyitem_PlotArea_SetLayout   = window['AscDFH'].historyitem_type_PlotArea | 5;
-	window['AscDFH'].historyitem_PlotArea_SetSerAx    = window['AscDFH'].historyitem_type_PlotArea | 6;
-	window['AscDFH'].historyitem_PlotArea_SetSpPr     = window['AscDFH'].historyitem_type_PlotArea | 7;
-	window['AscDFH'].historyitem_PlotArea_SetValAx    = window['AscDFH'].historyitem_type_PlotArea | 8;
-	window['AscDFH'].historyitem_PlotArea_AddAxis     = window['AscDFH'].historyitem_type_PlotArea | 9;
-	window['AscDFH'].historyitem_PlotArea_RemoveChart = window['AscDFH'].historyitem_type_PlotArea | 10;
-	window['AscDFH'].historyitem_PlotArea_RemoveAxis  = window['AscDFH'].historyitem_type_PlotArea | 11;
+	window['AscDFH'].historyitem_PlotArea_AddChart          = window['AscDFH'].historyitem_type_PlotArea | 1;
+	window['AscDFH'].historyitem_PlotArea_SetCatAx          = window['AscDFH'].historyitem_type_PlotArea | 2;
+	window['AscDFH'].historyitem_PlotArea_SetDateAx         = window['AscDFH'].historyitem_type_PlotArea | 3;
+	window['AscDFH'].historyitem_PlotArea_SetDTable         = window['AscDFH'].historyitem_type_PlotArea | 4;
+	window['AscDFH'].historyitem_PlotArea_SetLayout         = window['AscDFH'].historyitem_type_PlotArea | 5;
+	window['AscDFH'].historyitem_PlotArea_SetSerAx          = window['AscDFH'].historyitem_type_PlotArea | 6;
+	window['AscDFH'].historyitem_PlotArea_SetSpPr           = window['AscDFH'].historyitem_type_PlotArea | 7;
+	window['AscDFH'].historyitem_PlotArea_SetValAx          = window['AscDFH'].historyitem_type_PlotArea | 8;
+	window['AscDFH'].historyitem_PlotArea_AddAxis           = window['AscDFH'].historyitem_type_PlotArea | 9;
+	window['AscDFH'].historyitem_PlotArea_RemoveChart       = window['AscDFH'].historyitem_type_PlotArea | 10;
+	window['AscDFH'].historyitem_PlotArea_RemoveAxis        = window['AscDFH'].historyitem_type_PlotArea | 11;
+	window['AscDFH'].historyitem_PlotArea_SetPlotAreaRegion = window['AscDFH'].historyitem_type_PlotArea | 12;
 
 	window['AscDFH'].historyitem_NumFmt_SetFormatCode   = window['AscDFH'].historyitem_type_NumFmt | 1;
 	window['AscDFH'].historyitem_NumFmt_SetSourceLinked = window['AscDFH'].historyitem_type_NumFmt | 2;
@@ -2913,6 +2890,7 @@
 
 	window['AscDFH'].historyitem_ChartText_SetRich   = window['AscDFH'].historyitem_type_ChartText | 1;
 	window['AscDFH'].historyitem_ChartText_SetStrRef = window['AscDFH'].historyitem_type_ChartText | 2;
+	window['AscDFH'].historyitem_ChartText_SetTxData = window['AscDFH'].historyitem_type_ChartText | 3;
 
 	window['AscDFH'].historyitem_ShapeStyle_SetLnRef     = window['AscDFH'].historyitem_type_ShapeStyle | 1;
 	window['AscDFH'].historyitem_ShapeStyle_SetFillRef   = window['AscDFH'].historyitem_type_ShapeStyle | 2;
@@ -3027,10 +3005,9 @@
 	window['AscDFH'].historyitem_ShapeSetTextLink               = window['AscDFH'].historyitem_type_Shape | 13;
 	window['AscDFH'].historyitem_ShapeSetModelId                = window['AscDFH'].historyitem_type_Shape | 14;
 	window['AscDFH'].historyitem_ShapeSetTxXfrm                 = window['AscDFH'].historyitem_type_Shape | 15;
-	window['AscDFH'].historyitem_ShapeSetSmartArtPoint          = window['AscDFH'].historyitem_type_Shape | 16;
 	window['AscDFH'].historyitem_ShapeSetFLocksText             = window['AscDFH'].historyitem_type_Shape | 17;
 	window['AscDFH'].historyitem_ShapeSetClientData             = window['AscDFH'].historyitem_type_Shape | 18;
-	window['AscDFH'].historyitem_ShapeSetShapeSmartArtPointInfo = window['AscDFH'].historyitem_type_Shape | 19;
+	window['AscDFH'].historyitem_ShapeSetUseBgFill              = window['AscDFH'].historyitem_type_Shape | 19;
 
 	window['AscDFH'].historyitem_OleSizeSelectionSetRange = window['AscDFH'].historyitem_type_OleSizeSelection | 1;
 
@@ -3183,6 +3160,8 @@
 	window['AscDFH'].historyitem_Title_SetSpPr    = window['AscDFH'].historyitem_type_Title | 3;
 	window['AscDFH'].historyitem_Title_SetTx      = window['AscDFH'].historyitem_type_Title | 4;
 	window['AscDFH'].historyitem_Title_SetTxPr    = window['AscDFH'].historyitem_type_Title | 5;
+	window['AscDFH'].historyitem_Title_SetAlign   = window['AscDFH'].historyitem_type_Title | 6;
+	window['AscDFH'].historyitem_Title_SetPos     = window['AscDFH'].historyitem_type_Title | 7;
 
 	window['AscDFH'].historyitem_SlideSetComments       = window['AscDFH'].historyitem_type_Slide | 1;
 	window['AscDFH'].historyitem_SlideSetShow           = window['AscDFH'].historyitem_type_Slide | 2;
@@ -3606,7 +3585,6 @@
 	AscDFH.historyitem_PointCxnId   = AscDFH.historyitem_type_Point | 1;
 	AscDFH.historyitem_PointModelId = AscDFH.historyitem_type_Point | 2;
 	AscDFH.historyitem_PointType    = AscDFH.historyitem_type_Point | 3;
-	AscDFH.historyitem_PointExtLst  = AscDFH.historyitem_type_Point | 4;
 	AscDFH.historyitem_PointPrSet   = AscDFH.historyitem_type_Point | 5;
 	AscDFH.historyitem_PointSpPr    = AscDFH.historyitem_type_Point | 6;
 	AscDFH.historyitem_PointT       = AscDFH.historyitem_type_Point | 7;
@@ -3630,235 +3608,23 @@
 	AscDFH.historyitem_CxnSrcId      = AscDFH.historyitem_type_Cxn | 7;
 	AscDFH.historyitem_CxnSrcOrd     = AscDFH.historyitem_type_Cxn | 8;
 	AscDFH.historyitem_CxnType       = AscDFH.historyitem_type_Cxn | 9;
-	AscDFH.historyitem_CxnExtLst     = AscDFH.historyitem_type_Cxn | 10;
-
-	AscDFH.historyitem_ExtUri = AscDFH.historyitem_type_Ext | 1;
 
 	AscDFH.historyitem_DataModelBg     = AscDFH.historyitem_type_DataModel | 1;
 	AscDFH.historyitem_DataModelCxnLst = AscDFH.historyitem_type_DataModel | 2;
-	AscDFH.historyitem_DataModelExtLst = AscDFH.historyitem_type_DataModel | 3;
 	AscDFH.historyitem_DataModelPtLst  = AscDFH.historyitem_type_DataModel | 4;
 	AscDFH.historyitem_DataModelWhole  = AscDFH.historyitem_type_DataModel | 5;
 
-	AscDFH.historyitem_LayoutDefDefStyle    = AscDFH.historyitem_type_LayoutDef | 1;
-	AscDFH.historyitem_LayoutDefMinVer      = AscDFH.historyitem_type_LayoutDef | 2;
-	AscDFH.historyitem_LayoutDefUniqueId    = AscDFH.historyitem_type_LayoutDef | 3;
-	AscDFH.historyitem_LayoutDefCatLst      = AscDFH.historyitem_type_LayoutDef | 4;
-	AscDFH.historyitem_LayoutDefClrData     = AscDFH.historyitem_type_LayoutDef | 5;
-	AscDFH.historyitem_LayoutDefDesc        = AscDFH.historyitem_type_LayoutDef | 6;
-	AscDFH.historyitem_LayoutDefExtLst      = AscDFH.historyitem_type_LayoutDef | 7;
-	AscDFH.historyitem_LayoutDefLayoutNode  = AscDFH.historyitem_type_LayoutDef | 8;
-	AscDFH.historyitem_LayoutDefSampData    = AscDFH.historyitem_type_LayoutDef | 9;
-	AscDFH.historyitem_LayoutDefStyleData   = AscDFH.historyitem_type_LayoutDef | 10;
-	AscDFH.historyitem_LayoutDefTitle       = AscDFH.historyitem_type_LayoutDef | 11;
-
-	AscDFH.historyitem_SCatPri = AscDFH.historyitem_type_SCat | 1;
-	AscDFH.historyitem_SCatType = AscDFH.historyitem_type_SCat | 2;
-
-	AscDFH.historyitem_ClrDataUseDef    = AscDFH.historyitem_type_ClrData | 1;
-	AscDFH.historyitem_ClrDataDataModel = AscDFH.historyitem_type_ClrData | 2;
-
-	AscDFH.historyitem_DescLang = AscDFH.historyitem_type_Desc | 1;
-	AscDFH.historyitem_DescVal = AscDFH.historyitem_type_Desc | 2;
-
-	AscDFH.historyitem_LayoutNodeChOrder  = AscDFH.historyitem_type_LayoutNode | 1;
-	AscDFH.historyitem_LayoutNodeMoveWith = AscDFH.historyitem_type_LayoutNode | 2;
-	AscDFH.historyitem_LayoutNodeName     = AscDFH.historyitem_type_LayoutNode | 3;
-	AscDFH.historyitem_LayoutNodeStyleLbl = AscDFH.historyitem_type_LayoutNode | 4;
-
-	AscDFH.historyitem_AlgRev         = AscDFH.historyitem_type_Alg | 1;
-	AscDFH.historyitem_AlgType        = AscDFH.historyitem_type_Alg | 2;
-	AscDFH.historyitem_AlgExtLst      = AscDFH.historyitem_type_Alg | 3;
-	AscDFH.historyitem_AlgAddParam    = AscDFH.historyitem_type_Alg | 4;
-	AscDFH.historyitem_AlgRemoveParam = AscDFH.historyitem_type_Alg | 5;
-
-	AscDFH.historyitem_ParamType = AscDFH.historyitem_type_Param | 1;
-	AscDFH.historyitem_ParamVal  = AscDFH.historyitem_type_Param | 2;
-
-	AscDFH.historyitem_ChooseName            = AscDFH.historyitem_type_Choose | 1;
-	AscDFH.historyitem_ChooseElse            = AscDFH.historyitem_type_Choose | 2;
-	AscDFH.historyitem_ChooseAddToLstIf      = AscDFH.historyitem_type_Choose | 3;
-	AscDFH.historyitem_ChooseRemoveFromLstIf = AscDFH.historyitem_type_Choose | 4;
-
-
-	AscDFH.historyitem_IteratorAttributesAddAxis = AscDFH.historyitem_type_IteratorAttributes | 1;
-	AscDFH.historyitem_IteratorAttributesRemoveAxis = AscDFH.historyitem_type_IteratorAttributes | 2;
-	AscDFH.historyitem_IteratorAttributesAddCnt = AscDFH.historyitem_type_IteratorAttributes | 3;
-	AscDFH.historyitem_IteratorAttributesRemoveCnt = AscDFH.historyitem_type_IteratorAttributes | 4;
-	AscDFH.historyitem_IteratorAttributesAddHideLastTrans = AscDFH.historyitem_type_IteratorAttributes | 5;
-	AscDFH.historyitem_IteratorAttributesRemoveHideLastTrans = AscDFH.historyitem_type_IteratorAttributes | 6;
-	AscDFH.historyitem_IteratorAttributesAddPtType = AscDFH.historyitem_type_IteratorAttributes | 7;
-	AscDFH.historyitem_IteratorAttributesRemovePtType = AscDFH.historyitem_type_IteratorAttributes | 8;
-	AscDFH.historyitem_IteratorAttributesAddSt = AscDFH.historyitem_type_IteratorAttributes | 9;
-	AscDFH.historyitem_IteratorAttributesRemoveSt = AscDFH.historyitem_type_IteratorAttributes | 10;
-	AscDFH.historyitem_IteratorAttributesAddStep = AscDFH.historyitem_type_IteratorAttributes | 11;
-	AscDFH.historyitem_IteratorAttributesRemoveStep = AscDFH.historyitem_type_IteratorAttributes | 12;
-
-	AscDFH.historyitem_ElseName = AscDFH.historyitem_type_Else | 1;
-
-	AscDFH.historyitem_AxisTypeVal = AscDFH.historyitem_type_AxisType | 1;
-
-	AscDFH.historyitem_ElementTypeVal = AscDFH.historyitem_type_ElementType | 1;
-
-	AscDFH.historyitem_IfArg = AscDFH.historyitem_type_If | 1;
-	AscDFH.historyitem_IfFunc = AscDFH.historyitem_type_If | 2;
-	AscDFH.historyitem_IfName = AscDFH.historyitem_type_If | 3;
-	AscDFH.historyitem_IfOp = AscDFH.historyitem_type_If | 4;
-	AscDFH.historyitem_IfVal = AscDFH.historyitem_type_If | 5;
-	AscDFH.historyitem_IfAddList = AscDFH.historyitem_type_If | 6;
-	AscDFH.historyitem_IfRemoveList = AscDFH.historyitem_type_If | 7;
-	AscDFH.historyitem_IfRef = AscDFH.historyitem_type_If | 8;
-
-	AscDFH.historyitem_ConstrFact = AscDFH.historyitem_type_Constr | 1;
-	AscDFH.historyitem_ConstrFor = AscDFH.historyitem_type_Constr | 2;
-	AscDFH.historyitem_ConstrForName = AscDFH.historyitem_type_Constr | 3;
-	AscDFH.historyitem_ConstrOp = AscDFH.historyitem_type_Constr | 4;
-	AscDFH.historyitem_ConstrPtType = AscDFH.historyitem_type_Constr | 5;
-	AscDFH.historyitem_ConstrRefFor = AscDFH.historyitem_type_Constr | 6;
-	AscDFH.historyitem_ConstrRefForName = AscDFH.historyitem_type_Constr | 7;
-	AscDFH.historyitem_ConstrRefPtType = AscDFH.historyitem_type_Constr | 8;
-	AscDFH.historyitem_ConstrRefType = AscDFH.historyitem_type_Constr | 9;
-	AscDFH.historyitem_ConstrType = AscDFH.historyitem_type_Constr | 10;
-	AscDFH.historyitem_ConstrVal = AscDFH.historyitem_type_Constr | 11;
-	AscDFH.historyitem_ConstrExtLst = AscDFH.historyitem_type_Constr | 12;
-
-	AscDFH.historyitem_PresOfExtLst = AscDFH.historyitem_type_PresOf | 1;
-
-	AscDFH.historyitem_RuleFact = AscDFH.historyitem_type_Rule | 1;
-	AscDFH.historyitem_RuleFor = AscDFH.historyitem_type_Rule | 2;
-	AscDFH.historyitem_RuleForName = AscDFH.historyitem_type_Rule | 3;
-	AscDFH.historyitem_RuleMax = AscDFH.historyitem_type_Rule | 4;
-	AscDFH.historyitem_RuleType = AscDFH.historyitem_type_Rule | 5;
-	AscDFH.historyitem_RuleVal = AscDFH.historyitem_type_Rule | 6;
-	AscDFH.historyitem_RuleExtLst = AscDFH.historyitem_type_Rule | 7;
-	AscDFH.historyitem_RulePtType = AscDFH.historyitem_type_Rule | 8;
-
-	AscDFH.historyitem_SShapeBlip = AscDFH.historyitem_type_SShape | 1;
-	AscDFH.historyitem_SShapeBlipPhldr = AscDFH.historyitem_type_SShape | 2;
-	AscDFH.historyitem_SShapeHideGeom = AscDFH.historyitem_type_SShape | 3;
-	AscDFH.historyitem_SShapeLkTxEntry = AscDFH.historyitem_type_SShape | 4;
-	AscDFH.historyitem_SShapeRot = AscDFH.historyitem_type_SShape | 5;
-	AscDFH.historyitem_SShapeType = AscDFH.historyitem_type_SShape | 6;
-	AscDFH.historyitem_SShapeZOrderOff = AscDFH.historyitem_type_SShape | 7;
-	AscDFH.historyitem_SShapeAdjLst = AscDFH.historyitem_type_SShape | 8;
-	AscDFH.historyitem_SShapeExtLst = AscDFH.historyitem_type_SShape | 9;
-
-	AscDFH.historyitem_AdjIdx = AscDFH.historyitem_type_Adj | 1;
-	AscDFH.historyitem_AdjVal = AscDFH.historyitem_type_Adj | 2;
-
-	AscDFH.historyitem_VarLstAnimLvl = AscDFH.historyitem_type_VarLst | 1;
-	AscDFH.historyitem_VarLstAnimOne = AscDFH.historyitem_type_VarLst | 2;
-	AscDFH.historyitem_VarLstBulletEnabled = AscDFH.historyitem_type_VarLst | 3;
-	AscDFH.historyitem_VarLstChMax = AscDFH.historyitem_type_VarLst | 4;
-	AscDFH.historyitem_VarLstChPref = AscDFH.historyitem_type_VarLst | 5;
-	AscDFH.historyitem_VarLstDir = AscDFH.historyitem_type_VarLst | 6;
-	AscDFH.historyitem_VarLstHierBranch = AscDFH.historyitem_type_VarLst | 7;
-	AscDFH.historyitem_VarLstOrgChart = AscDFH.historyitem_type_VarLst | 8;
-	AscDFH.historyitem_VarLstResizeHandles = AscDFH.historyitem_type_VarLst | 9;
-
-	AscDFH.historyitem_AnimLvlVal = AscDFH.historyitem_type_AnimLvl | 1;
-
-	AscDFH.historyitem_AnimOneVal = AscDFH.historyitem_type_AnimOne | 1;
-
-	AscDFH.historyitem_BulletEnabledVal = AscDFH.historyitem_type_BulletEnabled | 1;
-
-	AscDFH.historyitem_ChMaxVal = AscDFH.historyitem_type_ChMax | 1;
-
-	AscDFH.historyitem_ChPrefVal = AscDFH.historyitem_type_ChPref | 1;
-
-	AscDFH.historyitem_DiagramDirectionVal = AscDFH.historyitem_type_DiagramDirection | 1;
-
-	AscDFH.historyitem_DiagramTitleLang = AscDFH.historyitem_type_DiagramTitle | 1;
-	AscDFH.historyitem_DiagramTitleVal = AscDFH.historyitem_type_DiagramTitle | 2;
-
-	AscDFH.historyitem_LayoutDefHdrDefStyle = AscDFH.historyitem_type_LayoutDefHdr | 1;
-	AscDFH.historyitem_LayoutDefHdrMinVer = AscDFH.historyitem_type_LayoutDefHdr | 2;
-	AscDFH.historyitem_LayoutDefHdrResId = AscDFH.historyitem_type_LayoutDefHdr | 3;
-	AscDFH.historyitem_LayoutDefHdrUniqueId = AscDFH.historyitem_type_LayoutDefHdr | 4;
-	AscDFH.historyitem_LayoutDefHdrCatLst = AscDFH.historyitem_type_LayoutDefHdr | 5;
-	AscDFH.historyitem_LayoutDefHdrExtLst = AscDFH.historyitem_type_LayoutDefHdr | 6;
-	AscDFH.historyitem_LayoutDefHdrAddTitle = AscDFH.historyitem_type_LayoutDefHdr | 7;
-	AscDFH.historyitem_LayoutDefHdrRemoveTitle = AscDFH.historyitem_type_LayoutDefHdr | 8;
-	AscDFH.historyitem_LayoutDefHdrAddDesc = AscDFH.historyitem_type_LayoutDefHdr | 9;
-	AscDFH.historyitem_LayoutDefHdrRemoveDesc = AscDFH.historyitem_type_LayoutDefHdr | 10;
-
-	AscDFH.historyitem_RelIdsCs = AscDFH.historyitem_type_RelIds | 1;
-	AscDFH.historyitem_RelIdsDm = AscDFH.historyitem_type_RelIds | 2;
-	AscDFH.historyitem_RelIdsLo = AscDFH.historyitem_type_RelIds | 3;
-	AscDFH.historyitem_RelIdsQs = AscDFH.historyitem_type_RelIds | 4;
-
 	AscDFH.historyitem_DiagramDataDataModel = AscDFH.historyitem_type_DiagramData | 1;
 
-	AscDFH.historyitem_VarLstAnimLvl = AscDFH.historyitem_type_VarLst | 1;
-	AscDFH.historyitem_VarLstAnimOne = AscDFH.historyitem_type_VarLst | 2;
-	AscDFH.historyitem_VarLstBulletEnabled = AscDFH.historyitem_type_VarLst | 3;
-	AscDFH.historyitem_VarLstChMax = AscDFH.historyitem_type_VarLst | 4;
-	AscDFH.historyitem_VarLstChPref = AscDFH.historyitem_type_VarLst | 5;
-	AscDFH.historyitem_VarLstDir = AscDFH.historyitem_type_VarLst | 6;
-	AscDFH.historyitem_VarLstHierBranch = AscDFH.historyitem_type_VarLst | 7;
-	AscDFH.historyitem_VarLstOrgChart = AscDFH.historyitem_type_VarLst | 8;
-	AscDFH.historyitem_VarLstResizeHandles = AscDFH.historyitem_type_VarLst | 9;
-
-	AscDFH.historyitem_ColorsDefMinVer = AscDFH.historyitem_type_ColorsDef | 1;
-	AscDFH.historyitem_ColorsDefUniqueId = AscDFH.historyitem_type_ColorsDef | 2;
-	AscDFH.historyitem_ColorsDefCatLst = AscDFH.historyitem_type_ColorsDef | 3;
-	AscDFH.historyitem_ColorsDefExtLst = AscDFH.historyitem_type_ColorsDef | 4;
-	AscDFH.historyitem_ColorsDefDesc = AscDFH.historyitem_type_ColorsDef | 5;
-	AscDFH.historyitem_ColorsDefTitle = AscDFH.historyitem_type_ColorsDef | 6;
-	AscDFH.historyitem_ColorsDefAddStyleLbl = AscDFH.historyitem_type_ColorsDef | 7;
-	AscDFH.historyitem_ColorsDefRemoveStyleLbl = AscDFH.historyitem_type_ColorsDef | 8;
-
-	AscDFH.historyitem_ColorDefStyleLblName = AscDFH.historyitem_type_ColorDefStyleLbl | 1;
-	AscDFH.historyitem_ColorDefStyleLblEffectClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 2;
-	AscDFH.historyitem_ColorDefStyleLblExtLst = AscDFH.historyitem_type_ColorDefStyleLbl | 3;
-	AscDFH.historyitem_ColorDefStyleLblFillClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 4;
-	AscDFH.historyitem_ColorDefStyleLblLinClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 5;
-	AscDFH.historyitem_ColorDefStyleLblTxEffectClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 6;
-	AscDFH.historyitem_ColorDefStyleLblTxFillClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 7;
-	AscDFH.historyitem_ColorDefStyleLblTxLinClrLst = AscDFH.historyitem_type_ColorDefStyleLbl | 8;
-
-	AscDFH.historyitem_ClrLstHueDir = AscDFH.historyitem_type_ClrLst | 1;
-	AscDFH.historyitem_ClrLstMeth = AscDFH.historyitem_type_ClrLst | 2;
-
-	AscDFH.historyitem_ColorsDefHdrMinVer = AscDFH.historyitem_type_ColorsDefHdr | 1;
-	AscDFH.historyitem_ColorsDefHdrResId = AscDFH.historyitem_type_ColorsDefHdr | 2;
-	AscDFH.historyitem_ColorsDefHdrUniqueId = AscDFH.historyitem_type_ColorsDefHdr | 3;
-	AscDFH.historyitem_ColorsDefHdrCatLst = AscDFH.historyitem_type_ColorsDefHdr | 4;
-	AscDFH.historyitem_ColorsDefHdrExtLst = AscDFH.historyitem_type_ColorsDefHdr | 5;
-	AscDFH.historyitem_ColorsDefHdrAddTitle = AscDFH.historyitem_type_ColorsDefHdr | 6;
-	AscDFH.historyitem_ColorsDefHdrRemoveTitle = AscDFH.historyitem_type_ColorsDefHdr | 7;
-	AscDFH.historyitem_ColorsDefHdrAddDesc = AscDFH.historyitem_type_ColorsDefHdr | 8;
-	AscDFH.historyitem_ColorsDefHdrRemoveDesc = AscDFH.historyitem_type_ColorsDefHdr | 9;
-
-	AscDFH.historyitem_StyleDefMinVer = AscDFH.historyitem_type_StyleDef | 1;
-	AscDFH.historyitem_StyleDefUniqueId = AscDFH.historyitem_type_StyleDef | 2;
-	AscDFH.historyitem_StyleDefCatLst = AscDFH.historyitem_type_StyleDef | 3;
-	AscDFH.historyitem_StyleDefExtLst = AscDFH.historyitem_type_StyleDef | 4;
-	AscDFH.historyitem_StyleDefScene3d = AscDFH.historyitem_type_StyleDef | 5;
-	AscDFH.historyitem_StyleDefTitle = AscDFH.historyitem_type_StyleDef | 6;
-	AscDFH.historyitem_StyleDefDesc = AscDFH.historyitem_type_StyleDef | 7;
-	AscDFH.historyitem_StyleDefAddStyleLbl = AscDFH.historyitem_type_StyleDef | 8;
-	AscDFH.historyitem_StyleDefRemoveStyleLbl = AscDFH.historyitem_type_StyleDef | 9;
-
 	AscDFH.historyitem_Scene3dBackdrop = AscDFH.historyitem_type_Scene3d | 1;
 	AscDFH.historyitem_Scene3dCamera = AscDFH.historyitem_type_Scene3d | 2;
-	AscDFH.historyitem_Scene3dExtLst = AscDFH.historyitem_type_Scene3d | 3;
 	AscDFH.historyitem_Scene3dLightRig = AscDFH.historyitem_type_Scene3d | 4;
 
-	AscDFH.historyitem_StyleDefStyleLblName = AscDFH.historyitem_type_StyleDefStyleLbl | 1;
-	AscDFH.historyitem_StyleDefStyleLblExtLst = AscDFH.historyitem_type_StyleDefStyleLbl | 2;
-	AscDFH.historyitem_StyleDefStyleLblScene3d = AscDFH.historyitem_type_StyleDefStyleLbl | 3;
-	AscDFH.historyitem_StyleDefStyleLblSp3d = AscDFH.historyitem_type_StyleDefStyleLbl | 4;
-	AscDFH.historyitem_StyleDefStyleLblStyle = AscDFH.historyitem_type_StyleDefStyleLbl | 5;
-	AscDFH.historyitem_StyleDefStyleLblTxPr = AscDFH.historyitem_type_StyleDefStyleLbl | 6;
-
 	AscDFH.historyitem_Scene3dBackdrop = AscDFH.historyitem_type_Scene3d | 1;
 	AscDFH.historyitem_Scene3dCamera = AscDFH.historyitem_type_Scene3d | 2;
-	AscDFH.historyitem_Scene3dExtLst = AscDFH.historyitem_type_Scene3d | 3;
 	AscDFH.historyitem_Scene3dLightRig = AscDFH.historyitem_type_Scene3d | 4;
 
 	AscDFH.historyitem_BackdropAnchor = AscDFH.historyitem_type_Backdrop | 1;
-	AscDFH.historyitem_BackdropExtLst = AscDFH.historyitem_type_Backdrop | 2;
 	AscDFH.historyitem_BackdropNorm = AscDFH.historyitem_type_Backdrop | 3;
 	AscDFH.historyitem_BackdropUp = AscDFH.historyitem_type_Backdrop | 4;
 
@@ -3890,7 +3656,6 @@
 	AscDFH.historyitem_Sp3dBevelB = AscDFH.historyitem_type_Sp3d | 5;
 	AscDFH.historyitem_Sp3dBevelT = AscDFH.historyitem_type_Sp3d | 6;
 	AscDFH.historyitem_Sp3dContourClr = AscDFH.historyitem_type_Sp3d | 7;
-	AscDFH.historyitem_Sp3dExtLst = AscDFH.historyitem_type_Sp3d | 8;
 	AscDFH.historyitem_Sp3dExtrusionClr = AscDFH.historyitem_type_Sp3d | 9;
 
 	AscDFH.historyitem_BevelH = AscDFH.historyitem_type_Bevel | 1;
@@ -3902,114 +3667,12 @@
 
 	AscDFH.historyitem_FlatTxZ = AscDFH.historyitem_type_FlatTx | 1;
 
-	AscDFH.historyitem_StyleDefHdrMinVer = AscDFH.historyitem_type_StyleDefHdr | 1;
-	AscDFH.historyitem_StyleDefHdrResId = AscDFH.historyitem_type_StyleDefHdr | 2;
-	AscDFH.historyitem_StyleDefHdrUniqueId = AscDFH.historyitem_type_StyleDefHdr | 3;
-	AscDFH.historyitem_StyleDefHdrCatLst = AscDFH.historyitem_type_StyleDefHdr | 4;
-	AscDFH.historyitem_StyleDefHdrExtLst = AscDFH.historyitem_type_StyleDefHdr | 5;
-	AscDFH.historyitem_StyleDefHdrAddDesc = AscDFH.historyitem_type_StyleDefHdr | 6;
-	AscDFH.historyitem_StyleDefHdrRemoveDesc = AscDFH.historyitem_type_StyleDefHdr | 7;
-	AscDFH.historyitem_StyleDefHdrAddList = AscDFH.historyitem_type_StyleDefHdr | 8;
-	AscDFH.historyitem_StyleDefHdrRemoveList = AscDFH.historyitem_type_StyleDefHdr | 9;
-
 	AscDFH.historyitem_BackdropAnchorX = AscDFH.historyitem_type_BackdropAnchor | 1;
 	AscDFH.historyitem_BackdropAnchorY = AscDFH.historyitem_type_BackdropAnchor | 2;
 	AscDFH.historyitem_BackdropAnchorZ = AscDFH.historyitem_type_BackdropAnchor | 3;
 
-	AscDFH.historyitem_StyleDataDataModel = AscDFH.historyitem_type_StyleData | 1;
-	AscDFH.historyitem_StyleDataUseDef = AscDFH.historyitem_type_StyleData | 2;
-
-	AscDFH.historyitem_SampDataDataModel = AscDFH.historyitem_type_SampData | 1;
-	AscDFH.historyitem_SampDataUseDef = AscDFH.historyitem_type_SampData | 2;
-
-	AscDFH.historyitem_ForEachName = AscDFH.historyitem_type_ForEach | 1;
-	AscDFH.historyitem_ForEachRef = AscDFH.historyitem_type_ForEach | 2;
-	AscDFH.historyitem_ForEachAddList = AscDFH.historyitem_type_ForEach | 3;
-	AscDFH.historyitem_ForEachRemoveList = AscDFH.historyitem_type_ForEach | 4;
-
-	AscDFH.historyitem_ResizeHandlesVal = AscDFH.historyitem_type_ResizeHandles | 1;
-
-	AscDFH.historyitem_OrgChartVal = AscDFH.historyitem_type_OrgChart | 1;
-
-	AscDFH.historyitem_HierBranchVal = AscDFH.historyitem_type_HierBranch | 1;
-
-	AscDFH.historyitem_FunctionValueAnimLvlStr       = AscDFH.historyitem_type_FunctionValue | 1;
-	AscDFH.historyitem_FunctionValueAnimOneStr       = AscDFH.historyitem_type_FunctionValue | 2;
-	AscDFH.historyitem_FunctionValueDirection        = AscDFH.historyitem_type_FunctionValue | 3;
-	AscDFH.historyitem_FunctionValueHierBranchStyle  = AscDFH.historyitem_type_FunctionValue | 4;
-	AscDFH.historyitem_FunctionValueResizeHandlesStr = AscDFH.historyitem_type_FunctionValue | 5;
-	AscDFH.historyitem_FunctionValueBool             = AscDFH.historyitem_type_FunctionValue | 6;
-	AscDFH.historyitem_FunctionValueInt              = AscDFH.historyitem_type_FunctionValue | 7;
-
-	AscDFH.historyitem_ShapeSmartArtInfoSpPrPoint             = AscDFH.historyitem_type_ShapeSmartArtInfo | 1;
-	AscDFH.historyitem_ShapeSmartArtInfoShapePoint            = AscDFH.historyitem_type_ShapeSmartArtInfo | 2;
-	AscDFH.historyitem_ShapeSmartArtInfoAddLstContentPoint    = AscDFH.historyitem_type_ShapeSmartArtInfo | 3;
-	AscDFH.historyitem_ShapeSmartArtInfoRemoveLstContentPoint = AscDFH.historyitem_type_ShapeSmartArtInfo | 4;
-
-	AscDFH.historyitem_SmartArtTreeRoot = AscDFH.historyitem_type_SmartArtTree | 1;
-
-	AscDFH.historyitem_SmartArtNodeInfo                  = AscDFH.historyitem_type_SmartArtNode | 1;
-	AscDFH.historyitem_SmartArtNodeData                  = AscDFH.historyitem_type_SmartArtNode | 2;
-	AscDFH.historyitem_SmartArtNodeAddToLstChildren      = AscDFH.historyitem_type_SmartArtNode | 3;
-	AscDFH.historyitem_SmartArtNodeRemoveFromLstChildren = AscDFH.historyitem_type_SmartArtNode | 4;
-
-	AscDFH.historyitem_SmartArtNodeDataParPoint              = AscDFH.historyitem_type_SmartArtNodeData | 1;
-	AscDFH.historyitem_SmartArtNodeDataSibPoint               = AscDFH.historyitem_type_SmartArtNodeData | 2;
-	AscDFH.historyitem_SmartArtNodeDataCxn                    = AscDFH.historyitem_type_SmartArtNodeData | 3;
-	AscDFH.historyitem_SmartArtNodeDataMainPoint              = AscDFH.historyitem_type_SmartArtNodeData | 4;
-	AscDFH.historyitem_SmartArtNodeDataAddToLstShapes         = AscDFH.historyitem_type_SmartArtNodeData | 5;
-	AscDFH.historyitem_SmartArtNodeDataRemoveFromLstShapes    = AscDFH.historyitem_type_SmartArtNodeData | 6;
-	AscDFH.historyitem_SmartArtNodeDataAddToLstPresPoint      = AscDFH.historyitem_type_SmartArtNodeData | 7;
-	AscDFH.historyitem_SmartArtNodeDataRemoveFromLstPresPoint = AscDFH.historyitem_type_SmartArtNodeData | 8;
-
-	AscDFH.historyitem_BuBlipBlip              = AscDFH.historyitem_type_BuBlip | 1;
-
-	AscDFH.historyitem_PointInfoPoint                = AscDFH.historyitem_type_PointInfo | 1;
-	AscDFH.historyitem_PointInfoAssociation          = AscDFH.historyitem_type_PointInfo | 2;
-
-	AscDFH.historyitem_ParameterValArrowheadStyle             = AscDFH.historyitem_type_ParameterVal | 1;
-	AscDFH.historyitem_ParameterValAutoTextRotation           = AscDFH.historyitem_type_ParameterVal | 2;
-	AscDFH.historyitem_ParameterValBendPoint                  = AscDFH.historyitem_type_ParameterVal | 3;
-	AscDFH.historyitem_ParameterValBreakpoint                 = AscDFH.historyitem_type_ParameterVal | 4;
-	AscDFH.historyitem_ParameterValCenterShapeMapping         = AscDFH.historyitem_type_ParameterVal | 5;
-	AscDFH.historyitem_ParameterValChildAlignment             = AscDFH.historyitem_type_ParameterVal | 6;
-	AscDFH.historyitem_ParameterValChildDirection             = AscDFH.historyitem_type_ParameterVal | 7;
-	AscDFH.historyitem_ParameterValConnectorDimension         = AscDFH.historyitem_type_ParameterVal | 8;
-	AscDFH.historyitem_ParameterValConnectorPoint             = AscDFH.historyitem_type_ParameterVal | 9;
-	AscDFH.historyitem_ParameterValConnectorRouting           = AscDFH.historyitem_type_ParameterVal | 10;
-	AscDFH.historyitem_ParameterValContinueDirection          = AscDFH.historyitem_type_ParameterVal | 11;
-	AscDFH.historyitem_ParameterValDiagramHorizontalAlignment = AscDFH.historyitem_type_ParameterVal | 12;
-	AscDFH.historyitem_ParameterValDiagramTextAlignment       = AscDFH.historyitem_type_ParameterVal | 13;
-	AscDFH.historyitem_ParameterValFallbackDimension          = AscDFH.historyitem_type_ParameterVal | 14;
-	AscDFH.historyitem_ParameterValFlowDirection              = AscDFH.historyitem_type_ParameterVal | 15;
-	AscDFH.historyitem_ParameterValGrowDirection              = AscDFH.historyitem_type_ParameterVal | 16;
-	AscDFH.historyitem_ParameterValHierarchyAlignment         = AscDFH.historyitem_type_ParameterVal | 17;
-	AscDFH.historyitem_ParameterValLinearDirection            = AscDFH.historyitem_type_ParameterVal | 18;
-	AscDFH.historyitem_ParameterValNodeHorizontalAlignment    = AscDFH.historyitem_type_ParameterVal | 19;
-	AscDFH.historyitem_ParameterValNodeVerticalAlignment      = AscDFH.historyitem_type_ParameterVal | 20;
-	AscDFH.historyitem_ParameterValOffset                     = AscDFH.historyitem_type_ParameterVal | 21;
-	AscDFH.historyitem_ParameterValPyramidAccentPosition      = AscDFH.historyitem_type_ParameterVal | 22;
-	AscDFH.historyitem_ParameterValPyramidAccentTextMargin    = AscDFH.historyitem_type_ParameterVal | 23;
-	AscDFH.historyitem_ParameterValRotationPath               = AscDFH.historyitem_type_ParameterVal | 24;
-	AscDFH.historyitem_ParameterValSecondaryChildAlignment    = AscDFH.historyitem_type_ParameterVal | 25;
-	AscDFH.historyitem_ParameterValSecondaryLinearDirection   = AscDFH.historyitem_type_ParameterVal | 26;
-	AscDFH.historyitem_ParameterValStartingElement            = AscDFH.historyitem_type_ParameterVal | 27;
-	AscDFH.historyitem_ParameterValTextAnchorHorizontal       = AscDFH.historyitem_type_ParameterVal | 28;
-	AscDFH.historyitem_ParameterValTextAnchorVertical         = AscDFH.historyitem_type_ParameterVal | 29;
-	AscDFH.historyitem_ParameterValTextBlockDirection         = AscDFH.historyitem_type_ParameterVal | 30;
-	AscDFH.historyitem_ParameterValTextDirection              = AscDFH.historyitem_type_ParameterVal | 31;
-	AscDFH.historyitem_ParameterValVerticalAlignment          = AscDFH.historyitem_type_ParameterVal | 32;
-	AscDFH.historyitem_ParameterValBool                       = AscDFH.historyitem_type_ParameterVal | 33;
-	AscDFH.historyitem_ParameterValDouble                     = AscDFH.historyitem_type_ParameterVal | 34;
-	AscDFH.historyitem_ParameterValInt                        = AscDFH.historyitem_type_ParameterVal | 35;
-	AscDFH.historyitem_ParameterValStr                        = AscDFH.historyitem_type_ParameterVal | 36;
-
 	AscDFH.historyitem_CoordinateCoordinateUnqualified = AscDFH.historyitem_type_Coordinate | 1;
 	AscDFH.historyitem_CoordinateUniversalMeasure      = AscDFH.historyitem_type_Coordinate | 2;
-
-	AscDFH.historyitem_ContourClrColor = AscDFH.historyitem_type_ContourClr | 1;
-
-	AscDFH.historyitem_ExtrusionClrColor = AscDFH.historyitem_type_ExtrusionClr | 1;
 
 	AscDFH.historyitem_ChartStyleAxisTitle          = AscDFH.historyitem_type_ChartStyle | 1;
 	AscDFH.historyitem_ChartStyleCategoryAxis       = AscDFH.historyitem_type_ChartStyle | 2;
@@ -4066,12 +3729,6 @@
 	AscDFH.historyitem_SmartArtStyleDef  = AscDFH.historyitem_type_SmartArt | 5;
 	AscDFH.historyitem_SmartArtParent    = AscDFH.historyitem_type_SmartArt | 6;
 	AscDFH.historyitem_SmartArtType      = AscDFH.historyitem_type_SmartArt | 7;
-
-	AscDFH.historyitem_CCommonDataClrListAdd    = AscDFH.historyitem_type_CCommonDataClrList | 1;
-	AscDFH.historyitem_CCommonDataClrListRemove = AscDFH.historyitem_type_CCommonDataClrList | 2;
-	AscDFH.historyitem_CCommonDataClrListHueDir = AscDFH.historyitem_type_CCommonDataClrList | 3;
-	AscDFH.historyitem_CCommonDataClrListMeth   = AscDFH.historyitem_type_CCommonDataClrList | 4;
-
 
 	AscDFH.historyitem_ViewPrGridSpacing        = AscDFH.historyitem_type_ViewPr | 1;
 	AscDFH.historyitem_ViewPrSlideViewerPr      = AscDFH.historyitem_type_ViewPr | 2;
@@ -4284,75 +3941,77 @@
 	AscDFH.historyitem_Series_SetLayoutId   = AscDFH.historyitem_type_Series | 8;
 	AscDFH.historyitem_Series_SetHidden     = AscDFH.historyitem_type_Series | 9;
 	AscDFH.historyitem_Series_SetOwnerIdx   = AscDFH.historyitem_type_Series | 10;
-	AscDFH.historyitem_Series_SetUniqueId   = AscDFH.historyitem_type_Series | 12;
+	AscDFH.historyitem_Series_SetUniqueId   = AscDFH.historyitem_type_Series | 11;
 	AscDFH.historyitem_Series_SetFormatIdx  = AscDFH.historyitem_type_Series | 12;
 
-	AscDFH.historyitem_SeriesElementVisibilities_SetConnectorLines = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_SeriesElementVisibilities_SetMeanLine       = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_SeriesElementVisibilities_SetMeanMarker     = AscDFH.historyitem_type_ViewPrScale | 3;
-	AscDFH.historyitem_SeriesElementVisibilities_SetNonoutliers    = AscDFH.historyitem_type_ViewPrScale | 4;
-	AscDFH.historyitem_SeriesElementVisibilities_SetOutliers       = AscDFH.historyitem_type_ViewPrScale | 5;
+	AscDFH.historyitem_SeriesElementVisibilities_SetConnectorLines = AscDFH.historyitem_type_SeriesElementVisibilities | 1;
+	AscDFH.historyitem_SeriesElementVisibilities_SetMeanLine       = AscDFH.historyitem_type_SeriesElementVisibilities | 2;
+	AscDFH.historyitem_SeriesElementVisibilities_SetMeanMarker     = AscDFH.historyitem_type_SeriesElementVisibilities | 3;
+	AscDFH.historyitem_SeriesElementVisibilities_SetNonoutliers    = AscDFH.historyitem_type_SeriesElementVisibilities | 4;
+	AscDFH.historyitem_SeriesElementVisibilities_SetOutliers       = AscDFH.historyitem_type_SeriesElementVisibilities | 5;
 
-	AscDFH.historyitem_SeriesLayoutProperties_SetParentLabelLayout = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_SeriesLayoutProperties_SetRegionLabelLayout = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_SeriesLayoutProperties_SetVisibility        = AscDFH.historyitem_type_ViewPrScale | 3;
-	AscDFH.historyitem_SeriesLayoutProperties_SetAggregation       = AscDFH.historyitem_type_ViewPrScale | 4;
-	AscDFH.historyitem_SeriesLayoutProperties_SetBinning           = AscDFH.historyitem_type_ViewPrScale | 5;
-	AscDFH.historyitem_SeriesLayoutProperties_SetGeography         = AscDFH.historyitem_type_ViewPrScale | 6;
-	AscDFH.historyitem_SeriesLayoutProperties_SetStatistics        = AscDFH.historyitem_type_ViewPrScale | 7;
-	AscDFH.historyitem_SeriesLayoutProperties_SetSubtotals         = AscDFH.historyitem_type_ViewPrScale | 8;
+	AscDFH.historyitem_SeriesLayoutProperties_SetParentLabelLayout = AscDFH.historyitem_type_SeriesLayoutProperties | 1;
+	AscDFH.historyitem_SeriesLayoutProperties_SetRegionLabelLayout = AscDFH.historyitem_type_SeriesLayoutProperties | 2;
+	AscDFH.historyitem_SeriesLayoutProperties_SetVisibility        = AscDFH.historyitem_type_SeriesLayoutProperties | 3;
+	AscDFH.historyitem_SeriesLayoutProperties_SetAggregation       = AscDFH.historyitem_type_SeriesLayoutProperties | 4;
+	AscDFH.historyitem_SeriesLayoutProperties_SetBinning           = AscDFH.historyitem_type_SeriesLayoutProperties | 5;
+	AscDFH.historyitem_SeriesLayoutProperties_SetGeography         = AscDFH.historyitem_type_SeriesLayoutProperties | 6;
+	AscDFH.historyitem_SeriesLayoutProperties_SetStatistics        = AscDFH.historyitem_type_SeriesLayoutProperties | 7;
+	AscDFH.historyitem_SeriesLayoutProperties_SetSubtotals         = AscDFH.historyitem_type_SeriesLayoutProperties | 8;
 
-	AscDFH.historyitem_Statistics_SetQuartileMethod    = AscDFH.historyitem_type_ViewPrScale | 1;
+	AscDFH.historyitem_Statistics_SetQuartileMethod    = AscDFH.historyitem_type_Statistics | 1;
 
-	AscDFH.historyitem_StringDimension_AddLevelData    = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_StringDimension_RemoveLevelData = AscDFH.historyitem_type_ViewPrScale | 2;
+	AscDFH.historyitem_StringDimension_AddLevelData    = AscDFH.historyitem_type_StringDimension | 1;
+	AscDFH.historyitem_StringDimension_RemoveLevelData = AscDFH.historyitem_type_StringDimension | 2;
 
-	AscDFH.historyitem_Subtotals_AddIdx    = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_Subtotals_RemoveIdx = AscDFH.historyitem_type_ViewPrScale | 2;
+	AscDFH.historyitem_Subtotals_AddIdx    = AscDFH.historyitem_type_Subtotals | 1;
+	AscDFH.historyitem_Subtotals_RemoveIdx = AscDFH.historyitem_type_Subtotals | 2;
 
-	AscDFH.historyitem_TextData_SetF = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_TextData_SetV = AscDFH.historyitem_type_ViewPrScale | 2;
+	AscDFH.historyitem_TextData_SetF = AscDFH.historyitem_type_TextData | 1;
+	AscDFH.historyitem_TextData_SetV = AscDFH.historyitem_type_TextData | 2;
 
-	AscDFH.historyitem_TickMarks_SetType = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_TickMarks_SetName = AscDFH.historyitem_type_ViewPrScale | 2;
+	AscDFH.historyitem_TickMarks_SetType = AscDFH.historyitem_type_TickMarks | 1;
+	AscDFH.historyitem_TickMarks_SetName = AscDFH.historyitem_type_TickMarks | 2;
 
-	AscDFH.historyitem_ValueAxisScaling_SetMax         = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_ValueAxisScaling_SetMin         = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_ValueAxisScaling_SetMajorUnit   = AscDFH.historyitem_type_ViewPrScale | 3;
-	AscDFH.historyitem_ValueAxisScaling_SetMinorUnit   = AscDFH.historyitem_type_ViewPrScale | 4;
+	AscDFH.historyitem_ValueAxisScaling_SetMax         = AscDFH.historyitem_type_ValueAxisScaling | 1;
+	AscDFH.historyitem_ValueAxisScaling_SetMin         = AscDFH.historyitem_type_ValueAxisScaling | 2;
+	AscDFH.historyitem_ValueAxisScaling_SetMajorUnit   = AscDFH.historyitem_type_ValueAxisScaling | 3;
+	AscDFH.historyitem_ValueAxisScaling_SetMinorUnit   = AscDFH.historyitem_type_ValueAxisScaling | 4;
 
-	AscDFH.historyitem_ValueColorEndPosition_SetExtremeValue = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_ValueColorEndPosition_SetNumber       = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_ValueColorEndPosition_SetPercent      = AscDFH.historyitem_type_ViewPrScale | 3;
+	AscDFH.historyitem_ValueColorEndPosition_SetExtremeValue = AscDFH.historyitem_type_ValueColorEndPosition | 1;
+	AscDFH.historyitem_ValueColorEndPosition_SetNumber       = AscDFH.historyitem_type_ValueColorEndPosition | 2;
+	AscDFH.historyitem_ValueColorEndPosition_SetPercent      = AscDFH.historyitem_type_ValueColorEndPosition | 3;
 
-	AscDFH.historyitem_ValueColorMiddlePosition_SetNumber  = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_ValueColorMiddlePosition_SetPercent = AscDFH.historyitem_type_ViewPrScale | 2;
+	AscDFH.historyitem_ValueColorMiddlePosition_SetNumber  = AscDFH.historyitem_type_ValueColorMiddlePosition | 1;
+	AscDFH.historyitem_ValueColorMiddlePosition_SetPercent = AscDFH.historyitem_type_ValueColorMiddlePosition | 2;
 
-	AscDFH.historyitem_ValueColorPositions_SetMin   = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_ValueColorPositions_SetMid   = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_ValueColorPositions_SetMax   = AscDFH.historyitem_type_ViewPrScale | 3;
-	AscDFH.historyitem_ValueColorPositions_SetCount = AscDFH.historyitem_type_ViewPrScale | 4;
+	AscDFH.historyitem_ValueColorPositions_SetMin   = AscDFH.historyitem_type_ValueColorPositions | 1;
+	AscDFH.historyitem_ValueColorPositions_SetMid   = AscDFH.historyitem_type_ValueColorPositions | 2;
+	AscDFH.historyitem_ValueColorPositions_SetMax   = AscDFH.historyitem_type_ValueColorPositions | 3;
+	AscDFH.historyitem_ValueColorPositions_SetCount = AscDFH.historyitem_type_ValueColorPositions | 4;
 
-	AscDFH.historyitem_ValueColors_SetMinColor = AscDFH.historyitem_type_ViewPrScale | 1;
-	AscDFH.historyitem_ValueColors_SetMidColor = AscDFH.historyitem_type_ViewPrScale | 2;
-	AscDFH.historyitem_ValueColors_SetMaxColor = AscDFH.historyitem_type_ViewPrScale | 3;
+	AscDFH.historyitem_ValueColors_SetMinColor = AscDFH.historyitem_type_ValueColors | 1;
+	AscDFH.historyitem_ValueColors_SetMidColor = AscDFH.historyitem_type_ValueColors | 2;
+	AscDFH.historyitem_ValueColors_SetMaxColor = AscDFH.historyitem_type_ValueColors | 3;
 	
 
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в PDF Forms
+	// Типы изменений в PDF Forms 
 	//------------------------------------------------------------------------------------------------------------------
 
 	AscDFH.historyitem_Pdf_Form_Value			= AscDFH.historyitem_type_Pdf_Form | 1;
 	AscDFH.historyitem_Pdf_Form_Add_Kid			= AscDFH.historyitem_type_Pdf_Form | 2;
 	AscDFH.historyitem_Pdf_Form_Remove_Kid		= AscDFH.historyitem_type_Pdf_Form | 3;
+	AscDFH.historyitem_Pdf_Form_Change_Display	= AscDFH.historyitem_type_Pdf_Form | 4;
 	
 	AscDFH.historyitem_Pdf_List_Form_Cur_Idxs	= AscDFH.historyitem_type_Pdf_List_Form | 1;
+	AscDFH.historyitem_Pdf_List_Form_Top_Idx	= AscDFH.historyitem_type_Pdf_List_Form | 2;
 
 
 	AscDFH.historyitem_Pdf_Pushbutton_Image		= AscDFH.historyitem_type_Pdf_Pushbutton | 1;
-
+	
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в PDF Annots
+	// Типы изменений в PDF Annots 
 	//------------------------------------------------------------------------------------------------------------------
 
 	// Common
@@ -4360,43 +4019,62 @@
 	AscDFH.historyitem_Pdf_Annot_Pos				= AscDFH.historyitem_type_Pdf_Annot | 2;
 	AscDFH.historyitem_Pdf_Annot_Contents			= AscDFH.historyitem_type_Pdf_Annot | 3;
 	AscDFH.historyitem_Pdf_Annot_Page				= AscDFH.historyitem_type_Pdf_Annot | 4;
-	AscDFH.historyitem_Pdf_Annot_Replies			= AscDFH.historyitem_type_Pdf_Annot | 5;
-	AscDFH.historyitem_Pdf_Annot_RD					= AscDFH.historyitem_type_Pdf_Annot | 6;
-	AscDFH.historyitem_Pdf_Annot_Vertices			= AscDFH.historyitem_type_Pdf_Annot | 7;
+	AscDFH.historyitem_Pdf_Annot_RD					= AscDFH.historyitem_type_Pdf_Annot | 5;
+	AscDFH.historyitem_Pdf_Annot_Vertices			= AscDFH.historyitem_type_Pdf_Annot | 6;
+	AscDFH.historyitem_Pdf_Annot_Creation_Date		= AscDFH.historyitem_type_Pdf_Annot | 7;
+	AscDFH.historyitem_Pdf_Annot_Mod_Date			= AscDFH.historyitem_type_Pdf_Annot | 8;
+	AscDFH.historyitem_Pdf_Annot_Author				= AscDFH.historyitem_type_Pdf_Annot | 9;
+	AscDFH.historyitem_Pdf_Annot_Display			= AscDFH.historyitem_type_Pdf_Annot | 10;
+	AscDFH.historyitem_Pdf_Annot_Name				= AscDFH.historyitem_type_Pdf_Annot | 11;
+	AscDFH.historyitem_Pdf_Annot_File_Idx			= AscDFH.historyitem_type_Pdf_Annot | 12;
+	AscDFH.historyitem_Pdf_Annot_Stroke				= AscDFH.historyitem_type_Pdf_Annot | 13;
+	AscDFH.historyitem_Pdf_Annot_StrokeWidth		= AscDFH.historyitem_type_Pdf_Annot | 14;
+	AscDFH.historyitem_Pdf_Annot_Fill				= AscDFH.historyitem_type_Pdf_Annot | 15;
+	AscDFH.historyitem_Pdf_Annot_Opacity			= AscDFH.historyitem_type_Pdf_Annot | 16;
+	AscDFH.historyitem_Pdf_Annot_Quads				= AscDFH.historyitem_type_Pdf_Annot | 17;
+	AscDFH.historyitem_Pdf_Annot_Intent				= AscDFH.historyitem_type_Pdf_Annot | 18;
+	AscDFH.historyitem_Pdf_Annot_Rotate				= AscDFH.historyitem_type_Pdf_Annot | 19;
 
 	// Comment
 	AscDFH.historyitem_Pdf_Comment_Data			= AscDFH.historyitem_type_Pdf_Comment | 1;
 
 	// Ink
-	AscDFH.historyitem_Pdf_Ink_Points			= AscDFH.historyitem_type_Pdf_Ink | 1;
-	AscDFH.historyitem_Pdf_Ink_FlipV			= AscDFH.historyitem_type_Pdf_Ink | 2;
-	AscDFH.historyitem_Pdf_Ink_FlipH			= AscDFH.historyitem_type_Pdf_Ink | 3;
+	AscDFH.historyitem_Pdf_Ink_Points			= AscDFH.historyitem_type_Pdf_Annot_Ink | 1;
+	AscDFH.historyitem_Pdf_Ink_FlipV			= AscDFH.historyitem_type_Pdf_Annot_Ink | 2;
+	AscDFH.historyitem_Pdf_Ink_FlipH			= AscDFH.historyitem_type_Pdf_Annot_Ink | 3;
 
 	// FreeText
-	AscDFH.historyitem_Pdf_FreeText_CL			= AscDFH.historyitem_Pdf_FreeText | 1;
-	AscDFH.historyitem_Pdf_FreeText_RC			= AscDFH.historyitem_Pdf_FreeText | 2;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_CL			= AscDFH.historyitem_type_Pdf_Annot_FreeText | 1;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_RC			= AscDFH.historyitem_type_Pdf_Annot_FreeText | 2;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_Align		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 3;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_Rotate		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 4;
 
 	// annot line
-	AscDFH.historyitem_Pdf_Line_Points			= AscDFH.historyitem_type_Pdf_Line | 1;
-
+	AscDFH.historyitem_Pdf_Line_Points			= AscDFH.historyitem_type_Pdf_Annot_Line | 1;
+	
+	// annot stamp
+	AscDFH.historyitem_Pdf_Stamp_Type			= AscDFH.historyitem_type_Pdf_Annot_Stamp | 1;
+	
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в PDF Text Shape 
+	// Типы изменений в PDF drawing prototype
 	//------------------------------------------------------------------------------------------------------------------
 
-	AscDFH.historyitem_Pdf_Drawing_Rect	= AscDFH.historyitem_Pdf_Drawing | 0;
-	AscDFH.historyitem_Pdf_Drawing_Page	= AscDFH.historyitem_Pdf_Drawing | 1;
-	AscDFH.historyitem_Pdf_Drawing_Rot	= AscDFH.historyitem_Pdf_Drawing | 2;
+	AscDFH.historyitem_type_Pdf_Drawing_Page		= AscDFH.historyitem_type_Pdf_Drawing | 1;
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в классе CPDFDoc
 	//------------------------------------------------------------------------------------------------------------------
-	window['AscDFH'].historyitem_PDF_Document_AddItem					= window['AscDFH'].historyitem_type_PDF_Document | 1;
-	window['AscDFH'].historyitem_PDF_Document_RemoveItem				= window['AscDFH'].historyitem_type_PDF_Document | 2;
-	window['AscDFH'].historyitem_PDF_Document_AddPage					= window['AscDFH'].historyitem_type_PDF_Document | 3;
-	window['AscDFH'].historyitem_PDF_Document_RemovePage				= window['AscDFH'].historyitem_type_PDF_Document | 4;
-	window['AscDFH'].historyitem_PDF_Document_RotatePage				= window['AscDFH'].historyitem_type_PDF_Document | 5;
-	window['AscDFH'].historyitem_PDF_Document_RecognizePage				= window['AscDFH'].historyitem_type_PDF_Document | 6;
-	window['AscDFH'].historyitem_PDF_Document_ChangePosInTree			= window['AscDFH'].historyitem_type_PDF_Document | 7;
+	window['AscDFH'].historyitem_PDF_Document_AnnotsContent   = window['AscDFH'].historyitem_type_PDF_Document | 1;
+	window['AscDFH'].historyitem_PDF_Document_DrawingsContent = window['AscDFH'].historyitem_type_PDF_Document | 2;
+	window['AscDFH'].historyitem_PDF_Document_FieldsContent   = window['AscDFH'].historyitem_type_PDF_Document | 3;
+	window['AscDFH'].historyitem_PDF_Document_PagesContent    = window['AscDFH'].historyitem_type_PDF_Document | 4;
+	window['AscDFH'].historyitem_PDF_Document_RotatePage      = window['AscDFH'].historyitem_type_PDF_Document | 5;
+	window['AscDFH'].historyitem_PDF_Document_RecognizePage   = window['AscDFH'].historyitem_type_PDF_Document | 6;
+	window['AscDFH'].historyitem_PDF_Document_SetDocument     = window['AscDFH'].historyitem_type_PDF_Document | 7;
+
+
+	AscDFH.historyitem_CustomPropertiesAddProperty = AscDFH.historyitem_type_CustomProperties | 0;
+	AscDFH.historyitem_CustomPropertiesRemoveProperty = AscDFH.historyitem_type_CustomProperties | 1;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4405,6 +4083,7 @@
 	//
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	window['AscDFH'].historydescription_Unknown                                     = 0x0000;
 	window['AscDFH'].historydescription_Cut                                         = 0x0001;
 	window['AscDFH'].historydescription_PasteButtonIE                               = 0x0002;
 	window['AscDFH'].historydescription_PasteButtonNotIE                            = 0x0003;
@@ -4848,6 +4527,30 @@
 	window['AscDFH'].historydescription_Document_AddComplexField                    = 0x01b4;
 	window['AscDFH'].historydescription_Document_EditComplexFieldInstruction        = 0x01b5;
 	window['AscDFH'].historydescription_Collaborative_DeletedTextRecovery           = 0x01b6;
+	window['AscDFH'].historydescription_Document_AutoCorrectMath                    = 0x01b7;
+
+	window['AscDFH'].historydescription_CustomProperties_Add                        = 0x01b8;
+	window['AscDFH'].historydescription_CustomProperties_Remove                     = 0x01b9;
+	window['AscDFH'].historydescription_CustomProperties_Modify                     = 0x01c0;
+	// pdf
+	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
+	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;
+	window['AscDFH'].historydescription_Pdf_AddPage				= 0x29c;
+	window['AscDFH'].historydescription_Pdf_RemovePage			= 0x29d;
+	window['AscDFH'].historydescription_Pdf_AddHighlightAnnot	= 0x29e;
+	window['AscDFH'].historydescription_Pdf_EraseInk			= 0x29f;
+	window['AscDFH'].historydescription_Pdf_RemoveComment		= 0x2a0;
+	window['AscDFH'].historydescription_Pdf_EditPage			= 0x2a1;
+	window['AscDFH'].historydescription_Pdf_ContextMenuRemove	= 0x2a2;
+	window['AscDFH'].historydescription_Pdf_RotatePage			= 0x2a3;
+	window['AscDFH'].historydescription_Pdf_UpdateAnnotRC		= 0x2a4;
+	window['AscDFH'].historydescription_Pdf_ClickCheckbox		= 0x2a5;
+	window['AscDFH'].historydescription_Pdf_FieldCommit			= 0x2a6;
+	window['AscDFH'].historydescription_Pdf_FieldImportImage	= 0x2a6;
+	window['AscDFH'].historydescription_Pdf_FieldSelectOption	= 0x2a7;
+	window['AscDFH'].historydescription_Pdf_ExecActions			= 0x2a8;
+	window['AscDFH'].historydescription_Pdf_FreeTextFitTextBox	= 0x2a9;
+	window['AscDFH'].historydescription_Pdf_AddComment			= 0x2b0;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4991,6 +4694,13 @@
 	CChangesBaseContentChange.prototype.IsContentChange = function()
 	{
 		return true;
+	};
+	CChangesBaseContentChange.prototype.GetContentChangesClass = function()
+	{
+		if (this.Class && this.Class.m_oContentChanges)
+			return this.Class.m_oContentChanges;
+		
+		return null;
 	};
 	CChangesBaseContentChange.prototype.IsAdd = function()
 	{

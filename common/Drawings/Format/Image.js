@@ -173,6 +173,19 @@
 				return this.blipFill.RasterImageId;
 			return null;
 		};
+		CImageShape.prototype.getTransparent = function () {
+			if (isRealObject(this.blipFill)) {
+				return this.blipFill.getTransparent();
+			}
+			return null;
+		};
+		CImageShape.prototype.setTransparent = function (v) {
+			if(this.blipFill) {
+				let oNewBlipFill = this.blipFill.createDuplicate();
+				oNewBlipFill.setTransparent(v);
+				this.setBlipFill(oNewBlipFill);
+			}
+		};
 
 		CImageShape.prototype.getSnapArrays = function (snapX, snapY) {
 			var transform = this.getTransformMatrix();
@@ -286,6 +299,41 @@
 			ret.setParent(null);
 			ret.setBDeleted(false);
 			return ret;
+		};
+
+		CImageShape.prototype.convertToPdf = function () {
+			let copy = new AscPDF.CPdfImage();
+			
+			copy.setParent(null);
+			copy.setBDeleted(false);
+
+			if (this.nvPicPr) {
+				copy.setNvPicPr(this.nvPicPr.createDuplicate());
+			}
+			if (this.spPr) {
+				copy.setSpPr(this.spPr.createDuplicate());
+				copy.spPr.setParent(copy);
+			}
+			if (this.blipFill) {
+				copy.setBlipFill(this.blipFill.createDuplicate());
+			}
+			if (this.style) {
+				copy.setStyle(this.style.createDuplicate());
+			}
+			if (this.macro !== null) {
+				copy.setMacro(this.macro);
+			}
+			if (this.textLink !== null) {
+				copy.setTextLink(this.textLink);
+			}
+			if (this.clientData) {
+				copy.setClientData(this.clientData.createDuplicate());
+			}
+			if (this.fLocksText !== null) {
+				copy.setFLocksText(this.fLocksText);
+			}
+			copy.setLocks(this.locks);
+			return copy;
 		};
 
 		CImageShape.prototype.recalculateBrush = CShape.prototype.recalculateBrush;
@@ -460,7 +508,7 @@
 
 		CImageShape.prototype.recalculateGeometry = function () {
 			this.calcGeometry = null;
-			if (isRealObject(this.spPr.geometry)) {
+			if (isRealObject(this.spPr && this.spPr.geometry)) {
 				this.calcGeometry = this.spPr.geometry;
 			} else {
 				var hierarchy = this.getHierarchy();
@@ -619,6 +667,26 @@
 				stroke.Fill.convertToPPTXMods();
 			}
 			this.spPr.setLn(stroke);
+		};
+		CImageShape.prototype.changeFill = function (unifill) {
+
+			if (this.recalcInfo.recalculateBrush) {
+				this.recalculateBrush();
+			}
+			var unifill2 = AscFormat.CorrectUniFill(unifill, this.brush, this.getEditorType());
+			unifill2.convertToPPTXMods();
+			this.setFill(unifill2);
+		};
+		CImageShape.prototype.setFill = function (fill) {
+
+			this.spPr.setFill(fill);
+		};
+
+		CImageShape.prototype.hasCrop = function () {
+			if(this.blipFill && this.blipFill.srcRect) {
+				return true;
+			}
+			return false;
 		};
 
 
@@ -847,14 +915,10 @@
 			}
 			var oBrush = new AscFormat.CUniFill();
 			oBrush.fill = oBlipFill;
-			if (Array.isArray(oBlipFill.Effects)) {
-				for (var nEffect = 0; nEffect < oBlipFill.Effects.length; ++nEffect) {
-					var oEffect = oBlipFill.Effects[nEffect];
-					if (oEffect && oEffect instanceof AscFormat.CAlphaModFix && AscFormat.isRealNumber(oEffect.amt)) {
-						oBrush.setTransparent(255 * oEffect.amt / 100000);
-						break;
-					}
-				}
+
+			let nTransparent = oBlipFill.getTransparent();
+			if(AscFormat.isRealNumber(nTransparent)) {
+				oBrush.setTransparent(nTransparent);
 			}
 			return oBrush;
 		}

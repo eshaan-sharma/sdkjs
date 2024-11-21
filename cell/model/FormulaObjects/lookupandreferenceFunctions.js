@@ -1254,7 +1254,7 @@ function (window, undefined) {
 			if (cElementType.cell !== pivot_table_ref.type && cElementType.cell3D !== pivot_table_ref.type && cElementType.cellsRange !== pivot_table_ref.type && cElementType.cellsRange3D !== pivot_table_ref.type) {
 				return refError;
 			}
-			let worksheet = pivot_table_ref.ws;
+			let worksheet = pivot_table_ref.getWS();
 			let bbox = pivot_table_ref.getBBox0();
 
 			let pivotTables = worksheet.getPivotTablesIntersectingRange(bbox);
@@ -1359,19 +1359,9 @@ function (window, undefined) {
 	cHLOOKUP.prototype.arrayIndexes = {0: 1, 1: 1, 2: 1};
 	cHLOOKUP.prototype.argumentsType = [argType.any, argType.number, argType.number, argType.logical];
 	cHLOOKUP.prototype.Calculate = function (arg) {
-		
-		// if(this.bArrayFormula) {
-		// 	//исключение, когда в формуле массива берется из одного аргумента только 1 элемент
-		// 	if(cElementType.cellsRange3D === arg[2].type || cElementType.cellsRange === arg[2].type) {
-		// 		arg[2] = arg[2].getValue2(0,0);
-		// 	} else if(cElementType.array === arg[2].type) {
-		// 		arg[2] = arg[2].getValue2(0,0);
-		// 	}
-		// }
-		
 		let retArr = new cArray();
 		let error = false;
-		if (arg[0].type === cElementType.cellsRange || arg[0].type === cElementType.cellsRange3D || arg[0].type === cElementType.array) {
+		if (arg[0].type === cElementType.array) {
 			if (arg[2] && arg[2].type === cElementType.cellsRange || arg[2].type === cElementType.cellsRange3D || arg[2].type === cElementType.array) {
 				arg[2] = arg[2].getValue2(0,0);
 			}
@@ -1383,10 +1373,10 @@ function (window, undefined) {
 				}
 			}
 
-			return retArr
+			return retArr;
 		}
 
-		if (arg[2] && (arg[2].type === cElementType.cellsRange || arg[2].type === cElementType.cellsRange3D || arg[2].type === cElementType.array)) {
+		if (arg[2] && (arg[2].type === cElementType.array)) {
 			let dimension = arg[2].getDimensions();
 			for (let r = 0; r < dimension.row; r++) {
 				retArr.addRow();
@@ -1770,9 +1760,26 @@ function (window, undefined) {
 	cLOOKUP.prototype.name = 'LOOKUP';
 	cLOOKUP.prototype.argumentsMin = 2;
 	cLOOKUP.prototype.argumentsMax = 3;
-	cLOOKUP.prototype.arrayIndexes = {1: 1, 2: 1};
+	cLOOKUP.prototype.arrayIndexes = {0: 1, 1: 1, 2: 1};
 	cLOOKUP.prototype.argumentsType = [argType.any, argType.reference, argType.reference];
 	cLOOKUP.prototype.Calculate = function (arg) {
+
+		if (!AscCommonExcel.bIsSupportDynamicArrays && arg[0].type === cElementType.cellsRange || arg[0].type === cElementType.cellsRange3D) {
+			arg[0] = arg[0].isOneElement() ? arg[0].getFirstElement() : arg[0].cross(arguments[1]);
+		} else if (arg[0].type === cElementType.array) {
+			let retArr = new cArray();
+			let dimension = arg[0].getDimensions();
+
+			for (let r = 0; r < dimension.row; r++) {
+				retArr.addRow();
+				for (let c = 0; c < dimension.col; c++) {
+					retArr.addElement(g_oLOOKUPCache.calculate([arg[0].getValue2(r, c), arg[1], arg[2]], arguments[1]));
+				}
+			}
+			return retArr;
+		}
+
+
 		return g_oLOOKUPCache.calculate(arg, arguments[1]);
 	};
 
@@ -2879,6 +2886,18 @@ function (window, undefined) {
 		let t = this, number, valueForSearching, r, c, res = -1, min, regexp, count;
 
 		if (!opt_xlookup) {
+			if (cElementType.cell3D === arg2.type || cElementType.cell === arg2.type) {
+				arg2 = arg2.getValue();
+			} else if (cElementType.array === arg2.type) {
+				arg2 = arg2.getElementRowCol(0, 0);
+			} else if (cElementType.cellsRange === arg2.type || cElementType.cellsRange3D === arg2.type) {
+				arg2 = arg2.cross(argument1);
+			}
+
+			if (cElementType.error === arg2.type) {
+				return arg2;
+			}
+
 			number = arg2.getValue() - 1;
 
 			if (isNaN(number)) {
@@ -3953,7 +3972,7 @@ function (window, undefined) {
 			arg0 = arg0.getElementRowCol(0, 0);
 		}
 
-		if (cElementType.cell === arg0.type) {
+		if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
 			arg0 = arg0.getValue();
 		}
 		if (cElementType.error === arg0.type) {
@@ -3992,7 +4011,7 @@ function (window, undefined) {
 		// variants check:
 		/* arg1 is not array/area */
 		if ( !(cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type || cElementType.array === arg1.type) ) {
-			if (arg1.type === cElementType.cell) {
+			if (arg1.type === cElementType.cell || arg1.type === cElementType.cell3D) {
 				arg1 = arg1.getValue();
 			}
 			if (arg1.type === cElementType.error) {
@@ -4006,7 +4025,7 @@ function (window, undefined) {
 
 				arg2 = arg2.getFirstElement();
 			}
-			if (arg2.type === cElementType.cell) {
+			if (arg2.type === cElementType.cell || arg2.type === cElementType.cell3D) {
 				arg2 = arg2.getValue();
 			}
 			if (arg2.type === cElementType.error) {
@@ -4188,26 +4207,15 @@ function (window, undefined) {
 	cVLOOKUP.prototype.name = 'VLOOKUP';
 	cVLOOKUP.prototype.argumentsMin = 3;
 	cVLOOKUP.prototype.argumentsMax = 4;
-	cVLOOKUP.prototype.arrayIndexes = {0: 1, 1: 1, 2: 1};
+	cVLOOKUP.prototype.arrayIndexes = {/*0: 1,*/ 1: 1, /*2: 1*/};
 	cVLOOKUP.prototype.numFormat = AscCommonExcel.cNumFormatNone;
+	// cVLOOKUP.prototype.returnValueType = AscCommonExcel.cReturnFormulaType.value_replace_area;
 	cVLOOKUP.prototype.argumentsType = [argType.any, argType.number, argType.number, argType.logical];
 	cVLOOKUP.prototype.Calculate = function (arg) {
-
-		/*
-		if(this.bArrayFormula) {
-		 	//в случае когда первый аргумент - массив
-			//исключение, когда в формуле массива берется из одного аргумента только 1 элемент
-			if(cElementType.cellsRange3D === arg[2].type || cElementType.cellsRange === arg[2].type) {
-				arg[2] = arg[2].getValue2(0,0);
-			} else if(cElementType.array === arg[2].type) {
-				arg[2] = arg[2].getValue2(0,0);
-			}
-		}
-		*/
 		let retArr = new cArray();
 		let error = false;
 
-		if (arg[0].type === cElementType.cellsRange || arg[0].type === cElementType.cellsRange3D || arg[0].type === cElementType.array) {
+		if (arg[0].type === cElementType.array) {
 			if (arg[2] && arg[2].type === cElementType.cellsRange || arg[2].type === cElementType.cellsRange3D || arg[2].type === cElementType.array) {
 				arg[2] = arg[2].getValue2(0,0);
 			}
@@ -4219,10 +4227,10 @@ function (window, undefined) {
 				}
 			}
 
-			return retArr
+			return retArr;
 		}
 
-		if (arg[2] && (arg[2].type === cElementType.cellsRange || arg[2].type === cElementType.cellsRange3D || arg[2].type === cElementType.array)) {
+		if (arg[2] && (arg[2].type === cElementType.array)) {
 			let dimension = arg[2].getDimensions();
 			for (let r = 0; r < dimension.row; r++) {
 				retArr.addRow();
@@ -4230,11 +4238,11 @@ function (window, undefined) {
 					if (!error) {
 						let res = g_oVLOOKUPCache.calculate([arg[0], arg[1], arg[2].getValue2(r, c), arg[3]], arguments[1]);
 						if (res.type === cElementType.error) {
-							error = true
+							error = true;
 						}
 						retArr.addElement(res);
 					} else {
-						break
+						break;
 					}
 				}
 			}
@@ -4382,10 +4390,6 @@ function (window, undefined) {
 						_res = _range.isOneCell() ? new cRef(rangeName, arg2.getWS()) : new cArea(rangeName, arg2.getWS());
 					} else {
 						_res = _range.isOneCell() ?  new cRef3D(rangeName, arg2.getWS()) : new cArea3D(rangeName, arg2.getWS());
-					}
-
-					if (_res.type === cElementType.cellsRange || _res.type === cElementType.cellsRange3D) {
-						_res = _res.getFullArray();
 					}
 
 					return _res;
@@ -4548,7 +4552,12 @@ function (window, undefined) {
 		if (arg1.type === arg1.empty) {
 			return new cError(cErrorType.wrong_value_type);
 		}
-		arg1 = arg1.toArray();
+
+		if (arg1.type === cElementType.cellsRange3D) {
+			arg1 = arg1.toArray()[0];
+		} else {
+			arg1 = arg1.toArray();
+		}
 
 		//Excel returns a #NUM when array is too large.
 		let elemCount = arg1.length * arg1[0].length;
