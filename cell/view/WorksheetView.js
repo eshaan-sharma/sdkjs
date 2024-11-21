@@ -1164,8 +1164,8 @@
 		//new scroll - calculate height before vr
 		let beforeVisibleRangeHeight = this._getRowTop(this.visibleRange.r1) - this.cellsTop;
 
-
-		beforeVisibleRangeHeight += this.getScrollCorrect();
+		//TODO mobile 2x -> if *this.getRetinaPixelRatio() -> slow horizontal scroll
+		beforeVisibleRangeHeight += this.getScrollCorrect()*this.getRetinaPixelRatio();
 		let defaultScrollPxStep = Asc.round(this.getVScrollStep());
 		return defaultScrollPxStep === 0 ? 0 : ((beforeVisibleRangeHeight - frozenVisibleRangeHeight)/defaultScrollPxStep) / this.getRetinaPixelRatio();
 	};
@@ -10269,19 +10269,39 @@
 		}
     };
 
+	window.isReverse;
     WorksheetView.prototype.scrollVertical = function (delta, editor, initRowsCount) {
 		let t = this;
         var vr = this.visibleRange;
         var fixStartRow = new asc_Range(vr.c1, vr.r1, vr.c2, vr.r1);
 
+
+
 		let isReverse = delta < 0;
 		let unitDeltaStep = Asc.round(this.getVScrollStep());
 
+
+
 		let defaultScrollPxStep = unitDeltaStep * Math.abs(delta);
 		if (defaultScrollPxStep < 1) {
+			console.log("ahtung")
 			return;
 		}
 		defaultScrollPxStep = Math.floor(defaultScrollPxStep);
+
+		if (isReverse) {
+			if (!window.valReverse) {
+				window.valReverse = 0;
+			}
+			window.valReverse += defaultScrollPxStep;
+		} else {
+			if (!window.val) {
+				window.val = 0;
+			}
+			window.val += defaultScrollPxStep;
+		}
+
+		console.log("window.val: " + window.val + " window.valReverse: " + window.valReverse)
 
 		let deltaRows = 0, deltaCorrect = 0;
 		let currentScrollCorrect = this.getScrollCorrect();
