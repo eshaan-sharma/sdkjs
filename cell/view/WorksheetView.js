@@ -10824,14 +10824,14 @@
         ctxW - (this._getColLeft(oldEnd) - leftOldStart + this.cellsLeft + diffWidth) : 0;
 
 
-		this._startRtlRendering();
+		this._startRtlRendering(null);
 		this._startRtlDrawingRendering();
 
 
         // Перемещаем область
         var moveWidth = oldW - lastColWidth;
         if (moveWidth > 0) {
-            ctx.drawImage(ctx.getCanvas(), x + this.getRightToLeftOffset(), y, moveWidth, ctxH, x - dx + this.getRightToLeftOffset(), y, moveWidth, ctxH);
+            this._drawImage(ctx, ctx.getCanvas(), x + this.getRightToLeftOffset(), y, moveWidth, ctxH, x - dx + this.getRightToLeftOffset(), y, moveWidth, ctxH);
 
             // Заглушка для safari (http://bugzilla.onlyoffice.com/show_bug.cgi?id=25546). Режим 'copy' сначала затирает, а
             // потом рисует (а т.к. мы рисуем сами на себе, то уже картинка будет пустой)
@@ -26835,8 +26835,11 @@
 		sheetViewSettings.rightToLeft = val;
 	};
 
-	WorksheetView.prototype._startRtlRendering = function (ctx) {
-		return;
+	WorksheetView.prototype._startRtlRendering = function (ctx, test) {
+		if (!test) {
+			return;
+		}
+
 		if (!ctx) {
 			ctx = this.drawingCtx;
 		}
@@ -26996,6 +26999,10 @@
 	};*/
 	WorksheetView.prototype._strokeRect = function (ctx, x, y, w, h) {
 		ctx.strokeRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._drawImage = function (ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
+		ctx.drawImage(img, this.getRightToLeft() ? (this.getCtxWidth(ctx) - sx - sw) : sx, sy, sw, sh, this.getRightToLeft() ? (this.getCtxWidth(ctx) - dx - dw) : dx, dy, dw, dh);
 		return ctx;
 	};
 
