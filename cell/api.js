@@ -1327,6 +1327,7 @@ var editor;
 					} else {
 						cp['data'] = dataUint;
 					}
+					cp['delimiter'] = AscCommon.getCSVDelimiter(cp['data']);
 				}
 				if (data.buffer) {
 					applyBuffer(data);

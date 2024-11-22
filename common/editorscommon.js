@@ -251,7 +251,42 @@
 	function getIndex(str, substring, n) {
 		return str.split(substring).slice(0, n).join(substring).length;
 	}
+	function getCSVDelimiter(data) {
+		const slice = data.slice(0, 200);
+		const quote = 34;
+		const delimiters = Object.keys(AscCommon.c_oAscCsvDelimiter);
+		const delimitersMap = new Map();
+		delimitersMap.set(9, AscCommon.c_oAscCsvDelimiter.Tab);
+		delimitersMap.set(59, AscCommon.c_oAscCsvDelimiter.Semicolon);
+		delimitersMap.set(124, AscCommon.c_oAscCsvDelimiter.Colon);
+		delimitersMap.set(44, AscCommon.c_oAscCsvDelimiter.Comma);
+		const counter = {
+			44: 0,
+			9: 0,
+			59: 0,
+			124: 0
+		}
+		let isQuoteOpen = false;
+		slice.forEach(function(sym) {
+			if (sym === quote) {
+				isQuoteOpen = !isQuoteOpen;
+			}
+			if (!isQuoteOpen && delimitersMap.has(sym)) {
+				counter[sym] += 1;
+			}
+		});
 
+		let max = 0;
+		let result = AscCommon.c_oAscCsvDelimiter.Comma;
+		for (let i in counter) {
+			if (counter[i] > max) {
+				max = counter[i];
+				result = i;
+			}
+		}
+
+		return delimitersMap.get(Number(result));
+	}
 	function getEncodingParams()
 	{
 		var res = [];
@@ -14662,6 +14697,7 @@
 	window["AscCommon"].getBaseUrlPathname = getBaseUrlPathname;
 	window["AscCommon"].getIndex = getIndex;
 	window["AscCommon"].getEncodingParams = getEncodingParams;
+	window["AscCommon"].getCSVDelimiter = getCSVDelimiter;
 	window["AscCommon"].getEncodingByBOM = getEncodingByBOM;
 	window["AscCommon"].saveWithParts = saveWithParts;
 	window["AscCommon"].loadFileContent = loadFileContent;
