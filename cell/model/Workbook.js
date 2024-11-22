@@ -5400,6 +5400,10 @@
 	};
 
 	Workbook.prototype.getExternalReferenceByReferenceData = function (referenceData, returnIndex) {
+		if (!referenceData) {
+			return null;
+		}
+
 		for (let i = 0; i < this.externalReferences.length; i++) {
 			if (this.externalReferences[i].referenceData) {
 				if (this.externalReferences[i].referenceData["fileKey"] === referenceData["fileKey"] && this.externalReferences[i].referenceData["instanceId"] === referenceData["instanceId"]) {
