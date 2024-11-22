@@ -1515,50 +1515,50 @@ function CEditorPage(api)
 
 	this.zoom_Fire = function(type)
 	{
-		if (false === oThis.m_oApi.bInit_word_control)
-			return;
-
-		this.m_nZoomType = type;
-
-		// нужно проверить режим и сбросить кеш грамотно (ie version)
-		AscCommon.g_fontManager.ClearRasterMemory();
-
-		var oWordControl = oThis;
-
-		oWordControl.m_bIsRePaintOnScroll = false;
-		var dPosition                     = 0;
-		if (oWordControl.m_dScrollY_max != 0)
-		{
-			dPosition = oWordControl.m_dScrollY / oWordControl.m_dScrollY_max;
-		}
-		oWordControl.CheckZoom();
-		oWordControl.CalculateDocumentSize();
-		var lCurPage = oWordControl.m_oLogicDocument.getCurrentPage();
-		//var lCurPage = oWordControl.m_oDrawingDocument.SlideCurrent;
-
-		this.GoToPage(lCurPage, true);
-		this.ZoomFreePageNum = lCurPage;
-
-		if (-1 != lCurPage)
-		{
-			this.CreateBackgroundHorRuler();
-			oWordControl.m_bIsUpdateHorRuler = true;
-			this.CreateBackgroundVerRuler();
-			oWordControl.m_bIsUpdateVerRuler = true;
-		}
-		var lPosition = parseInt(dPosition * oWordControl.m_oScrollVerApi.getMaxScrolledY());
-		oWordControl.m_oScrollVerApi.scrollToY(lPosition);
-
-		this.ZoomFreePageNum = -1;
-
-		oWordControl.m_oApi.sync_zoomChangeCallback(this.m_nZoomValue, type);
-		oWordControl.m_bIsUpdateTargetNoAttack = true;
-		oWordControl.m_bIsRePaintOnScroll      = true;
-
-		oWordControl.OnScroll();
-
-		if (this.MobileTouchManager)
-			this.MobileTouchManager.Resize_After();
+		// if (false === oThis.m_oApi.bInit_word_control)
+		// 	return;
+		//
+		// this.m_nZoomType = type;
+		//
+		// // нужно проверить режим и сбросить кеш грамотно (ie version)
+		// AscCommon.g_fontManager.ClearRasterMemory();
+		//
+		// var oWordControl = oThis;
+		//
+		// oWordControl.m_bIsRePaintOnScroll = false;
+		// var dPosition                     = 0;
+		// if (oWordControl.m_dScrollY_max != 0)
+		// {
+		// 	dPosition = oWordControl.m_dScrollY / oWordControl.m_dScrollY_max;
+		// }
+		// oWordControl.CheckZoom();
+		// oWordControl.CalculateDocumentSize();
+		// var lCurPage = oWordControl.m_oLogicDocument.getCurrentPage();
+		// //var lCurPage = oWordControl.m_oDrawingDocument.SlideCurrent;
+		//
+		// this.GoToPage(lCurPage, true);
+		// this.ZoomFreePageNum = lCurPage;
+		//
+		// if (-1 != lCurPage)
+		// {
+		// 	this.CreateBackgroundHorRuler();
+		// 	oWordControl.m_bIsUpdateHorRuler = true;
+		// 	this.CreateBackgroundVerRuler();
+		// 	oWordControl.m_bIsUpdateVerRuler = true;
+		// }
+		// var lPosition = parseInt(dPosition * oWordControl.m_oScrollVerApi.getMaxScrolledY());
+		// oWordControl.m_oScrollVerApi.scrollToY(lPosition);
+		//
+		// this.ZoomFreePageNum = -1;
+		//
+		// oWordControl.m_oApi.sync_zoomChangeCallback(this.m_nZoomValue, type);
+		// oWordControl.m_bIsUpdateTargetNoAttack = true;
+		// oWordControl.m_bIsRePaintOnScroll      = true;
+		//
+		// oWordControl.OnScroll();
+		//
+		// if (this.MobileTouchManager)
+		// 	this.MobileTouchManager.Resize_After();
 	};
 
 	this.zoom_Out = function()
@@ -3470,7 +3470,7 @@ function CEditorPage(api)
 		drDoc.SlideCurrent   = lPageNum;
 		this.m_oLogicDocument.setCurrentPage(lPageNum);
 
-		this.SlideDrawer.CheckSlide(drDoc.SlideCurrent);
+		// this.SlideDrawer.CheckSlide(drDoc.SlideCurrent);
 
 		if (true !== isFromZoom)
 		{
@@ -3520,11 +3520,11 @@ function CEditorPage(api)
 			//this.m_oLogicDocument.MoveCursorToXY(0, 0, false);
 			this.m_oLogicDocument.RecalculateCurPos();
 
-			this.m_oApi.sync_currentPageCallback(drDoc.SlideCurrent);
+			// this.m_oApi.sync_currentPageCallback(drDoc.SlideCurrent);
 		}
 		else
 		{
-			this.m_oApi.sync_currentPageCallback(drDoc.SlideCurrent);
+			// this.m_oApi.sync_currentPageCallback(drDoc.SlideCurrent);
 		}
 
 		this.m_oLogicDocument.Document_UpdateSelectionState();
