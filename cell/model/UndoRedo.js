@@ -2737,20 +2737,20 @@ function (window, undefined) {
 
 			if (from && !to) {//удаление
 				from.initWorksheetsFromSheetDataSet();
-				externalReferenceIndex = wb.getExternalLinkIndexByName(from.Id);
+				externalReferenceIndex = from.referenceData ? wb.getExternalReferenceByReferenceData(from.referenceData, true) : wb.getExternalLinkIndexByName(from.Id);
 				if (externalReferenceIndex !== null) {
 					wb.externalReferences[externalReferenceIndex - 1] = from;
 				} else {
 					wb.externalReferences.push(from);
 				}
 			} else if (!from && to) { //добавление
-				externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				externalReferenceIndex = to.referenceData ? wb.getExternalReferenceByReferenceData(to.referenceData, true) : wb.getExternalLinkIndexByName(to.Id);
 				if (externalReferenceIndex !== null) {
 					wb._removeExternalReference(externalReferenceIndex - 1);
 				}
 			} else if (from && to) { //изменение
 				//TODO нужно сохранить ссылки на текущий лист
-				externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				externalReferenceIndex = to.referenceData ? wb.getExternalReferenceByReferenceData(to.referenceData, true) : wb.getExternalLinkIndexByName(to.Id);
 
 				if (externalReferenceIndex !== null) {
 					from.worksheets = wb.externalReferences[externalReferenceIndex - 1].worksheets;

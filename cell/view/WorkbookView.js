@@ -5423,17 +5423,37 @@
 
 					let oPortalData = _arrAfterPromise[i].data;
 					let path = oPortalData && oPortalData["path"];
+					let referenceData = oPortalData.referenceData;
+
 					//if after update get short path, check on added such link
-					let eR = t.model.getExternalReferenceById(eRId);
+					let eR = referenceData ? t.model.getExternalReferenceByReferenceData(referenceData) : t.model.getExternalReferenceById(eRId);
+					// if (referenceData) {
+					// 	eR = t.model.getExternalLinkByReferenceData(referenceData);
+					// 	eR = eR && eR.index && eR.val && eR.val[eR.index - 1];
+					// }
+
+					if (!eR) {
+						eR = t.model.getExternalReferenceById(eRId);
+					}
 
 					let externalReferenceId = eRId;
 					if (path && externalReferenceId !== path) {
 						let isNotUpdate = (AscCommonExcel.importRangeLinksState && AscCommonExcel.importRangeLinksState.notUpdateIdMap && AscCommonExcel.importRangeLinksState.notUpdateIdMap[this.Id]) || this.notUpdateId;
 						if (!isNotUpdate) {
-							eR = t.model.getExternalReferenceById(path);
-							//need remove added new link with externalReferenceId id
+							// eR = t.model.getExternalReferenceById(path);
+							// next we need to remove the added new link with the same identifier externalReferenceId
 							if (eR) {
-								let eRAdded = t.model.getExternalReferenceById(externalReferenceId);
+								/* 
+									change the index of an already added link for which a promise has not yet been received
+									we get the link that we wrote down before receiving the promise
+									so we are looking for a link without referenceData, but with the same name 
+								*/
+								let eRAdded = t.model.getExternalReferenceWithoutRefData(externalReferenceId);
+
+								// if (!eRAdded) {
+								// 	eRAdded = t.model.getExternalReferenceById(externalReferenceId);
+								// }
+
 								if (eRAdded) {
 									let indexFrom = t.model.getExternalReferenceById(externalReferenceId, true);
 									let indexTo = t.model.getExternalReferenceById(path, true);

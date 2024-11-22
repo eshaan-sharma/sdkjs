@@ -28274,7 +28274,7 @@
 
 					ws.model.workbook.addExternalReferences([newExternalReference]);
 
-					pasteLinkIndex = ws.model.workbook.getExternalLinkIndexByName(name);
+					pasteLinkIndex = referenceData ? ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true) : ws.model.workbook.getExternalLinkIndexByName(name);
 					if (pasteLinkIndex != null) {
 						pasteSheetLinkName = pastedSheetName;
 					}
@@ -29132,14 +29132,14 @@
 				type = 1;
 				sheet = externalSheetSameWb;
 			} else {
-				let externalReference;
+				let externalReferenceIndex;
 				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
 					let fromPath = pastedWb.Core.contentStatus;
 					let thisPath = window["AscDesktopEditor"]["LocalFileGetSourcePath"]();
 					relativePath = buildRelativePath(fromPath, thisPath);
-					externalReference = ws.model.workbook.getExternalLinkIndexByName(relativePath);
+					externalReferenceIndex = ws.model.workbook.getExternalLinkIndexByName(relativePath);
 				} else {
-					//сначала ищем по дополнительной информации
+					//first we look by additional information
 					//fileId -> contentStatus, portalName -> category
 					let referenceData;
 					if (pastedWb && pastedWb.Core) {
@@ -29147,20 +29147,27 @@
 						referenceData["fileKey"] = pastedWb.Core.contentStatus;
 						referenceData["instanceId"] = pastedWb.Core.category;
 					}
-					externalReference = referenceData && ws.model.workbook.getExternalLinkByReferenceData(referenceData);
-					externalReference = externalReference && externalReference.index;
-					if (null == externalReference) {
+
+					/* get external link index by reference data */
+					externalReferenceIndex = referenceData && ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true);
+					
+					if (null == externalReferenceIndex) {
 						//потом пробуем по имени найти
-						externalReference = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						let tempER = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						if (tempER && !referenceData) {
+							// if there is no data, but an existing link with the same name is found, we refer to the existing data without updating
+							externalReferenceIndex = tempER;
+						}
+						// if there is data and it doesn't match, but there is a link with the same name, we write a new link with the same name (duplicate by name, but not by data)
 					}
 				}
 
-				//если всё-таки не нашли, то добавляем новый external reference
-				if (!externalReference) {
+				// if we still haven’t found the ER, then we add a new external reference
+				if (!externalReferenceIndex) {
 					type = -2;
 				} else {
 					type = -1;
-					index = externalReference;
+					index = externalReferenceIndex;
 					sheet = pastedWb.aWorksheets[0].sName;
 				}
 			}
