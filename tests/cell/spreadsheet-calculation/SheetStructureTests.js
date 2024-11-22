@@ -4770,25 +4770,24 @@ $(function () {
 		ws.getRange2("B10").setValue("3");
 		ws.getRange2("B11").setValue("4");
 
-		// assert.strictEqual(ws.getRange2("A10:B11").hasMerged(), null, 'Is A10:B11 merged');
-		assert.ok(ws.getRange2("A10:B11").hasMerged() === null, 'Is A10:B11 merged');
+		// If the range is not merged, null is returned, otherwise a Range.bbox object
+		assert.ok(ws.getRange2("A10:B11").hasMerged() === null, 'Range A10:B11 is not merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "1", 'Value in A10 before merge in A10:B11');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "2", 'Value in A11 before merge in A10:B11');
 		assert.strictEqual(ws.getRange2("B10").getValueWithoutFormat(), "3", 'Value in B10 before merge in A10:B11');
 		assert.strictEqual(ws.getRange2("B11").getValueWithoutFormat(), "4", 'Value in B11 before merge in A10:B11');
 
 		// A10:B11 merge & center
-		ws.getRange2("A10:B11").merge(2);
+		ws.getRange2("A10:B11").merge(Asc.c_oAscMergeOptions.MergeCenter);
 
-		// assert.strictEqual(ws.getRange2("A10:B11").hasMerged().r1, 9, 'Is A10:B11 merged');
-		assert.ok(ws.getRange2("A10:B11").hasMerged(), 'Is A10:B11 merged');
+		assert.ok(ws.getRange2("A10:B11").hasMerged(), 'Range A10:B11 is merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "1", 'Value in A10 after merge in A10:B11');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "", 'Value in A11 after merge in A10:B11');
 		assert.strictEqual(ws.getRange2("B10").getValueWithoutFormat(), "", 'Value in B10 after merge in A10:B11');
 		assert.strictEqual(ws.getRange2("B11").getValueWithoutFormat(), "", 'Value in B11 after merge in A10:B11');
 
 		// A10:B11 unmerge
-		ws.getRange2("A10:B11").merge(2);
+		ws.getRange2("A10:B11").merge(Asc.c_oAscMergeOptions.MergeCenter);
 
 		ws.getRange2("A10:B11").cleanAll();
 		ws.getRange2("A10").setValue("1");
@@ -4796,9 +4795,9 @@ $(function () {
 		ws.getRange2("B10").setValue("3");
 		ws.getRange2("B11").setValue("4");
 
-		assert.ok(ws.getRange2("A9:B11").hasMerged() === null, 'Is A9:B11 merged');
-		ws.getRange2("A9:B11").merge(2);
-		assert.ok(ws.getRange2("A9:B11").hasMerged(), 'Is A9:B11 merged');
+		assert.ok(ws.getRange2("A9:B11").hasMerged() === null, 'Range A9:B11 is not merged');
+		ws.getRange2("A9:B11").merge(c_oAscMergeOptions.MergeCenter);
+		assert.ok(ws.getRange2("A9:B11").hasMerged(), 'Range A9:B11 is merged');
 		assert.strictEqual(ws.getRange2("A9").getValueWithoutFormat(), "1", 'Value in A9 after merge in A9:B11');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "", 'Value in A10 after merge in A9:B11');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "", 'Value in A11 after merge in A9:B11');
@@ -4807,47 +4806,47 @@ $(function () {
 		assert.strictEqual(ws.getRange2("B11").getValueWithoutFormat(), "", 'Value in B11 after merge in A9:B11');
 
 		// A9:B11 unmerge
-		ws.getRange2("A9:B11").merge(2);
+		ws.getRange2("A9:B11").merge(Asc.c_oAscMergeOptions.MergeCenter);
 		ws.getRange2("A9:B11").cleanAll();
 
 		let bbox = ws.getRange2("A11").bbox;
 		ws.getRange2("A11").setValue("={2,4}", undefined, undefined, bbox);
 		// cellWithFormula = new window['AscCommonExcel'].CCellWithFormula(ws, bbox.r1, bbox.c1);
-		assert.ok(ws.getRange2("A10:A11").hasMerged() === null, 'Is A10:A11 merged');
+		assert.ok(ws.getRange2("A10:A11").hasMerged() === null, 'Range A10:A11 is not merged');
 		ws.getRange2("A10:A11").merge(2);
-		assert.ok(ws.getRange2("A10:A11").hasMerged(), 'Is A10:A11 merged');
+		assert.ok(ws.getRange2("A10:A11").hasMerged(), 'Range A10:A11 is merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "2", 'Value in A10 after merge in A10:A11 with one cell array');
 
 		// A10:A11 unmerge
-		ws.getRange2("A10:A11").merge(2);
+		ws.getRange2("A10:A11").merge(Asc.c_oAscMergeOptions.MergeCenter);
 		ws.getRange2("A10:A12").cleanAll();
 
 		bbox = ws.getRange2("A11:A12").bbox;
 		ws.getRange2("A11").setValue("={2,4}", undefined, undefined, bbox);
-		assert.ok(ws.getRange2("A10:A12").hasMerged() === null, 'Is A10:A12 merged');
-		ws.getRange2("A10:A12").merge(2);
-		assert.ok(ws.getRange2("A10:A12").hasMerged(), 'Is A10:A12 merged');
+		assert.ok(ws.getRange2("A10:A12").hasMerged() === null, 'Range A10:A12 is not merged');
+		ws.getRange2("A10:A12").merge(c_oAscMergeOptions.MergeCenter);
+		assert.ok(ws.getRange2("A10:A12").hasMerged(), 'Range A10:A12 is merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "", 'Value in A10 after merge in A10:A12 with two cells array');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "", 'Value in A11 after merge in A10:A12 with two cells array');
 		assert.strictEqual(ws.getRange2("A12").getValueWithoutFormat(), "", 'Value in A12 after merge in A10:A12 with two cells array');
 
 		// A10:A12 unmerge
-		ws.getRange2("A10:A12").merge(2);
+		ws.getRange2("A10:A12").merge(Asc.c_oAscMergeOptions.MergeCenter);
 		ws.getRange2("A10:A12").cleanAll();
 
 		ws.getRange2("A10").setValue("1");
 
 		bbox = ws.getRange2("A11").bbox;
 		ws.getRange2("A11").setValue("={2,4}", undefined, undefined, bbox);
-		assert.ok(ws.getRange2("A10:A12").hasMerged() === null, 'Is A10:A12 merged');
-		ws.getRange2("A10:A12").merge(2);
-		assert.ok(ws.getRange2("A10:A12").hasMerged(), 'Is A10:A12 merged');
+		assert.ok(ws.getRange2("A10:A12").hasMerged() === null, 'Range A10:A12 is not merged');
+		ws.getRange2("A10:A12").merge(c_oAscMergeOptions.MergeCenter);
+		assert.ok(ws.getRange2("A10:A12").hasMerged(), 'Range A10:A12 is merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "1", 'Value in A10 after merge in A10:A12 with one cell value before one cell array');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "", 'Value in A11 after merge in A10:A12 with one cell value before one cell array');
 		assert.strictEqual(ws.getRange2("A12").getValueWithoutFormat(), "", 'Value in A12 after merge in A10:A12 with one cell value before one cell array');
 
 		// A10:A12 unmerge
-		ws.getRange2("A10:A12").merge(2);
+		ws.getRange2("A10:A12").merge(Asc.c_oAscMergeOptions.MergeCenter);
 		ws.getRange2("A10:B12").cleanAll();
 
 		ws.getRange2("A10").setValue("1");
@@ -4855,9 +4854,9 @@ $(function () {
 
 		bbox = ws.getRange2("A11:B11").bbox;
 		ws.getRange2("A11:B11").setValue("={2,4}", undefined, undefined, bbox);
-		assert.ok(ws.getRange2("A10:B12").hasMerged() === null, 'Is A10:B12 merged');
-		ws.getRange2("A10:B12").merge(2);
-		assert.ok(ws.getRange2("A10:B12").hasMerged(), 'Is A10:A12 merged');
+		assert.ok(ws.getRange2("A10:B12").hasMerged() === null, 'Range A10:B12 is not merged');
+		ws.getRange2("A10:B12").merge(c_oAscMergeOptions.MergeCenter);
+		assert.ok(ws.getRange2("A10:B12").hasMerged(), 'Range A10:B12 is merged');
 		assert.strictEqual(ws.getRange2("A10").getValueWithoutFormat(), "1", 'Value in A10 after merge in A10:B12 with two cells value before two cells array');
 		assert.strictEqual(ws.getRange2("A11").getValueWithoutFormat(), "", 'Value in A11 after merge in A10:B12 with two cells value before two cells array');
 		assert.strictEqual(ws.getRange2("A12").getValueWithoutFormat(), "", 'Value in A12 after merge in A10:B12 with two cells value before two cells array');
@@ -4866,7 +4865,7 @@ $(function () {
 		assert.strictEqual(ws.getRange2("B12").getValueWithoutFormat(), "", 'Value in B12 after merge in A10:B12 with two cells value before two cells array');
 
 		// A10:B12 unmerge
-		ws.getRange2("A10:B12").merge(2);
+		ws.getRange2("A10:B12").merge(Asc.c_oAscMergeOptions.MergeCenter);
 		ws.getRange2("A10:B12").cleanAll();
 
 	});
