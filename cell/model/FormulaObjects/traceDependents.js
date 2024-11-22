@@ -1596,9 +1596,17 @@ function (window, undefined) {
 				} else {
 					this._lockChangeDocument = null;
 					let t = this;
-					if (arg2) {
-						for (let col = arg2.c1; col <= arg2.c2; col++) {
-							for (let row = arg2.r1; row <= arg2.r2; row++) {
+					if (t.isHaveData() && arg2) {
+						if (Asc.c_oAscSelectionType.RangeMax === arg2.getType()) {
+							t.clearAll();
+							break;
+						}
+
+						let maxRowToClear = t.ws.nRowsCount ? Math.min(t.ws.nRowsCount, arg2.r2) : arg2.r2,
+							maxColToClear = t.ws.nColsCount ? Math.min(t.ws.nColsCount, arg2.c2) : arg2.c2;
+
+						for (let col = arg2.c1; col <= maxColToClear; col++) {
+							for (let row = arg2.r1; row <= maxRowToClear; row++) {
 								if (!(arg2.c1 === col && arg2.r1 === row)) {
 									t.clearCellTraces(row, col);
 								}

@@ -2709,7 +2709,7 @@ ParaDrawing.prototype.setPageIndex = function(newPageIndex)
 		}
 	}
 };
-ParaDrawing.prototype.Get_PageNum = function()
+ParaDrawing.prototype.GetPageNum = function()
 {
 	return this.PageNum;
 };
