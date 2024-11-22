@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -60,7 +60,7 @@ Paragraph.prototype.Recalculate_FastWholeParagraph = function()
 
     // TODO: Отключаем это ускорение в таблицах, т.к. в таблицах и так есть свое ускорение. Но можно и это ускорение
     // подключить, для этого надо проверять изменились ли MinMax ширины и набираем ли мы в строке заголовков.
-	var oCell = this.Parent.IsTableCellContent(true);
+	var oCell = this.IsTableCellContent(true);
     if (oCell && oCell.GetTable())
 	{
 		if (tbllayout_AutoFit === oCell.GetTable().Get_CompiledPr(false).TablePr.TableLayout || oCell.IsInHeader(true))
@@ -225,7 +225,7 @@ Paragraph.prototype.RecalculateFastRunRange = function(oParaPos)
 
     // TODO: Отключаем это ускорение в таблицах, т.к. в таблицах и так есть свое ускорение. Но можно и это ускорение
     // подключить, для этого надо проверять изменились ли MinMax ширины и набираем ли мы в строке заголовков.
-    if ( undefined === this.Parent || true === this.Parent.IsTableCellContent() )
+    if ( undefined === this.Parent || true === this.IsTableCellContent() )
         return -1;
 
     //Не запускаемм быстрый пересчет, когда параграф находится в автофигуре с выставленным флагом подбора размера по размеру контента,
@@ -1497,6 +1497,9 @@ Paragraph.prototype.private_RecalculateLinePosition    = function(CurLine, CurPa
 
     Bottom  = Bottom2;
     Bottom += this.Lines[CurLine].Metrics.LineGap;
+	
+	if (this.Lines[CurLine].Metrics.LineGap < 0)
+		Bottom2 += this.Lines[CurLine].Metrics.LineGap;
 
     // Если данная строка последняя, тогда подкорректируем нижнюю границу
     if ( true === PRS.End )
@@ -1519,7 +1522,7 @@ Paragraph.prototype.private_RecalculateLinePosition    = function(CurLine, CurPa
 		// TODO: Здесь нужно сделать корректировку YLimit с учетом сносок. Надо разобраться почему вообще здесь
 		// используется this.YLimit вместо Page.YLimit
 
-		if (!this.Parent.IsCalculatingContinuousSectionBottomLine() && false === this.Parent.IsTableCellContent() && Bottom > this.YLimit && Bottom - this.YLimit <= ParaPr.Spacing.After)
+		if (!this.Parent.IsCalculatingContinuousSectionBottomLine() && false === this.IsTableCellContent() && Bottom > this.YLimit && Bottom - this.YLimit <= ParaPr.Spacing.After)
 			Bottom = this.YLimit;
 	}
 
@@ -1557,7 +1560,7 @@ Paragraph.prototype.private_RecalculateLineBottomBound = function(CurLine, CurPa
     var Bottom2 = PRS.LineBottom2;
 
     // В ячейке перенос страницы происходит по нижней границе, т.е. с учетом Spacing.After и границы
-    if ( true === this.Parent.IsTableCellContent() )
+    if ( true === this.IsTableCellContent() )
         Bottom2 = PRS.LineBottom;
 
     // Переносим строку по PageBreak. Если в строке ничего нет кроме PageBreak, и это не конец параграфа, тогда нам не надо проверять высоту строки и обтекание.
@@ -1599,7 +1602,7 @@ Paragraph.prototype.private_RecalculateLineBottomBound = function(CurLine, CurPa
 		&& (CurLine != this.Pages[CurPage].FirstLine
 		|| false === bNoFootnotes
 		|| (0 === RealCurPage && ((null != this.Get_DocumentPrev() && !this.Parent.IsElementStartOnNewPage(this.GetIndex()))
-		|| (true === this.Parent.IsTableCellContent() && true !== this.Parent.IsTableFirstRowOnNewPage())
+		|| (true === this.IsTableCellContent() && true !== this.Parent.IsTableFirstRowOnNewPage())
 		|| (true === this.Parent.IsBlockLevelSdtContent() && true !== this.Parent.IsBlockLevelSdtFirstOnNewPage()))))
 		&& false === BreakPageLineEmpty)
     {
@@ -2427,7 +2430,7 @@ Paragraph.prototype.private_RecalculateMoveLineToNextPage = function(CurLine, Cu
 			let compatibilityMode = PRS.getCompatibilityMode();
 			if (compatibilityMode <= AscCommon.document_compatibility_mode_Word14)
 			{
-				if (null != this.Get_DocumentPrev() && true != this.Parent.IsTableCellContent() && 0 === CurPage)
+				if (null != this.Get_DocumentPrev() && !this.IsTableCellContent() && 0 === CurPage)
 				{
 					CurLine = 0;
 					PRS.RunRecalcInfoBreak = null;
@@ -2486,20 +2489,22 @@ Paragraph.prototype.private_CheckNeedBeforeSpacing = function(CurPage, Parent, P
 		&& this.LogicDocument.GetCompatibilityMode() <= AscCommon.document_compatibility_mode_Word14
 		&& true === ParaPr.PageBreakBefore)
 		return true;
-
-	if (!(Parent instanceof CDocument))
+	
+	let topDocument = this.GetTopDocumentContent();
+	if (!(topDocument instanceof AscWord.Document) || this.IsTableCellContent())
 	{
 		if (Parent instanceof AscFormat.CDrawingDocContent && 0 !== CurPage)
 			return false;
-
+		
 		return true;
 	}
 
-	// Если дошли до этого места, то тут все зависит от того на какой мы странице. Если на первой странице данной секции
+	// Если сюда дошли, значит мы либо на верхнем уровне, либо в блочном контроле, который лежит на верхнем уровне.
+	// Дальше все зависит от того на какой мы странице. Если на первой странице данной секции,
 	// тогда добавляем расстояние, а если нет - нет. Но подсчет первой страницы здесь не совпадает с тем, как она
 	// считается для нумерации. Если разрыв секции идет на текущей странице, то первой считается сразу данная страница.
 
-	var LogicDocument = Parent;
+	var LogicDocument = topDocument;
 	var SectionIndex  = LogicDocument.GetSectionIndexByElementIndex(this.Get_Index());
 	var FirstElement  = LogicDocument.GetFirstElementInSection(SectionIndex);
 
@@ -3368,7 +3373,7 @@ CParagraphRecalculateStateWrap.prototype.Reset_Page = function(Paragraph, CurPag
 	this.TopDocument = Paragraph.Parent.GetTopDocumentContent();
 	this.PageAbs     = Paragraph.Get_AbsolutePage(CurPage);
 	this.ColumnAbs   = Paragraph.Get_AbsoluteColumn(CurPage);
-	this.InTable     = Paragraph.Parent.IsTableCellContent();
+	this.InTable     = Paragraph.IsTableCellContent();
 	this.SectPr      = null;
 	this.TopIndex    = -1;
 	

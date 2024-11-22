@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -347,7 +347,7 @@ CDocumentContentElementBase.prototype.GetDirectTextPr = function()
 {
 	return new CTextPr();
 };
-CDocumentContentElementBase.prototype.DrawSelectionOnPage = function(CurPage)
+CDocumentContentElementBase.prototype.DrawSelectionOnPage = function(CurPage, clipInfo)
 {
 };
 CDocumentContentElementBase.prototype.StopSelection = function()
@@ -1332,7 +1332,7 @@ CDocumentContentElementBase.prototype.getDrawingDocument = function()
 	return Asc.editor.getDrawingDocument();
 };
 /**
- * @returns {?CDocumentSpellChecker}
+ * @returns {?AscWord.CDocumentSpellChecker}
  */
 CDocumentContentElementBase.prototype.getSpelling = function()
 {

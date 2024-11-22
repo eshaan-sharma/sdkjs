@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -80,9 +80,6 @@ var tblwidth_Pct  = 0x03;
 
 var tbllayout_Fixed   = 0x00;
 var tbllayout_AutoFit = 0x01;
-
-var border_None   = 0x0000;
-var border_Single = 0x0001;
 
 var vertalignjc_Top    = 0x00;
 var vertalignjc_Center = 0x01;
@@ -609,9 +606,9 @@ CStyle.prototype =
 		this.Name = Value;
 	},
 
-    Get_Name : function()
+    Get_Name : function(isSimplify)
     {
-        return this.Name;
+        return isSimplify ? this.Name.toLowerCase().replace(/\s/g,"") : this.Name;
     },
 
 	Set_BasedOn : function(Value)
@@ -5891,10 +5888,10 @@ CStyle.prototype =
 
     },
 
-    isEqual: function(cStyles)
+    isEqual: function(cStyles, isSimplifyName)
     {
         var result = false;
-        if(this.BasedOn == cStyles.BasedOn && this.Name == cStyles.Name && this.Next == cStyles.Next && this.Type == cStyles.Type && this.hidden == cStyles.hidden)
+        if(this.BasedOn == cStyles.BasedOn && this.GetName(isSimplifyName) == cStyles.GetName(isSimplifyName) && this.Next == cStyles.Next && this.Type == cStyles.Type && this.hidden == cStyles.hidden)
         {
             if(this.qFormat == cStyles.qFormat && this.semiHidden == cStyles.semiHidden && this.uiPriority == cStyles.uiPriority && this.unhideWhenUsed == cStyles.unhideWhenUsed)
             {
@@ -6574,9 +6571,9 @@ CStyle.prototype.GetUnhideWhenUsed = function()
 {
 	return this.unhideWhenUsed;
 };
-CStyle.prototype.GetName = function()
+CStyle.prototype.GetName = function(isSimplify)
 {
-	return this.Get_Name();
+	return this.Get_Name(isSimplify);
 };
 CStyle.prototype.GetBasedOn = function()
 {
@@ -8608,14 +8605,15 @@ CStyles.prototype.GetRelatedStyles = function(styleId)
  * Получаем идентификатор стиля по его имени
  * @param {string} sName
  * @param {boolean} [isReturnParaDefault=false] Возвращать ли дефолтовый стиль для параграфа, если стиль не найден
+ * @param {boolean} [isOnlyCharChecking=false] Проверять ли имя стиля только по символам
  * @returns {?string}
  */
-CStyles.prototype.GetStyleIdByName = function(sName, isReturnParaDefault)
+CStyles.prototype.GetStyleIdByName = function(sName, isReturnParaDefault, isSimplify)
 {
 	for (var sId in this.Style)
 	{
 		var oStyle = this.Style[sId];
-		if (sName === oStyle.GetName())
+		if (sName === oStyle.GetName(isSimplify))
 			return sId;
 	}
 
@@ -8787,9 +8785,9 @@ CStyles.prototype.Remove_AllCustomStylesFromInterface = function()
 		}
 	}
 };
-CStyles.prototype.IsStyleDefaultByName = function(styleName)
+CStyles.prototype.IsStyleDefaultByName = function(styleName, isSimplify)
 {
-	var styleId = this.GetStyleIdByName(styleName);
+	var styleId = this.GetStyleIdByName(styleName, false, isSimplify);
 	if (!styleId)
 		return false;
 
@@ -9989,6 +9987,211 @@ CDocumentShd.prototype.ReadFromBinary = function(oReader)
 	return this.Read_FromBinary(oReader);
 };
 
+AscWord.BorderType = {
+	// No Border
+	none : -1,
+	nil  : 0,
+	
+	// Line Border
+	single                 : 1,
+	thick                  : 2,
+	double                 : 3,
+	dotted                 : 4,
+	dashed                 : 5,
+	dotDash                : 6,
+	dotDotDash             : 7,
+	triple                 : 8,
+	thinThickSmallGap      : 9,
+	thickThinSmallGap      : 10,
+	thinThickThinSmallGap  : 11,
+	thinThickMediumGap     : 12,
+	thickThinMediumGap     : 13,
+	thinThickThinMediumGap : 14,
+	thinThickLargeGap      : 15,
+	thickThinLargeGap      : 16,
+	thinThickThinLargeGap  : 17,
+	wave                   : 18,
+	doubleWave             : 19,
+	dashSmallGap           : 20,
+	dashDotStroked         : 21,
+	threeDEmboss           : 22,
+	threeDEngrave          : 23,
+	outset                 : 24,
+	inset                  : 25,
+	
+	// ArtBorder
+	apples             : 101,
+	archedScallops     : 102,
+	babyPacifier       : 103,
+	babyRattle         : 104,
+	balloons3Colors    : 105,
+	balloonsHotAir     : 106,
+	basicBlackDashes   : 107,
+	basicBlackDots     : 108,
+	basicBlackSquares  : 109,
+	basicThinLines     : 110,
+	basicWhiteDashes   : 111,
+	basicWhiteDots     : 112,
+	basicWhiteSquares  : 113,
+	basicWideInline    : 114,
+	basicWideMidline   : 115,
+	basicWideOutline   : 116,
+	bats               : 117,
+	birds              : 118,
+	birdsFlight        : 119,
+	cabins             : 120,
+	cakeSlice          : 121,
+	candyCorn          : 122,
+	celticKnotwork     : 123,
+	certificateBanner  : 124,
+	chainLink          : 125,
+	champagneBottle    : 126,
+	checkedBarBlack    : 127,
+	checkedBarColor    : 128,
+	checkered          : 129,
+	christmasTree      : 130,
+	circlesLines       : 131,
+	circlesRectangles  : 132,
+	classicalWave      : 133,
+	clocks             : 134,
+	compass            : 135,
+	confetti           : 136,
+	confettiGrays      : 137,
+	confettiOutline    : 138,
+	confettiStreamers  : 139,
+	confettiWhite      : 140,
+	cornerTriangles    : 141,
+	couponCutoutDashes : 142,
+	couponCutoutDots   : 143,
+	crazyMaze          : 144,
+	creaturesButterfly : 145,
+	creaturesFish      : 146,
+	creaturesInsects   : 147,
+	creaturesLadyBug   : 148,
+	crossStitch        : 149,
+	cup                : 150,
+	custom             : 151,
+	decoArch           : 152,
+	decoArchColor      : 153,
+	decoBlocks         : 154,
+	diamondsGray       : 155,
+	doubleD            : 156,
+	doubleDiamonds     : 157,
+	earth1             : 158,
+	earth2             : 159,
+	earth3             : 160,
+	eclipsingSquares1  : 161,
+	eclipsingSquares2  : 162,
+	eggsBlack          : 163,
+	fans               : 164,
+	film               : 165,
+	firecrackers       : 166,
+	flowersBlockPrint  : 167,
+	flowersDaisies     : 168,
+	flowersModern1     : 169,
+	flowersModern2     : 170,
+	flowersPansy       : 171,
+	flowersRedRose     : 172,
+	flowersRoses       : 173,
+	flowersTeacup      : 174,
+	flowersTiny        : 175,
+	gems               : 176,
+	gingerbreadMan     : 177,
+	gradient           : 178,
+	handmade1          : 179,
+	handmade2          : 180,
+	heartBalloon       : 181,
+	heartGray          : 182,
+	hearts             : 183,
+	heebieJeebies      : 184,
+	holly              : 185,
+	houseFunky         : 186,
+	hypnotic           : 187,
+	iceCreamCones      : 188,
+	lightBulb          : 189,
+	lightning1         : 190,
+	lightning2         : 191,
+	mapleLeaf          : 192,
+	mapleMuffins       : 193,
+	mapPins            : 194,
+	marquee            : 195,
+	marqueeToothed     : 196,
+	moons              : 197,
+	mosaic             : 198,
+	musicNotes         : 199,
+	northwest          : 200,
+	ovals              : 201,
+	packages           : 202,
+	palmsBlack         : 203,
+	palmsColor         : 204,
+	paperClips         : 205,
+	papyrus            : 206,
+	partyFavor         : 207,
+	partyGlass         : 208,
+	pencils            : 209,
+	people             : 210,
+	peopleHats         : 211,
+	peopleWaving       : 212,
+	poinsettias        : 213,
+	postageStamp       : 214,
+	pumpkin1           : 215,
+	pushPinNote1       : 216,
+	pushPinNote2       : 217,
+	pyramids           : 218,
+	pyramidsAbove      : 219,
+	quadrants          : 220,
+	rings              : 221,
+	safari             : 222,
+	sawtooth           : 223,
+	sawtoothGray       : 224,
+	scaredCat          : 225,
+	seattle            : 226,
+	sharksTeeth        : 227,
+	shadowedSquares    : 228,
+	shapes1            : 229,
+	shapes2            : 230,
+	shorebirdTracks    : 231,
+	skyrocket          : 232,
+	snowflakeFancy     : 233,
+	snowflakes         : 234,
+	sombrero           : 235,
+	southwest          : 236,
+	stars              : 237,
+	stars3d            : 238,
+	starsBlack         : 239,
+	starsShadowed      : 240,
+	starsTop           : 241,
+	sun                : 242,
+	swirligig          : 243,
+	tornPaper          : 244,
+	tornPaperBlack     : 245,
+	trees              : 246,
+	triangle1          : 247,
+	triangle2          : 248,
+	triangleCircle1    : 249,
+	triangleCircle2    : 250,
+	triangleParty      : 251,
+	triangles          : 252,
+	twistedLines1      : 253,
+	twistedLines2      : 254,
+	vine               : 255,
+	waveline           : 256,
+	weavingAngles      : 257,
+	weavingBraid       : 258,
+	weavingRibbon      : 259,
+	weavingStrips      : 260,
+	whiteFlowers       : 261,
+	woodwork           : 262,
+	xIllusions         : 263,
+	zanyTriangles      : 264,
+	zigZag             : 265,
+	zigZagStitch       : 266
+};
+
+// For compatibility
+var border_None   = AscWord.BorderType.none;
+var border_Single = AscWord.BorderType.single;
+
 function CDocumentBorder()
 {
 	this.Color   = new CDocumentColor(0, 0, 0);
@@ -9996,7 +10199,7 @@ function CDocumentBorder()
 	this.LineRef = undefined;
 	this.Space   = 0;                      // Это значение учитывается всегда, даже когда Value = none (поэтому важно, что по умолчанию 0)
 	this.Size    = 0.5 * g_dKoef_pt_to_mm; // Размер учитываем в зависимости от Value
-	this.Value   = border_None;
+	this.Value   = AscWord.BorderType.none;
 }
 CDocumentBorder.FromObject = function(obj)
 {
@@ -10153,12 +10356,12 @@ CDocumentBorder.prototype =
     {
         // Double   : Size
         // Long     : Space
-        // Byte     : Value
+        // Long     : Value
         // Variable : Color
 
         Writer.WriteDouble( this.Size );
         Writer.WriteLong( this.Space );
-        Writer.WriteByte( this.Value );
+        Writer.WriteLong( this.Value );
         this.Color.Write_ToBinary( Writer );
         if(this.Unifill)
         {
@@ -10190,7 +10393,7 @@ CDocumentBorder.prototype =
 
         this.Size  = Reader.GetDouble();
         this.Space = Reader.GetLong();
-        this.Value = Reader.GetByte();
+        this.Value = Reader.GetLong();
         this.Color.Read_FromBinary( Reader );
         if(Reader.GetBool())
         {
@@ -10235,6 +10438,18 @@ CDocumentBorder.prototype.setSpaceInPoint = function(val)
 CDocumentBorder.prototype.getSpaceInPoint = function(val)
 {
 	return undefined !== this.Space ? Math.round(this.Space * g_dKoef_mm_to_pt) : undefined;
+};
+CDocumentBorder.prototype.setValue = function(value)
+{
+	// Пока мы работаем только с такими типами
+	if (value === AscWord.BorderType.nil || value === AscWord.BorderType.none)
+		this.Value = AscWord.BorderType.none;
+	else
+		this.Value = AscWord.BorderType.single;
+};
+CDocumentBorder.prototype.getValue = function()
+{
+	return this.Value;
 };
 /**
  * Получаем рассчитанную толщину линии в зависимости от типа.
@@ -12484,6 +12699,29 @@ CLang.prototype =
             this.Val = Reader.GetLong();
     }
 };
+CLang.prototype.Clear = function()
+{
+	this.Bidi     = undefined;
+	this.EastAsia = undefined;
+	this.Val      = undefined;
+};
+CLang.prototype.Apply = function(lang)
+{
+	if (null === lang.Bidi)
+		this.Bidi = undefined;
+	else if (undefined !== lang.Bidi)
+		this.Bidi = lang.Bidi;
+	
+	if (null === lang.EastAsia)
+		this.EastAsia = undefined;
+	else if (undefined !== lang.EastAsia)
+		this.EastAsia = lang.EastAsia;
+	
+	if (null === lang.Val)
+		this.Val = undefined;
+	else if (undefined !== lang.Val)
+		this.Val = lang.Val;
+};
 CLang.prototype.Is_Empty = function()
 {
 	if (undefined !== this.Bidi
@@ -12830,10 +13068,10 @@ CTextPr.prototype.Merge = function(TextPr)
 	if (TextPr.Shd)
 		this.Shd = TextPr.Shd.Copy();
 
-	if (undefined !== TextPr.Vanish)
+	if (undefined !== TextPr.Vanish && null !== TextPr.Vanish)
 		this.Vanish = TextPr.Vanish;
 
-	if (undefined !== TextPr.Ligatures)
+	if (undefined !== TextPr.Ligatures && null !== TextPr.Ligatures)
 		this.Ligatures = TextPr.Ligatures;
 
 	if (TextPr.TextOutline)
@@ -12851,6 +13089,174 @@ CTextPr.prototype.Merge = function(TextPr)
 	{
 		this.FontScale = TextPr.FontScale;
 	}
+};
+/**
+ * Накатываем на данные настройки те, которые пришли, причем если какое-то значение null, то это поле мы делаем undefined
+ * @param {CTextPr} textPr
+ */
+CTextPr.prototype.Apply = function(textPr)
+{
+	if (null === textPr.Bold)
+		this.Bold = undefined;
+	else if (undefined !== textPr.Bold)
+		this.Bold = textPr.Bold;
+	
+	if (null === textPr.BoldCS)
+		this.BoldCS = undefined;
+	else if (undefined !== textPr.BoldCS)
+		this.BoldCS = textPr.BoldCS;
+	
+	if (null === textPr.Italic)
+		this.Italic = undefined;
+	else if (undefined !== textPr.Italic)
+		this.Italic = textPr.Italic;
+	
+	if (null === textPr.ItalicCS)
+		this.ItalicCS = undefined;
+	else if (undefined !== textPr.ItalicCS)
+		this.ItalicCS = textPr.ItalicCS;
+	
+	if (null === textPr.Strikeout)
+		this.Strikeout = undefined;
+	else if (undefined !== textPr.Strikeout)
+		this.Strikeout = textPr.Strikeout;
+	
+	if (null === textPr.Underline)
+		this.Underline = undefined;
+	else if (undefined !== textPr.Underline)
+		this.Underline = textPr.Underline;
+
+	if (null === textPr.FontFamily)
+	{
+		this.FontFamily = undefined;
+	}
+	else if (undefined !== textPr.FontFamily)
+	{
+		this.FontFamily = {
+			Name  : textPr.FontFamily.Name,
+			Index : textPr.FontFamily.Index,
+		};
+	}
+	
+	if (null === textPr.FontSize)
+		this.FontSize = undefined;
+	else if (undefined !== textPr.FontSize)
+		this.FontSize = textPr.FontSize;
+	
+	if (null === textPr.FontSizeCS)
+		this.FontSizeCS = undefined;
+	else if (undefined !== textPr.FontSizeCS)
+		this.FontSizeCS = textPr.FontSizeCS;
+	
+	if (null === textPr.Color)
+		this.Color = undefined;
+	else if (undefined !== textPr.Color)
+		this.Color = textPr.Color.Copy();
+	
+	if (null === textPr.VertAlign)
+		this.VertAlign = undefined;
+	else if (undefined !== textPr.VertAlign)
+		this.VertAlign = textPr.VertAlign;
+	
+	if (null === textPr.HighLight)
+		this.HighLight = undefined;
+	else if (highlight_None === textPr.HighLight)
+		this.HighLight = highlight_None;
+	else if (undefined !== textPr.HighLight)
+		this.HighLight = textPr.HighLight.Copy();
+	
+	if (null === textPr.RStyle)
+		this.RStyle = undefined;
+	else if (undefined !== textPr.RStyle)
+		this.RStyle = textPr.RStyle;
+	
+	if (null === textPr.Spacing)
+		this.Spacing = undefined;
+	else if (undefined !== textPr.Spacing)
+		this.Spacing = textPr.Spacing;
+	
+	if (null === textPr.DStrikeout)
+		this.DStrikeout = undefined;
+	else if (undefined !== textPr.DStrikeout)
+		this.DStrikeout = textPr.DStrikeout;
+	
+	if (null === textPr.SmallCaps)
+		this.SmallCaps = undefined;
+	else if (undefined !== textPr.SmallCaps)
+		this.SmallCaps = textPr.SmallCaps;
+	
+	if (null === textPr.Caps)
+		this.Caps = undefined;
+	else if (undefined !== textPr.Caps)
+		this.Caps = textPr.Caps;
+	
+	if (null === textPr.Position)
+		this.Position = undefined;
+	else if (undefined !== textPr.Position)
+		this.Position = textPr.Position;
+	
+	if (textPr.RFonts)
+		this.RFonts.Merge(textPr.RFonts);
+	
+	if (null === textPr.CS)
+		this.CS = undefined;
+	else if (undefined !== textPr.CS)
+		this.CS = textPr.CS;
+	
+	if (null === textPr.RTL)
+		this.RTL = undefined;
+	else if (undefined !== textPr.RTL)
+		this.RTL = textPr.RTL;
+	
+	if (null === textPr.Lang)
+		this.Lang.Clear();
+	else if (textPr.Lang)
+		this.Lang.Apply(textPr.Lang);
+	
+	if (null === textPr.Unifill)
+		this.Unifill = undefined;
+	else if (textPr.Unifill)
+		this.Unifill = textPr.Unifill.createDuplicate();
+	
+	if (null === textPr.FontRef)
+		this.FontRef = undefined;
+	else if (textPr.FontRef)
+		this.FontRef = textPr.FontRef.createDuplicate();
+	
+	if (null === textPr.TextOutline)
+		this.TextOutline = undefined;
+	else if (textPr.TextOutline)
+		this.TextOutline = textPr.TextOutline.createDuplicate();
+	
+	if (null === textPr.TextFill)
+		this.TextFill = undefined;
+	else if (textPr.TextFill)
+		this.TextFill = textPr.TextFill.createDuplicate();
+	
+	if (null === textPr.HighlightColor)
+		this.HighlightColor = undefined;
+	else if (textPr.HighlightColor)
+		this.HighlightColor = textPr.HighlightColor.createDuplicate();
+	
+	if (null === textPr.Shd)
+		this.Shd = undefined;
+	else if (undefined !== textPr.Shd)
+		this.Shd = textPr.Shd.Copy();
+	
+	if (null === textPr.Vanish)
+		this.Vanish = undefined;
+	else if (undefined !== textPr.Vanish)
+		this.Vanish = textPr.Vanish;
+	
+	if (null === textPr.Ligatures)
+		this.Ligatures = undefined;
+	else if (undefined !== textPr.Ligatures)
+		this.Ligatures = textPr.Ligatures;
+	
+	if (null === textPr.FontScale)
+		this.FontScale = undefined;
+	else if (undefined !== textPr.FontScale)
+		this.FontScale = textPr.FontScale;
 };
 CTextPr.prototype.InitDefault = function(nCompatibilityMode)
 {
@@ -15872,8 +16278,8 @@ CParaPr.prototype.createDuplicateForSmartArt = function (bCopyPrChange, oPr) {
 	if (undefined != this.Spacing)
 		ParaPr.Spacing = this.Spacing.Copy();
 
-	if (undefined != this.Ind) // TODO: apply only changed ind
-		ParaPr.Ind = this.Ind.Copy();
+	// if (undefined != this.Ind) // TODO: apply only changed ind
+	// 	ParaPr.Ind = this.Ind.Copy();
 
 	if (undefined != this.Tabs)
 		ParaPr.Tabs = this.Tabs.Copy();

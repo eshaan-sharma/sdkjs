@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -162,8 +162,8 @@ function (window, undefined) {
 
 		/** @type RegExp */
 		this.rangeChars = ["=", "-", "+", "*", "/", "(", "{", "<", ">", "^", "!", "&", ":", " ", "."];
-		this.reNotFormula = new XRegExp("[^\\p{L}\\\\_\\#\\]\\[\\p{N}\\.\"\]", "i");
-		this.reFormula = new XRegExp("^([\\p{L}\\\\_\\]\\[][\\p{L}\\\\_\\#\\]\\[\\p{N}\\.]*)", "i");
+		this.reNotFormula = new XRegExp("[^\\p{L}\\\\_\\#\\]\\[\\p{N}\\.\"\@]", "i");
+		this.reFormula = new XRegExp("^([\\p{L}\\\\_\\]\\[][\\p{L}\\\\_\\#\\]\\[\\p{N}\\.@]*)", "i");
 
 		this.defaults = {
 			padding: padding,
@@ -481,6 +481,10 @@ function (window, undefined) {
 		if (this.isFormula()) {
 			return;
 		}
+		if (!this.options.fragments) {
+			return;
+		}
+
 		this.startAction();
 
 		var t = this, opt = t.options, begin, end, i, first, last;
@@ -539,6 +543,9 @@ function (window, undefined) {
 		if (this.isFormula()) {
 			return;
 		}
+		if (!this.options.fragments) {
+			return;
+		}
 		var t = this, opt = t.options;
 
 		if (t.selectionBegin !== t.selectionEnd) {
@@ -554,6 +561,9 @@ function (window, undefined) {
 
 	CellEditor.prototype._changeFragments = function (fragmentsMap) {
 		let opt = this.options;
+		if (!opt.fragments) {
+			return;
+		}
 		this.startAction();
 		if (fragmentsMap) {
 			let _undoFragments = {};
@@ -951,7 +961,8 @@ function (window, undefined) {
 				bboxOper = null;
 				r = this._parseResult.refPos[index];
 				oper = r.oper;
-				if (cElementType.table === oper.type || cElementType.name === oper.type || cElementType.name3D === oper.type) {
+				if ((cElementType.table === oper.type || cElementType.name === oper.type ||
+					cElementType.name3D === oper.type) && oper.externalLink == null) {
 					oper = r.oper.toRef(bbox);
 					if (oper instanceof AscCommonExcel.cError) {
 						continue;
@@ -1258,9 +1269,9 @@ function (window, undefined) {
 		//получаю строку без двухбайтовых символов и её отдаю регулярке
 		//позиции всех функций должны совпадать
 		//остаётся вопрос с аргументами, которые могут содержать двухбайтовые символы
-		s = this.options.fragments.reduce(function (pv, cv) {
+		s = this.options.fragments ? this.options.fragments.reduce(function (pv, cv) {
 			return pv + AscCommonExcel.convertUnicodeToSimpleString(cv.getCharCodes());
-		}, "");
+		}, "") : "";
 
 		if (isFormula) {
 			let obj = this._getFunctionByString(this.cursorPos, s);
@@ -1361,7 +1372,7 @@ function (window, undefined) {
 	CellEditor.prototype._expand = function () {
 		var bottom, tm;
 		var doAdjust = false, fragments = this._getRenderFragments();
-		if (0 < fragments.length) {
+		if (fragments && 0 < fragments.length) {
 			bottom = this.bottom;
 			this.bottom = this.sides.b[this.sides.bi];
 
@@ -1535,11 +1546,13 @@ function (window, undefined) {
 
 		if (!window['IS_NATIVE_EDITOR']) {
 			let _width = this._originalCanvasWidth ? this._originalCanvasWidth : ctx.getWidth();
-			ctx.setFillStyle(opt.background)
-				.fillRect(0, 0, _width, ctx.getHeight());
+			if (opt.background) {
+				ctx.setFillStyle(opt.background);
+			}
+			ctx.fillRect(0, 0, _width, ctx.getHeight());
 		}
 
-		if (opt.fragments.length > 0) {
+		if (opt.fragments && opt.fragments.length > 0) {
 			t.textRender.render(undefined, t._getContentLeft(), dy || 0, t._getContentWidth(), opt.font.getColor());
 		}
 	};
@@ -1889,6 +1902,9 @@ function (window, undefined) {
 	};
 
 	CellEditor.prototype._getContentPosition = function () {
+		if (!this.textFlags) {
+			return this.defaults.padding;
+		}
 		switch (this.textFlags.textAlign) {
 			case AscCommon.align_Right:
 				return this.right - this.left - this.defaults.padding - 1;
@@ -1917,6 +1933,10 @@ function (window, undefined) {
 		this.noUpdateMode = true;
 
 		this.sAutoComplete = null;
+
+		if (!opt.fragments) {
+			return;
+		}
 
 		if (this.selectionBegin !== this.selectionEnd) {
 			var copyFragment = this._findFragmentToInsertInto(Math.min(this.selectionBegin, this.selectionEnd) + 1);
@@ -2033,6 +2053,9 @@ function (window, undefined) {
 		if (b === e) {
 			return;
 		}
+		if (!opt.fragments) {
+			return;
+		}
 
 		this.startAction();
 
@@ -2120,6 +2143,9 @@ function (window, undefined) {
 		if (!fragments) {
 			fragments = this.options.fragments;
 		}
+		if (!fragments) {
+			return;
+		}
 
 		for (i = 0, begin = 0; i < fragments.length; ++i) {
 			end = begin + fragments[i].getCharCodesLength();
@@ -2138,6 +2164,9 @@ function (window, undefined) {
 
 		if (!fragments) {
 			fragments = this.options.fragments;
+		}
+		if (!fragments) {
+			return;
 		}
 
 		for (i = 0, begin = 0; i < fragments.length; ++i) {
@@ -2161,6 +2190,9 @@ function (window, undefined) {
 		var fr;
 		if (!fragments) {
 			fragments = this.options.fragments;
+		}
+		if (!fragments) {
+			return;
 		}
 
 		if (pos > f.begin && pos < f.end) {
@@ -2219,6 +2251,10 @@ function (window, undefined) {
 	CellEditor.prototype._addFragments = function (f, pos) {
 		var t = this, opt = t.options, fr;
 
+		if (!opt.fragments) {
+			return;
+		}
+
 		fr = t._findFragment(pos);
 		if (fr && pos < fr.end) {
 			t._splitFragment(fr, pos);
@@ -2243,6 +2279,9 @@ function (window, undefined) {
 		if (!fragments) {
 			fragments = this.options.fragments;
 		}
+		if (!fragments) {
+			return;
+		}
 
 		for (i = 0; i < fragments.length;) {
 			if (fragments[i].getCharCodesLength() < 1 && fragments.length > 1) {
@@ -2266,6 +2305,10 @@ function (window, undefined) {
 
 	CellEditor.prototype._cleanFragments = function (fr) {
 		var t = this, i, s, f, wrap = t.textFlags.wrapText || t.textFlags.wrapOnlyNL;
+
+		if (!fr) {
+			return;
+		}
 
 		for (i = 0; i < fr.length; ++i) {
 			s = fr[i].getCharCodes();
@@ -2361,7 +2404,7 @@ function (window, undefined) {
 			let _redoFragments = {};
 			for (let i in _fragments) {
 				if (_fragments.hasOwnProperty(i)) {
-					if (this.options.fragments[i]) {
+					if (this.options.fragments && this.options.fragments[i]) {
 						_redoFragments[i] = this.options.fragments[i].clone();
 					}
 				}
@@ -2420,7 +2463,7 @@ function (window, undefined) {
 		}
 
 		var xfs = new AscCommonExcel.CellXfs();
-		xfs.setFont(this.newTextFormat || this.options.fragments[f.index].format);
+		xfs.setFont(this.newTextFormat || (this.options.fragments && this.options.fragments[f.index].format));
 		this.handlers.trigger("updateEditorSelectionInfo", xfs);
 	};
 
@@ -2794,7 +2837,7 @@ function (window, undefined) {
 			case 186: // ctrl + (shift) + ;
 				if (ctrlKey) {
 					var oDate = new Asc.cDate();
-					t._addChars(event.shiftKey ? oDate.getTimeString(api) : oDate.getDateString(api));
+					t._addChars(event.shiftKey ? oDate.getTimeString(api) : oDate.getDateString(api, true));
 					event.stopPropagation();
 					event.preventDefault();
 				}
@@ -3049,7 +3092,7 @@ function (window, undefined) {
 			return {x: event.pageX, y: event.pageY};
 		}
 
-		var offs = this.canvasOverlay.getBoundingClientRect();
+		var offs = AscCommon.UI.getBoundingClientRect(this.canvasOverlay);
 		var x = (((event.pageX * AscBrowser.zoom) >> 0) - offs.left) / this.kx;
 		var y = (((event.pageY * AscBrowser.zoom) >> 0) - offs.top) / this.ky;
 
@@ -3154,6 +3197,12 @@ function (window, undefined) {
 		this.skipKeyPress = val;
 	};
 	CellEditor.prototype.getText = function (start, len) {
+		if (start == null) {
+			start = 0;
+		}
+		if (len == null) {
+			len = this.textRender.getCharsCount();
+		}
 		let chars = this.textRender.getChars(start, len);
 		let res = "";
 		for (let i in chars) {
