@@ -7328,7 +7328,7 @@
 		return this.private_calculateFunction("OR", arguments);
 	};
 	/**
-	 * Returns the <b>true</b> logical value.
+	 * Returns the <b>TRUE</b> logical value.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @returns {boolean}
