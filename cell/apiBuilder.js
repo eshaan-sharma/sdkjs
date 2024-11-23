@@ -2161,7 +2161,7 @@
 	 * @param {ApiRange | ApiName} arg1 - The range of cells which will be evaluated.
 	 * @param {ApiRange | ApiName | number | string} arg2 - The first condition or criteria in the form of a number, expression, or text that defines which cells will be used to find the average.
 	 * @param {?ApiRange | ?ApiName} arg3 - The actual cells to be used to find the average. If omitted, the cells in the range are used.
-	 * @param {?ApiRange | ?ApiName | number | string} arg4 - Up to 127 additional conditions or criteria in the form of a number, expression, or text that defines which cells will be used to find the average.
+	 * @param {?ApiRange | ?ApiName | ?number | ?string} arg4 - Up to 127 additional conditions or criteria in the form of a number, expression, or text that defines which cells will be used to find the average.
 	 * These arguments are optional.
 	 * @param {?ApiRange | ?ApiName} arg5 - Up to 127 actual ranges to be used to find the average. If omitted, the cells in the range are used. These arguments are optional.
 	 * @returns {number}
