@@ -4837,33 +4837,36 @@ function(window, undefined) {
 		return ret;
 	};
 
+	CChartSpace.prototype.getMultiplier = function (oAxis) {
+		if (!oAxis || !oAxis.dispUnits) {
+			return 1.0;
+		}
+		return oAxis.dispUnits.getMultiplier();
+	}
+
+	CChartSpace.prototype.getNumFmt = function (oAxis) {
+		const sFormatCode = oAxis ? oAxis.getFormatCode() : null;
+		if (typeof sFormatCode === "string") {
+			return oNumFormatCache.get(sFormatCode);
+		}
+		return oNumFormatCache.get("General");
+	}
+
+	CChartSpace.prototype.getFormattedString = function (fValue, oNumFormat, fMultiplier) {
+		const fCalcValue = fValue * fMultiplier;
+		if (oNumFormat) {
+			return oNumFormat.formatToChart(fCalcValue);
+		}
+		return fCalcValue + "";
+	}
 
 	CChartSpace.prototype.getValLabels = function(oAxis) {
 		let aStrings = [];
 		let aVal = [].concat(oAxis.scale);
-		let fMultiplier;
-		if (oAxis.dispUnits) {
-			fMultiplier = oAxis.dispUnits.getMultiplier();
-		} else {
-			fMultiplier = 1.0;
-		}
-		let oNumFormat = null;
-		let sFormatCode = oAxis.getFormatCode();
-		if (typeof sFormatCode === "string") {
-			oNumFormat = oNumFormatCache.get(sFormatCode);
-		}
-		if (!oNumFormat) {
-			oNumFormat = oNumFormatCache.get("General");
-		}
+		const fMultiplier = this.getMultiplier(oAxis);
+		const oNumFormat = this.getNumFmt(oAxis);
 		for (let t = 0; t < aVal.length; ++t) {
-			let fCalcValue = aVal[t] * fMultiplier;
-			let sRichValue;
-			if (oNumFormat) {
-				sRichValue = oNumFormat.formatToChart(fCalcValue);
-			} else {
-				sRichValue = fCalcValue + "";
-			}
-			aStrings.push(sRichValue);
+			aStrings.push(this.getFormattedString(aVal[t], oNumFormat, fMultiplier));
 		}
 		return aStrings;
 	};
@@ -5036,9 +5039,26 @@ function(window, undefined) {
 
 					if (type === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN) {
 						// if data is aggregated then convert array of integers into chars
-						const data = cachedData.clusteredColumn.aggregation ? cachedData.clusteredColumn.aggregation : cachedData.clusteredColumn.results;
+						const isAggregated = cachedData.clusteredColumn.aggregation;
+						const data = isAggregated ? cachedData.clusteredColumn.aggregation : cachedData.clusteredColumn.results;
 						for (let i = 0; i < data.length; i++) {
-							aStrings.push(data[i].lblName);
+							if (isAggregated) {
+								aStrings.push(data[i].lblName);
+							} else {
+								const oNumFmt = this.getNumFmt(oAxis);
+								const FMultiplier = this.getMultiplier(oAxis);
+								const binning = cachedData.clusteredColumn.binning;
+								if (data[i].min === null) {
+									aStrings.push(data[i].subChars[0] + " " + this.getFormattedString(data[i].max, oNumFmt, FMultiplier));
+								} else if (data[i].max === null) {
+									const fVal = binning.length > 1 ? data[i].min : binning.overflow;
+									aStrings.push(data[i].subChars[0] + " " + this.getFormattedString(fVal, oNumFmt, FMultiplier));
+								} else {
+									const sFormattedMin = this.getFormattedString(data[i].min, oNumFmt, FMultiplier);
+									const sFormattedMax = this.getFormattedString(data[i].max, oNumFmt, FMultiplier);
+									aStrings.push(data[i].subChars[0] + sFormattedMin + ", " + sFormattedMax + data[i].subChars[1]);
+								}
+							}
 						}
 					} else if (type === AscFormat.SERIES_LAYOUT_WATERFALL) {
 						const strCache = strSeria.getCatLit(type);

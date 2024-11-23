@@ -2901,37 +2901,29 @@ CChartsDrawer.prototype =
 				}
 			}
 
-			const createLabels = function (localResults, localBinning) {
+			const createSubChars = function (localResults, localBinning) {
 				let start = '[';
 				let end = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? ')' : ']';
 				// user can manually set minimum and maximum, therefore alternative start and end needed
 				const startByExpression = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '<' : '≤';
 				const endByExpression = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '≥' : '>';
 
-				const constructExpression = function (isMin, val) {
-					const sign = isMin ? startByExpression : (localResults.length > 1 ? val : localBinning.overflow);
-					return sign + " " + val;
-				}
-
 				for (let i = 0; i < localResults.length; i++) {
 					if (localResults[i].min === null) {
-						localResults[i].lblName = constructExpression(true, localResults[i].max);
-						continue;
-					}
-					if (localResults[i].max === null) {
-						localResults[i].lblName = constructExpression(false, localResults[i].min);
-						continue;
-					}
+						localResults[i].subChars = [startByExpression];
+					} else if (localResults[i].max === null) {
+						localResults[i].subChars = [endByExpression];
+					} else {
+						if (i === 1 && localBinning.intervalClosed !== AscFormat.INTERVAL_CLOSED_SIDE_L) {
+							start = '(';
+						}
 
-					if (i === 1 && localBinning.intervalClosed !== AscFormat.INTERVAL_CLOSED_SIDE_L) {
-						start = '(';
-					}
+						if (i === (localResults.length - 1) && localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L) {
+							end = ']';
+						}
 
-					if (i === (localResults.length - 1) && localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L) {
-						end = ']';
+						localResults[i].subChars = [start, end];
 					}
-
-					localResults[i].lblName = start + localResults[i].min + ", " + localResults[i].max + end;
 				}
 			}
 
@@ -2944,7 +2936,7 @@ CChartsDrawer.prototype =
 			localBinning.binSize = !localBinning.normalized ? this._roundValue(localBinning.binSize, true, BINNING_PRECISION) : localBinning.binSize;
 			addRangesAndFillCatScale(localResults, localBinning, catLimits, axisProperties);
 			countOccurrencesAndValExtremum(localResults, localBinning, numArr, axisProperties, this);
-			createLabels(localResults, localBinning, axisProperties);
+			createSubChars(localResults, localBinning, axisProperties);
 		}
 	},
 
