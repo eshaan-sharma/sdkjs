@@ -5034,61 +5034,11 @@ function(window, undefined) {
 						return [];
 					}
 
-					if (type === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN && cachedData.clusteredColumn && cachedData.clusteredColumn.aggregation) {
+					if (type === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN) {
 						// if data is aggregated then convert array of integers into chars
-						const strCache = strSeria.getCatLit();
-						if (strCache && strCache.pts) {
-							const mySet = {};
-							for (let i = 0; i < strCache.pts.length; i++) {
-								// If no labels exist, then excel just leaves empty catAxis
-								const key = strCache.pts[i].val;
-								if (!mySet.hasOwnProperty(key)) {
-									mySet[key] = true;
-									aStrings.push(key);
-								}
-							}
-						} else {
-							aStrings.push('');
-						}
-					} else if (type === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN && cachedData.clusteredColumn && cachedData.clusteredColumn.binning) {
-						// obtain properly formated array of integers
-						const bStrings = this.getValLabels(oAxis);
-						const binning = cachedData.clusteredColumn.binning;
-
-						//convert array of formated strings into ranges
-						if (bStrings && bStrings.length != 0) {
-							// ranges always start with '[' and end with ']', however between they can have '(' and ')'
-							let start = '[';
-							let end = binning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? ')' : ']';
-							// user can manually set minimum and maximum, therefore alternative start and end needed
-							const alternativeStart = binning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '<' : '≤';
-							const alternativeEnd = binning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '≥' : '>';
-
-							const isAlternativeStartExist = binning.underflow === 0 || binning.underflow ? true : false;
-							const isAlternativeEndExist = binning.overflow === 0 || binning.overflow ? true : false;
-							// first check is alternativeStart exist, and append alternativeStartSign with value,
-							// also because start not the first anymore, we can change its value from '[' to '(';
-							if (isAlternativeStartExist) {
-								aStrings.push(alternativeStart + bStrings[0]);
-								start = '(';
-							}
-							// if element not the first one, then change value of start
-							// if element is last one and no alternativeEnd exist, then change value of end
-							for (let i = 0; i < (bStrings.length - 1); i++) {
-								if (i === 1 && start != "(" && binning.intervalClosed !== AscFormat.INTERVAL_CLOSED_SIDE_L) {
-									start = '(';
-								}
-
-								if (i === (bStrings.length - 2) && !isAlternativeEndExist && binning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L) {
-									end = ']';
-								}
-								aStrings.push(start + bStrings[i] + ", " + bStrings[i + 1] + end)
-							}
-							// add alternativeEnd if exist
-							if (isAlternativeEndExist) {
-								const val = (bStrings.length > 1) ? bStrings[bStrings.length - 1] : binning.overflow;
-								aStrings.push(alternativeEnd +  " " + val);
-							}
+						const data = cachedData.clusteredColumn.aggregation ? cachedData.clusteredColumn.aggregation : cachedData.clusteredColumn.results;
+						for (let i = 0; i < data.length; i++) {
+							aStrings.push(data[i].lblName);
 						}
 					} else if (type === AscFormat.SERIES_LAYOUT_WATERFALL) {
 						const strCache = strSeria.getCatLit(type);

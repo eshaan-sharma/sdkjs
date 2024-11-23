@@ -2746,18 +2746,18 @@ CChartsDrawer.prototype =
 				// create object of key and values
 				for (let i = 0; i < numArr.length; i++) {
 					const key = strArr[i].val;
-					if (dictSet[key]) {
+					if (AscFormat.isRealNumber(dictSet[key])) {
 						aggregation[dictSet[key]].val += numArr[i].val;
 					} else {
-						aggregation.push({key: key, val: numArr[i].val});
+						aggregation.push({lblName: key, val: numArr[i].val});
 						dictSet[key] = aggregation.length - 1;
 					}
-					this._chartExSetAxisMinAndMax(axisProperties.val, aggregation[key]);
+					this._chartExSetAxisMinAndMax(axisProperties.val, aggregation[dictSet[key]].val);
 				}
 			} else {
 				// Cases when labels do not exist
 				const val = numArr[0].val ? numArr[0].val : 0;
-				aggregation.push({key: '', val: val});
+				aggregation.push({lblName: '', val: val});
 				this._chartExSetAxisMinAndMax(axisProperties.val, val);
 			}
 		}
@@ -2901,6 +2901,40 @@ CChartsDrawer.prototype =
 				}
 			}
 
+			const createLabels = function (localResults, localBinning) {
+				let start = '[';
+				let end = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? ')' : ']';
+				// user can manually set minimum and maximum, therefore alternative start and end needed
+				const startByExpression = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '<' : '≤';
+				const endByExpression = localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L ? '≥' : '>';
+
+				const constructExpression = function (isMin, val) {
+					const sign = isMin ? startByExpression : (localResults.length > 1 ? val : localBinning.overflow);
+					return sign + " " + val;
+				}
+
+				for (let i = 0; i < localResults.length; i++) {
+					if (localResults[i].min === null) {
+						localResults[i].lblName = constructExpression(true, localResults[i].max);
+						continue;
+					}
+					if (localResults[i].max === null) {
+						localResults[i].lblName = constructExpression(false, localResults[i].min);
+						continue;
+					}
+
+					if (i === 1 && localBinning.intervalClosed !== AscFormat.INTERVAL_CLOSED_SIDE_L) {
+						start = '(';
+					}
+
+					if (i === (localResults.length - 1) && localBinning.intervalClosed === AscFormat.INTERVAL_CLOSED_SIDE_L) {
+						end = ']';
+					}
+
+					localResults[i].lblName = start + localResults[i].min + ", " + localResults[i].max + end;
+				}
+			}
+
 			const localBinning = cachedData.binning;
 			const localResults = cachedData.results;
 			const catLimits = handleCatLimits(localBinning, axisProperties);
@@ -2910,6 +2944,7 @@ CChartsDrawer.prototype =
 			localBinning.binSize = !localBinning.normalized ? this._roundValue(localBinning.binSize, true, BINNING_PRECISION) : localBinning.binSize;
 			addRangesAndFillCatScale(localResults, localBinning, catLimits, axisProperties);
 			countOccurrencesAndValExtremum(localResults, localBinning, numArr, axisProperties, this);
+			createLabels(localResults, localBinning, axisProperties);
 		}
 	},
 
