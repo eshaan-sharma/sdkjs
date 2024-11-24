@@ -5038,16 +5038,17 @@ function(window, undefined) {
 					}
 
 					if (type === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN) {
-						// if data is aggregated then convert array of integers into chars
 						const isAggregated = cachedData.clusteredColumn.aggregation;
 						const data = isAggregated ? cachedData.clusteredColumn.aggregation : cachedData.clusteredColumn.results;
-						for (let i = 0; i < data.length; i++) {
-							if (isAggregated) {
+						if (isAggregated) {
+							for (let i = 0; i < data.length; i++) {
 								aStrings.push(data[i].lblName);
-							} else {
-								const oNumFmt = this.getNumFmt(oAxis);
-								const FMultiplier = this.getMultiplier(oAxis);
-								const binning = cachedData.clusteredColumn.binning;
+							}
+						} else {
+							const oNumFmt = this.getNumFmt(oAxis);
+							const FMultiplier = this.getMultiplier(oAxis);
+							const binning = cachedData.clusteredColumn.binning;
+							for (let i = 0; i < data.length; i++) {
 								if (data[i].min === null) {
 									aStrings.push(data[i].subChars[0] + " " + this.getFormattedString(data[i].max, oNumFmt, FMultiplier));
 								} else if (data[i].max === null) {
