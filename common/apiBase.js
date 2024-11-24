@@ -378,6 +378,26 @@
 		}
 		return res;
 	};
+	baseEditorsApi.prototype._getOpenFormatByEditorId                 = function(editorId, isOpenOoxml)
+	{
+		let res = Asc.c_oAscFileType.UNKNOWN;
+		switch (this.editorId)
+		{
+			case c_oEditorId.Word:
+				res = isOpenOoxml ? Asc.c_oAscFileType.DOCX : Asc.c_oAscFileType.CANVAS_WORD;
+				break;
+			case c_oEditorId.Spreadsheet:
+				res = isOpenOoxml ? Asc.c_oAscFileType.XLSX: Asc.c_oAscFileType.CANVAS_SPREADSHEET;
+				break;
+			case c_oEditorId.Presentation:
+				res = isOpenOoxml ? Asc.c_oAscFileType.PPTX : Asc.c_oAscFileType.CANVAS_PRESENTATION;
+				break;
+			case c_oEditorId.Draw:
+				res = Asc.c_oAscFileType.VSDX;
+				break;
+		}
+		return res;
+	};
 	baseEditorsApi.prototype.getEditorId                     = function()
 	{
 		return this.editorId;
@@ -1053,11 +1073,8 @@
 					locale = undefined;
 				}
 			}
-			let convertToOrigin = '';
-			if (!!(this.DocInfo && this.DocInfo.get_DirectUrl()) && this["asc_isSupportFeature"]("ooxml")) {
-				convertToOrigin = '.docx.xlsx.pptx';
-			}
-
+			let isOpenOoxml = !!(this.DocInfo && this.DocInfo.get_DirectUrl()) && this["asc_isSupportFeature"]("ooxml");
+			let outputformat = this._getOpenFormatByEditorId(this.editorId, isOpenOoxml);
 			rData = {
 				"c"             : 'open',
 				"id"            : this.documentId,
@@ -1067,7 +1084,8 @@
 				"title"         : this.documentTitle,
 				"lcid"          : locale,
 				"nobase64"      : true,
-				"convertToOrigin" : convertToOrigin
+				"outputformat"  : outputformat,
+				"convertToOrigin" : ""
 			};
 
 			if (this.isUseNativeViewer)
@@ -2827,6 +2845,7 @@
 					case AscCommon.c_oEditorId.Word: errorData = 'docx';break;
 					case AscCommon.c_oEditorId.Spreadsheet: errorData = 'xlsx';break;
 					case AscCommon.c_oEditorId.Presentation: errorData = 'pptx';break;
+					case AscCommon.c_oEditorId.Draw: errorData = 'vsdx';break;
 					default:
 						if (isNativeFormat) {
 							errorData = 'pdf'

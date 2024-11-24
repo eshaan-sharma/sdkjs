@@ -507,6 +507,7 @@ window.AscCommon.g_cIsBeta = "false";
 		XLSX_FLAT  : 0x010b,
 		XLSX_PACKAGE  : 0x010c,
 		XLSY : 0x1002,
+		CANVAS_SPREADSHEET : 0x2002,
 
 		// PowerPoint
 		PPTX : 0x0081,
@@ -521,6 +522,15 @@ window.AscCommon.g_cIsBeta = "false";
 		OTP  : 0x008a,
 		PPTX_PACKAGE  : 0x008b,
 		PPTY : 0x1003,
+		CANVAS_PRESENTATION : 0x2003,
+
+		//Draw
+		VSDX : 0x4001,
+		VSSX : 0x4002,
+		VSTX : 0x4003,
+		VSDM : 0x4004,
+		VSSM : 0x4005,
+		VSTM : 0x4006,
 
 		//image
 		IMG  : 0x0400,
@@ -1938,7 +1948,33 @@ window.AscCommon.g_cIsBeta = "false";
 		sysDash       : 7,
 		sysDashDot    : 8,
 		sysDashDotDot : 9,
-		sysDot        : 10
+		sysDot        : 10,
+		// visio types
+		vsdxTransparent		: 11, // 0 visio value
+		vsdxSolid			: 12,
+		vsdxDash			: 13,
+		vsdxDot				: 14,
+		vsdxDashDot			: 15,
+		vsdxDashDotDot		: 16,
+		vsdxDashDashDot		: 17,
+		vsdxLongDashShortDash   		: 18,
+		vsdxLongDashShortDashShortDash  : 19,
+		vsdxHalfDash  			: 20,
+		vsdxHalfDot				: 21,
+		vsdxHalfDashDot			: 22,
+		vsdxHalfDashDotDot		: 23,
+		vsdxHalfDashDashDot   	: 24,
+		vsdxHalfLongDashShortDash   		 : 25,
+		vsdxHalfLongDashShortDashShortDash   : 26,
+		vsdxDoubleDash   		: 27,
+		vsdxDoubleDot   		: 28,
+		vsdxDoubleDashDot   	: 29,
+		vsdxDoubleDashDotDot   	: 30,
+		vsdxDoubleDashDashDot   : 31,
+		vsdxDoubleLongDashShortDash   			: 32,
+		vsdxDoubleLongDashShortDashShortDash    : 33,
+		vsdxHalfHalfDash   		: 34,
+
 	};
 
 
@@ -4547,6 +4583,7 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['XLSX_FLAT']            = prot.XLSX_FLAT;
 	prot['XLSX_PACKAGE']         = prot.XLSX_PACKAGE;
 	prot['XLSY']                 = prot.XLSY;
+	prot['CANVAS_SPREADSHEET']   = prot.CANVAS_SPREADSHEET;
 	prot['PPTX']                 = prot.PPTX;
 	prot['PPT']                  = prot.PPT;
 	prot['ODP']                  = prot.ODP;
@@ -4558,6 +4595,13 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['FODP']                 = prot.FODP;
 	prot['OTP']                  = prot.OTP;
 	prot['PPTX_PACKAGE']         = prot.PPTX_PACKAGE;
+	prot['CANVAS_PRESENTATION']  = prot.CANVAS_PRESENTATION;
+
+	prot['VSDX']        		 = prot.VSDX;
+	prot['VSSX']        		 = prot.VSSX;
+	prot['VSTX']        		 = prot.VSTX;
+	prot['VSDM']        		 = prot.VSDM;
+	prot['VSTM']        		 = prot.VSTM;
 
 	prot['JPG']                  = prot.JPG;
 	prot['TIFF']                 = prot.TIFF;

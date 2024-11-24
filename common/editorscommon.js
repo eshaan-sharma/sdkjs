@@ -815,27 +815,37 @@
 		let contentTypes = contentTypesBytes ? AscCommon.UTF8ArrayToString(contentTypesBytes, 0, contentTypesBytes.length) : "";
 		jsZlib.close();
 
-		if (-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml") ||
+		let isWord = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-word.document.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-word.template.macroEnabledTemplate.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.oform") ||
-			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.docxf")) {
-			return AscCommon.c_oEditorId.Word;
-		} else if (-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.docxf");
+		let isExcel = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-excel.template.macroEnabled.main+xml") ||
-			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.binary.macroEnabled.main")) {
-			return AscCommon.c_oEditorId.Spreadsheet;
-		} else if (-1 !== contentTypes.indexOf(
-				"application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.binary.macroEnabled.main");
+		let isSlide = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml") ||
-			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.template.macroEnabled.main+xml")) {
+			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.template.macroEnabled.main+xml");
+		let isDraw = -1 !== contentTypes.indexOf("application/vnd.ms-visio.drawing.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.stencil.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.template.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.drawing.macroEnabled.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.stencil.macroEnabled.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.template.macroEnabled.main+xml");
+		if (isWord) {
+			return AscCommon.c_oEditorId.Word;
+		} else if (isExcel) {
+			return AscCommon.c_oEditorId.Spreadsheet;
+		} else if (isSlide) {
 			return AscCommon.c_oEditorId.Presentation;
+		} else if (isDraw) {
+			return AscCommon.c_oEditorId.Draw;
 		} else {
 			return null;
 		}
@@ -1908,7 +1918,24 @@
 			case c_oAscFileType.OTP:
 				return 'otp';
 				break;
-
+			case c_oAscFileType.VSDX:
+				return 'vsdx';
+				break;
+			case c_oAscFileType.VSSX:
+				return 'vssx';
+				break;
+			case c_oAscFileType.VSTX:
+				return 'vstx';
+				break;
+			case c_oAscFileType.VSDM:
+				return 'vsdm';
+				break;
+			case c_oAscFileType.VSSM:
+				return 'vssm';
+				break;
+			case c_oAscFileType.VSTM:
+				return 'vstm';
+				break;
 			case c_oAscFileType.IMG:
 				return 'zip';
 				break;
@@ -2019,7 +2046,18 @@
 				return c_oAscFileType.FODP;
 			case 'otp':
 				return c_oAscFileType.OTP;
-
+			case 'vsdx':
+				return c_oAscFileType.VSDX;
+			case 'vssx':
+				return c_oAscFileType.VSSX;
+			case 'vstx':
+				return c_oAscFileType.VSTX;
+			case 'vsdm':
+				return c_oAscFileType.VSDM;
+			case 'vssm':
+				return c_oAscFileType.VSSM;
+			case 'vstm':
+				return c_oAscFileType.VSTM;
 			case 'xlsx':
 				return c_oAscFileType.XLSX;
 			case 'xls':
@@ -2215,7 +2253,7 @@
 							callback(e);
 					}
 					else
-						callback(Asc.c_oAscError.ID.Unknown);
+					callback(Asc.c_oAscError.ID.Unknown);
 				}
 			});
 
@@ -2233,9 +2271,9 @@
 					Asc.editor.sendEvent("asc_onOpenFilePdfForm", fileName.click.bind(fileName), cancelFileDialog);
 				}
 				else 
-					fileName.click();
-			}
-			else
+			fileName.click();
+		}
+		else
 				fileName.click();
 		}
 		else
@@ -4057,7 +4095,7 @@
 					if (sheetModel)
 					{
 						range = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
-					}
+		}
 				}
 
 				if (!sheetModel) {
@@ -10732,6 +10770,44 @@
 		change.Redo();
 	}
 
+	function mockLogicDoc(doc){
+		doc.Get_PageLimits = function(PageAbs) {
+			return {X: 0, Y: 0, XLimit: Page_Width, YLimit: Page_Height};
+		};
+		doc.Get_PageFields = function (PageAbs, isInHdrFtr) {
+			return {X: 0, Y: 0, XLimit: 2000, YLimit: 2000};
+		};
+
+		doc.IsTrackRevisions = function() {
+			return false;
+		};
+
+		doc.IsDocumentEditor = function() {
+			return false;
+		};
+		doc.Spelling = {
+			AddParagraphToCheck: function(Para) {}
+		};
+
+		doc.IsSplitPageBreakAndParaMark = function () {
+			return false;
+		};
+		doc.IsDoNotExpandShiftReturn = function () {
+			return false;
+		};
+
+		doc.GetApi = function() {
+			return Asc.editor;
+		};
+
+		doc.GetDrawingDocument = function() {
+			return Asc.editor.getDrawingDocument();
+		};
+
+		doc.SearchEngine = {
+			Selection: []
+		};
+	}
 	/**
 	 * Функция сравнивает две строки (они могут быть не заданы)
 	 * @param s1 {?string}
@@ -14709,8 +14785,13 @@
 	}
 	registerServiceWorker();
 
+	function consoleLog(val) {
+		//console.log(val);
+	}
+
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
+	window["AscCommon"].consoleLog = consoleLog;
 	window["AscCommon"].getSockJs = getSockJs;
 	window["AscCommon"].getSocketIO = getSocketIO;
 	window["AscCommon"].getBaseUrl = getBaseUrl;
@@ -14803,6 +14884,7 @@
 	window["AscCommon"].CompareStrings = CompareStrings;
 	window["AscCommon"].IsSupportAscFeature = IsSupportAscFeature;
 	window["AscCommon"].IsSupportOFormFeature = IsSupportOFormFeature;
+	window["AscCommon"].mockLogicDoc = mockLogicDoc;
 
 	window["AscCommon"].loadSdk = loadSdk;
     window["AscCommon"].loadScript = loadScript;
