@@ -2756,9 +2756,12 @@ CChartsDrawer.prototype =
 				}
 			} else {
 				// Cases when labels do not exist
-				const val = numArr[0].val ? numArr[0].val : 0;
-				aggregation.push({lblName: '', val: val});
-				this._chartExSetAxisMinAndMax(axisProperties.val, val);
+				let sum = 0;
+				for (let i = 0; i < numArr.length; i++) {
+					sum += numArr[i].val;
+				}
+				aggregation.push({lblName: '', val: sum});
+				this._chartExSetAxisMinAndMax(axisProperties.val, sum);
 			}
 		}
 	},
