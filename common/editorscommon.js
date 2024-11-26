@@ -2097,8 +2097,8 @@
 							if (!window.g_asc_plugins)
 								return;
 
-							if (!window.g_asc_plugins.api.licenseResult || !window.g_asc_plugins.api.licenseResult['advancedApi'])
-								return;
+							// if (!window.g_asc_plugins.api.licenseResult || !window.g_asc_plugins.api.licenseResult['advancedApi'])
+							// 	return;
 
 							if (data["subType"] === "connector")
 							{
